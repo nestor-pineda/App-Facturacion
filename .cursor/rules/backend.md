@@ -25,17 +25,26 @@ El sistema separa la lógica de transporte (HTTP), la lógica de negocio y el ac
 ## 📁 Estructura de Carpetas
 
 ```
-src/
-├── api/
-│   ├── routes/          # Definición de endpoints y routers
-│   ├── controllers/     # Manejo de request/response
-│   └── middlewares/     # Auth, validación, error handling
-├── services/            # Lógica de negocio pura
-├── prisma/              # Esquema de base de datos y migraciones
-├── models/              # Tipos de TypeScript y definiciones
-├── lib/                 # Utilidades genéricas (PDF, formateo)
-├── config/              # Variables de entorno y constantes
-└── index.ts             # Punto de entrada de la aplicación
+App-Facturacion/
+├── src/
+│   ├── api/
+│   │   ├── controllers/     # Manejo de request/response
+│   │   ├── middlewares/     # Auth, validación, error handling
+│   │   ├── routes/          # Definición de endpoints y routers
+│   │   └── schemas/         # Esquemas de validación con Zod
+│   ├── config/              # Variables de entorno y constantes
+│   ├── lib/                 # Utilidades genéricas (cálculos, PDF futuro)
+│   ├── models/              # Tipos e interfaces de TypeScript
+│   ├── prisma/              # Esquema de base de datos y migraciones
+│   ├── services/            # Lógica de negocio pura
+│   └── index.ts             # Punto de entrada de la aplicación
+│
+└── tests/
+    ├── helpers/             # Factories y utilidades de test
+    ├── integration/         # Tests de endpoints completos
+    └── unit/
+        ├── services/        # Tests unitarios de servicios
+        └── utils/           # Tests unitarios de utilidades
 ```
 
 **Convenciones:**
