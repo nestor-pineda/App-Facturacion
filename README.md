@@ -118,6 +118,31 @@ Respuesta esperada (`201 Created`):
 }
 ```
 
+### Login
+
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "autonomo@ejemplo.com",
+    "password": "Password123"
+  }'
+```
+
+Respuesta esperada (`200 OK`):
+
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+> El `accessToken` debe enviarse en el header `Authorization: Bearer <token>` en todas las rutas protegidas.
+
 ---
 
 ## Desarrollo

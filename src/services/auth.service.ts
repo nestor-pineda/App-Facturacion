@@ -1,10 +1,13 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database';
-import type { RegisterInput } from '../api/schemas/auth.schema';
+import { env } from '../config/env';
+import type { RegisterInput, LoginInput } from '../api/schemas/auth.schema';
 
 const SALT_ROUNDS = 12;
 
 export const EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS';
+export const INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
 
 export const register = async (data: RegisterInput) => {
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
@@ -28,4 +31,32 @@ export const register = async (data: RegisterInput) => {
 
   const { password: _password, ...userWithoutPassword } = user;
   return userWithoutPassword;
+};
+
+export const login = async (data: LoginInput) => {
+  const user = await prisma.user.findUnique({ where: { email: data.email } });
+
+  if (!user) {
+    throw new Error(INVALID_CREDENTIALS);
+  }
+
+  const isPasswordValid = await bcrypt.compare(data.password, user.password);
+
+  if (!isPasswordValid) {
+    throw new Error(INVALID_CREDENTIALS);
+  }
+
+  const accessToken = jwt.sign(
+    { userId: user.id },
+    env.JWT_SECRET,
+    { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions,
+  );
+
+  const refreshToken = jwt.sign(
+    { userId: user.id },
+    env.JWT_REFRESH_SECRET,
+    { expiresIn: env.JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions,
+  );
+
+  return { accessToken, refreshToken };
 };
