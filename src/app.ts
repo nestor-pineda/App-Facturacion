@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import { env } from './config/env';
+import authRouter from './api/routes/auth.routes';
 
 const isDev = env.NODE_ENV === 'development';
 
@@ -11,7 +12,7 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Aquí se montarán los routers de /api/v1 cuando se implementen
+app.use('/api/v1/auth', authRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, error: { message: 'Ruta no encontrada', code: 'NOT_FOUND' } });

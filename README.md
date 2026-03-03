@@ -81,6 +81,45 @@ Conecta Beekeeper Studio con estos datos:
 
 ---
 
+## API — Ejemplos de uso
+
+### Registrar un nuevo usuario
+
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "autonomo@ejemplo.com",
+    "password": "Password123",
+    "nombre_comercial": "Mi Empresa SL",
+    "nif": "12345678A",
+    "direccion_fiscal": "Calle Mayor 1, 28001 Madrid",
+    "telefono": "600000000"
+  }'
+```
+
+Respuesta esperada (`201 Created`):
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "uuid-generado",
+      "email": "autonomo@ejemplo.com",
+      "nombre_comercial": "Mi Empresa SL",
+      "nif": "12345678A",
+      "direccion_fiscal": "Calle Mayor 1, 28001 Madrid",
+      "telefono": "600000000",
+      "created_at": "2026-02-27T...",
+      "updated_at": "2026-02-27T..."
+    }
+  }
+}
+```
+
+---
+
 ## Desarrollo
 
 ```bash
