@@ -2,12 +2,13 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database';
 import { env } from '../config/env';
-import type { RegisterInput, LoginInput } from '../api/schemas/auth.schema';
+import type { RegisterInput, LoginInput, RefreshInput } from '../api/schemas/auth.schema';
 
 const SALT_ROUNDS = 12;
 
 export const EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS';
 export const INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
+export const INVALID_TOKEN = 'INVALID_TOKEN';
 
 export const register = async (data: RegisterInput) => {
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
@@ -59,4 +60,20 @@ export const login = async (data: LoginInput) => {
   );
 
   return { accessToken, refreshToken };
+};
+
+export const refresh = (data: RefreshInput) => {
+  try {
+    const decoded = jwt.verify(data.refreshToken, env.JWT_REFRESH_SECRET) as { userId: string };
+
+    const accessToken = jwt.sign(
+      { userId: decoded.userId },
+      env.JWT_SECRET,
+      { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions,
+    );
+
+    return { accessToken };
+  } catch {
+    throw new Error(INVALID_TOKEN);
+  }
 };

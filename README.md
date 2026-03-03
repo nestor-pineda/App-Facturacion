@@ -143,6 +143,31 @@ Respuesta esperada (`200 OK`):
 
 > El `accessToken` debe enviarse en el header `Authorization: Bearer <token>` en todas las rutas protegidas.
 
+### Renovar el accessToken (Refresh)
+
+Cuando el `accessToken` expire, usa el `refreshToken` para obtener uno nuevo sin volver a hacer login:
+
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }'
+```
+
+Respuesta esperada (`200 OK`):
+
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+> Si el `refreshToken` es inválido o ha expirado, se devuelve `401 INVALID_TOKEN` y el usuario debe volver a hacer login.
+
 ---
 
 ## Desarrollo
