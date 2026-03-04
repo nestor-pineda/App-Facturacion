@@ -23,7 +23,17 @@ Este documento define las variables de entorno necesarias para el funcionamiento
 
 | Variable | Descripción | Ejemplo |
 | :--- | :--- | :--- |
-| `ALLOWED_ORIGINS` | Dominios permitidos para peticiones CORS | `http://localhost:5173` |
+| `ALLOWED_ORIGINS` | Dominios permitidos para peticiones CORS (lista separada por comas) | `http://localhost:5173,https://app.example.com` |
+
+La variable acepta uno o varios orígenes separados por coma. En desarrollo se suele poner solo el origen del frontend local. En producción se añade el dominio real de la aplicación.
+
+```
+# Desarrollo
+ALLOWED_ORIGINS=http://localhost:5173
+
+# Producción (varios orígenes)
+ALLOWED_ORIGINS=https://app.example.com,https://www.example.com
+```
 
 ## 🚀 Acceso en el Código
 
