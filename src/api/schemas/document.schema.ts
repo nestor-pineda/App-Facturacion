@@ -22,6 +22,11 @@ export const createInvoiceSchema = z.object({
   lines: z.array(documentLineSchema).min(1, 'La factura debe tener al menos una línea'),
 });
 
+export const updateQuoteSchema = createQuoteSchema;
+export const updateInvoiceSchema = createInvoiceSchema;
+
 export type DocumentLineInput = z.infer<typeof documentLineSchema>;
 export type CreateQuoteInput = z.infer<typeof createQuoteSchema>;
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
+export type UpdateQuoteInput = CreateQuoteInput;
+export type UpdateInvoiceInput = CreateInvoiceInput;

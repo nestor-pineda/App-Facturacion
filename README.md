@@ -18,7 +18,7 @@ Sistema de facturación para autónomos. Backend REST API construido con Node.js
 10. [Solución de problemas frecuentes](#10-solución-de-problemas-frecuentes)
 11. [Documentación adicional](#11-documentación-adicional)
 
-> La sección **Probar la API paso a paso** cubre 13 pasos: registro, login, clientes, servicios, presupuestos (crear, enviar, listar) y facturas (crear, emitir, listar).
+> La sección **Probar la API paso a paso** cubre 18 pasos: registro, login, clientes, servicios, presupuestos (crear, enviar, listar, editar, eliminar) y facturas (crear, emitir, listar, editar, eliminar).
 
 ---
 
@@ -425,9 +425,70 @@ Respuesta esperada (`200 OK`):
 
 ---
 
-### Paso 11 — Crear una factura
+### Paso 11 — Editar un presupuesto borrador
 
-El proceso es idéntico al presupuesto. La factura se crea en estado `borrador` y sin número legal:
+Solo es posible mientras el presupuesto esté en estado `borrador`. El cuerpo reemplaza completamente la cabecera y las líneas:
+
+```bash
+curl -X PUT http://localhost:3000/api/v1/quotes/UUID_DEL_PRESUPUESTO \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -d '{
+    "client_id": "UUID_DEL_CLIENTE",
+    "fecha": "2026-02-01",
+    "notas": "Presupuesto revisado",
+    "lines": [
+      {
+        "service_id": "UUID_DEL_SERVICIO",
+        "descripcion": "Consultoría web - 8 horas",
+        "cantidad": 8,
+        "precio_unitario": 150.00,
+        "iva_porcentaje": 21
+      }
+    ]
+  }'
+```
+
+Respuesta esperada (`200 OK`):
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid-del-presupuesto",
+    "estado": "borrador",
+    "subtotal": 1200,
+    "total_iva": 252,
+    "total": 1452,
+    "lines": [ ... ]
+  }
+}
+```
+
+Si el presupuesto ya está en estado `enviado`, se devuelve `409 ALREADY_SENT`.
+
+---
+
+### Paso 12 — Eliminar un presupuesto borrador
+
+```bash
+curl -X DELETE http://localhost:3000/api/v1/quotes/UUID_DEL_PRESUPUESTO \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
+Respuesta esperada (`200 OK`):
+
+```json
+{ "success": true }
+```
+
+Si el presupuesto ya está en estado `enviado`, se devuelve `409 ALREADY_SENT`.
+
+---
+
+### Paso 14 — Crear una factura
+
+El proceso es idéntico al presupuesto pero usando `fecha_emision`. La factura se crea en estado `borrador` y sin número legal:
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/invoices \
@@ -468,7 +529,7 @@ Respuesta esperada (`201 Created`):
 
 ---
 
-### Paso 12 — Emitir la factura (asigna número legal)
+### Paso 15 — Emitir la factura (asigna número legal)
 
 Este paso genera automáticamente el número correlativo `YYYY/NNN` y bloquea la factura:
 
@@ -493,7 +554,7 @@ Respuesta esperada (`200 OK`):
 
 ---
 
-### Paso 13 — Listar facturas (con filtros opcionales)
+### Paso 16 — Listar facturas (con filtros opcionales)
 
 ```bash
 # Todas las facturas
@@ -512,6 +573,68 @@ curl "http://localhost:3000/api/v1/invoices?client_id=UUID_DEL_CLIENTE" \
 curl "http://localhost:3000/api/v1/invoices?desde=2026-01-01&hasta=2026-12-31" \
   -H "Authorization: Bearer TU_TOKEN"
 ```
+
+---
+
+### Paso 17 — Editar una factura borrador
+
+Solo es posible mientras la factura esté en estado `borrador` (antes de emitirla):
+
+```bash
+curl -X PUT http://localhost:3000/api/v1/invoices/UUID_DE_LA_FACTURA \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -d '{
+    "client_id": "UUID_DEL_CLIENTE",
+    "fecha_emision": "2026-02-15",
+    "notas": "Factura corregida",
+    "lines": [
+      {
+        "service_id": "UUID_DEL_SERVICIO",
+        "descripcion": "Consultoría web - 10 horas",
+        "cantidad": 10,
+        "precio_unitario": 150.00,
+        "iva_porcentaje": 21
+      }
+    ]
+  }'
+```
+
+Respuesta esperada (`200 OK`):
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid-de-la-factura",
+    "numero": null,
+    "estado": "borrador",
+    "subtotal": 1500,
+    "total_iva": 315,
+    "total": 1815,
+    "lines": [ ... ]
+  }
+}
+```
+
+Si la factura ya está en estado `enviada`, se devuelve `409 ALREADY_SENT`.
+
+---
+
+### Paso 18 — Eliminar una factura borrador
+
+```bash
+curl -X DELETE http://localhost:3000/api/v1/invoices/UUID_DE_LA_FACTURA \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
+Respuesta esperada (`200 OK`):
+
+```json
+{ "success": true }
+```
+
+Si la factura ya está en estado `enviada`, se devuelve `409 ALREADY_SENT`.
 
 ---
 

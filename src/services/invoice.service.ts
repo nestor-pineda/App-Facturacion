@@ -1,5 +1,5 @@
 import { prisma } from '../config/database';
-import type { CreateInvoiceInput, DocumentLineInput } from '../api/schemas/document.schema';
+import type { CreateInvoiceInput, DocumentLineInput, UpdateInvoiceInput } from '../api/schemas/document.schema';
 import { generateInvoiceNumber } from './numbering.service';
 
 export const INVOICE_NOT_FOUND = 'INVOICE_NOT_FOUND';
@@ -85,6 +85,63 @@ export const create = async (userId: string, data: CreateInvoiceInput) => {
     },
     include: { lines: true },
   });
+};
+
+export const update = async (userId: string, id: string, data: UpdateInvoiceInput) => {
+  const totals = calculateDocumentTotals(data.lines);
+
+  return prisma.$transaction(async (tx) => {
+    const invoice = await tx.invoice.findFirst({ where: { id, user_id: userId } });
+
+    if (!invoice) {
+      throw new Error(INVOICE_NOT_FOUND);
+    }
+
+    if (invoice.estado !== 'borrador') {
+      throw new Error(ALREADY_SENT);
+    }
+
+    await tx.invoiceLine.deleteMany({ where: { invoice_id: id } });
+    return tx.invoice.update({
+      where: { id },
+      data: {
+        client_id: data.client_id,
+        fecha_emision: new Date(data.fecha_emision),
+        notas: data.notas,
+        subtotal: totals.subtotal,
+        total_iva: totals.total_iva,
+        total: totals.total,
+        lines: {
+          create: data.lines.map((line) => {
+            const { subtotal } = calculateLineTotals(line);
+            return {
+              service_id: line.service_id,
+              descripcion: line.descripcion,
+              cantidad: line.cantidad,
+              precio_unitario: line.precio_unitario,
+              iva_porcentaje: line.iva_porcentaje,
+              subtotal,
+            };
+          }),
+        },
+      },
+      include: { lines: true },
+    });
+  });
+};
+
+export const remove = async (userId: string, id: string) => {
+  const invoice = await prisma.invoice.findFirst({ where: { id, user_id: userId } });
+
+  if (!invoice) {
+    throw new Error(INVOICE_NOT_FOUND);
+  }
+
+  if (invoice.estado !== 'borrador') {
+    throw new Error(ALREADY_SENT);
+  }
+
+  await prisma.invoice.delete({ where: { id } });
 };
 
 export const send = async (userId: string, id: string) => {

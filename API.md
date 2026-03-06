@@ -57,6 +57,13 @@ Crea un nuevo servicio (IVA por defecto 21%).
 
 ## 📄 Presupuestos (Quotes)
 
+### GET `/quotes`
+
+Lista presupuestos con filtros opcionales.
+
+* **Query Params:** `estado` (borrador|enviado), `client_id`, `desde` (date), `hasta` (date).
+* **Response 200:** `{ success: true, data: Quote[] }`
+
 ### POST `/quotes`
 Crea un presupuesto en estado `borrador`.
 - **Body:** ```json
@@ -72,6 +79,24 @@ Crea un presupuesto en estado `borrador`.
 ```
 
 * **Nota:** Debe realizar **snapshot** de los datos del servicio en las líneas.
+
+### PUT `/quotes/:id`
+
+Edita un presupuesto en estado `borrador` (reemplazo completo de cabecera y líneas).
+
+* **Body:** Igual que `POST /quotes`.
+* **Response 200:** `{ success: true, data: Quote }`
+* **Response 400:** Error de validación.
+* **Response 404:** Presupuesto no encontrado.
+* **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — el presupuesto ya fue enviado.
+
+### DELETE `/quotes/:id`
+
+Elimina un presupuesto en estado `borrador`. Las líneas se eliminan en cascada.
+
+* **Response 200:** `{ success: true }`
+* **Response 404:** Presupuesto no encontrado.
+* **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — el presupuesto ya fue enviado.
 
 ### PATCH `/quotes/:id/send`
 
@@ -94,8 +119,26 @@ Lista facturas con filtros.
 
 Crea una factura en `borrador`. El campo `numero` será `null`.
 
-* **Body:** Igual que `/quotes`.
+* **Body:** Igual que `/quotes` pero con `fecha_emision` en lugar de `fecha`.
 * **Response 201:** `{ success: true, data: Invoice }`
+
+### PUT `/invoices/:id`
+
+Edita una factura en estado `borrador` (reemplazo completo de cabecera y líneas).
+
+* **Body:** Igual que `POST /invoices`.
+* **Response 200:** `{ success: true, data: Invoice }`
+* **Response 400:** Error de validación.
+* **Response 404:** Factura no encontrada.
+* **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — la factura ya fue enviada.
+
+### DELETE `/invoices/:id`
+
+Elimina una factura en estado `borrador`. Las líneas se eliminan en cascada.
+
+* **Response 200:** `{ success: true }`
+* **Response 404:** Factura no encontrada.
+* **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — la factura ya fue enviada.
 
 ### PATCH `/invoices/:id/send`
 
@@ -115,10 +158,10 @@ Genera el documento legal en PDF.
 
 ## ⚠️ Errores Comunes
 
-* **400 (Bad Request):** Error de validación de Zod (ej: email inválido).
+* **400 (Bad Request):** Error de validación de Zod (ej: campo requerido ausente o formato incorrecto).
 * **401 (Unauthorized):** Token JWT ausente, expirado o inválido.
 * **404 (Not Found):** El recurso no existe o no pertenece al `user_id` del token.
-* **422 (Unprocessable Entity):** Intento de modificar una factura `enviada`.
+* **409 (Conflict):** Intento de modificar o eliminar un documento ya enviado (`ALREADY_SENT`), o de reenviar una factura ya emitida.
 
 ```
 

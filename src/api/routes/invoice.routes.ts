@@ -8,6 +8,8 @@ router.use(authenticate);
 
 router.get('/', invoiceController.list);
 router.post('/', invoiceController.create);
+router.put('/:id', invoiceController.update);
+router.delete('/:id', invoiceController.remove);
 router.patch('/:id/send', invoiceController.send);
 
 export default router;

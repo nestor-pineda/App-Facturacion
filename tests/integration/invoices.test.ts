@@ -161,6 +161,205 @@ describe('POST /api/v1/invoices', () => {
   });
 });
 
+describe('PUT /api/v1/invoices/:id', () => {
+  let token: string;
+  let clientId: string;
+  let serviceId: string;
+  let invoiceId: string;
+
+  const basePayload = (cId: string, sId: string) => ({
+    client_id: cId,
+    fecha_emision: '2026-01-20',
+    lines: [
+      { service_id: sId, descripcion: 'Servicio original', cantidad: 1, precio_unitario: 200, iva_porcentaje: 21 },
+    ],
+  });
+
+  beforeEach(async () => {
+    token = await createUserAndGetToken();
+
+    const clientRes = await request(app)
+      .post(CLIENTS_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validClient);
+    clientId = clientRes.body.data.id;
+
+    const serviceRes = await request(app)
+      .post(SERVICES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validService);
+    serviceId = serviceRes.body.data.id;
+
+    const invRes = await request(app)
+      .post(INVOICES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(basePayload(clientId, serviceId));
+    invoiceId = invRes.body.data.id;
+  });
+
+  it('should return 401 without auth token', async () => {
+    const response = await request(app)
+      .put(`${INVOICES_URL}/${invoiceId}`)
+      .send(basePayload(clientId, serviceId));
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe('NO_TOKEN');
+  });
+
+  it('should update a borrador invoice and return 200 with new data', async () => {
+    const updatedPayload = {
+      client_id: clientId,
+      fecha_emision: '2026-07-01',
+      notas: 'Nota actualizada',
+      lines: [
+        { service_id: serviceId, descripcion: 'Servicio actualizado', cantidad: 2, precio_unitario: 300, iva_porcentaje: 10 },
+      ],
+    };
+
+    const response = await request(app)
+      .put(`${INVOICES_URL}/${invoiceId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(updatedPayload);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.notas).toBe('Nota actualizada');
+    expect(Number(response.body.data.subtotal)).toBe(600);
+    expect(Number(response.body.data.total_iva)).toBeCloseTo(60, 1);
+    expect(Number(response.body.data.total)).toBeCloseTo(660, 1);
+    expect(response.body.data.lines).toHaveLength(1);
+    expect(response.body.data.lines[0].descripcion).toBe('Servicio actualizado');
+  });
+
+  it('should replace all lines on update (old lines are removed)', async () => {
+    const updatedPayload = {
+      client_id: clientId,
+      fecha_emision: '2026-07-01',
+      lines: [
+        { descripcion: 'Nueva línea A', cantidad: 1, precio_unitario: 100, iva_porcentaje: 21 },
+        { descripcion: 'Nueva línea B', cantidad: 2, precio_unitario: 150, iva_porcentaje: 21 },
+      ],
+    };
+
+    const response = await request(app)
+      .put(`${INVOICES_URL}/${invoiceId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(updatedPayload);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.lines).toHaveLength(2);
+    const descriptions = response.body.data.lines.map((l: { descripcion: string }) => l.descripcion);
+    expect(descriptions).toContain('Nueva línea A');
+    expect(descriptions).toContain('Nueva línea B');
+  });
+
+  it('should return 400 when validation fails', async () => {
+    const response = await request(app)
+      .put(`${INVOICES_URL}/${invoiceId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ client_id: clientId });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('should return 404 for non-existent invoice', async () => {
+    const response = await request(app)
+      .put(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(basePayload(clientId, serviceId));
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('should return 409 ALREADY_SENT when trying to update an enviada invoice', async () => {
+    await request(app)
+      .patch(`${INVOICES_URL}/${invoiceId}/send`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const response = await request(app)
+      .put(`${INVOICES_URL}/${invoiceId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(basePayload(clientId, serviceId));
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe('ALREADY_SENT');
+  });
+});
+
+describe('DELETE /api/v1/invoices/:id', () => {
+  let token: string;
+  let clientId: string;
+  let serviceId: string;
+  let invoiceId: string;
+
+  beforeEach(async () => {
+    token = await createUserAndGetToken();
+
+    const clientRes = await request(app)
+      .post(CLIENTS_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validClient);
+    clientId = clientRes.body.data.id;
+
+    const serviceRes = await request(app)
+      .post(SERVICES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validService);
+    serviceId = serviceRes.body.data.id;
+
+    const invRes = await request(app)
+      .post(INVOICES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(buildInvoicePayload(clientId, serviceId));
+    invoiceId = invRes.body.data.id;
+  });
+
+  it('should return 401 without auth token', async () => {
+    const response = await request(app).delete(`${INVOICES_URL}/${invoiceId}`);
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe('NO_TOKEN');
+  });
+
+  it('should delete a borrador invoice and return 200', async () => {
+    const response = await request(app)
+      .delete(`${INVOICES_URL}/${invoiceId}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+
+    const listResponse = await request(app)
+      .get(INVOICES_URL)
+      .set('Authorization', `Bearer ${token}`);
+    expect(listResponse.body.data).toHaveLength(0);
+  });
+
+  it('should return 404 for non-existent invoice', async () => {
+    const response = await request(app)
+      .delete(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('should return 409 ALREADY_SENT when trying to delete an enviada invoice', async () => {
+    await request(app)
+      .patch(`${INVOICES_URL}/${invoiceId}/send`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const response = await request(app)
+      .delete(`${INVOICES_URL}/${invoiceId}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe('ALREADY_SENT');
+  });
+});
+
 describe('PATCH /api/v1/invoices/:id/send', () => {
   let token: string;
   let clientId: string;

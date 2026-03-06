@@ -1,7 +1,8 @@
 import { prisma } from '../config/database';
-import type { CreateQuoteInput, DocumentLineInput } from '../api/schemas/document.schema';
+import type { CreateQuoteInput, DocumentLineInput, UpdateQuoteInput } from '../api/schemas/document.schema';
 
 export const QUOTE_NOT_FOUND = 'QUOTE_NOT_FOUND';
+export const QUOTE_ALREADY_SENT = 'QUOTE_ALREADY_SENT';
 
 export interface QuoteFilters {
   estado?: 'borrador' | 'enviado';
@@ -85,15 +86,77 @@ export const create = async (userId: string, data: CreateQuoteInput) => {
   });
 };
 
-export const send = async (userId: string, id: string) => {
-  const result = await prisma.quote.updateMany({
-    where: { id, user_id: userId },
-    data: { estado: 'enviado' },
-  });
+export const update = async (userId: string, id: string, data: UpdateQuoteInput) => {
+  const totals = calculateDocumentTotals(data.lines);
 
-  if (result.count === 0) {
+  return prisma.$transaction(async (tx) => {
+    const quote = await tx.quote.findFirst({ where: { id, user_id: userId } });
+
+    if (!quote) {
+      throw new Error(QUOTE_NOT_FOUND);
+    }
+
+    if (quote.estado !== 'borrador') {
+      throw new Error(QUOTE_ALREADY_SENT);
+    }
+
+    await tx.quoteLine.deleteMany({ where: { quote_id: id } });
+    return tx.quote.update({
+      where: { id },
+      data: {
+        client_id: data.client_id,
+        fecha: new Date(data.fecha),
+        notas: data.notas,
+        subtotal: totals.subtotal,
+        total_iva: totals.total_iva,
+        total: totals.total,
+        lines: {
+          create: data.lines.map((line) => {
+            const { subtotal } = calculateLineTotals(line);
+            return {
+              service_id: line.service_id,
+              descripcion: line.descripcion,
+              cantidad: line.cantidad,
+              precio_unitario: line.precio_unitario,
+              iva_porcentaje: line.iva_porcentaje,
+              subtotal,
+            };
+          }),
+        },
+      },
+      include: { lines: true },
+    });
+  });
+};
+
+export const remove = async (userId: string, id: string) => {
+  const quote = await prisma.quote.findFirst({ where: { id, user_id: userId } });
+
+  if (!quote) {
     throw new Error(QUOTE_NOT_FOUND);
   }
 
-  return prisma.quote.findFirst({ where: { id, user_id: userId }, include: { lines: true } });
+  if (quote.estado !== 'borrador') {
+    throw new Error(QUOTE_ALREADY_SENT);
+  }
+
+  await prisma.quote.delete({ where: { id } });
+};
+
+export const send = async (userId: string, id: string) => {
+  const quote = await prisma.quote.findFirst({ where: { id, user_id: userId } });
+
+  if (!quote) {
+    throw new Error(QUOTE_NOT_FOUND);
+  }
+
+  if (quote.estado === 'enviado') {
+    throw new Error(QUOTE_ALREADY_SENT);
+  }
+
+  return prisma.quote.update({
+    where: { id },
+    data: { estado: 'enviado' },
+    include: { lines: true },
+  });
 };
