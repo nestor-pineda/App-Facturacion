@@ -25,8 +25,13 @@ export const createInvoiceSchema = z.object({
 export const updateQuoteSchema = createQuoteSchema;
 export const updateInvoiceSchema = createInvoiceSchema;
 
+export const convertQuoteSchema = z.object({
+  fecha_emision: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe tener formato YYYY-MM-DD').optional(),
+});
+
 export type DocumentLineInput = z.infer<typeof documentLineSchema>;
 export type CreateQuoteInput = z.infer<typeof createQuoteSchema>;
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
 export type UpdateQuoteInput = CreateQuoteInput;
 export type UpdateInvoiceInput = CreateInvoiceInput;
+export type ConvertQuoteInput = z.infer<typeof convertQuoteSchema>;

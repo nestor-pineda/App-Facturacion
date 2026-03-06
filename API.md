@@ -104,6 +104,15 @@ Marca como `enviado`. Bloquea futuras ediciones.
 
 * **Response 200:** `{ success: true, data: Quote }`
 
+### POST `/quotes/:id/convert`
+
+Convierte un presupuesto (en cualquier estado) en una nueva factura en estado `borrador`. El presupuesto original no se modifica.
+
+* **Body (opcional):** `{ "fecha_emision": "YYYY-MM-DD" }` — si se omite, se usa la fecha actual.
+* **Response 201:** `{ success: true, data: Invoice }`
+* **Response 400:** `{ success: false, error: { message: "...", code: "VALIDATION_ERROR" } }` — formato de `fecha_emision` inválido.
+* **Response 404:** `{ success: false, error: { message: "...", code: "NOT_FOUND" } }` — presupuesto no encontrado.
+
 ---
 
 ## 🧾 Facturas (Invoices)

@@ -11,5 +11,6 @@ router.post('/', quoteController.create);
 router.put('/:id', quoteController.update);
 router.delete('/:id', quoteController.remove);
 router.patch('/:id/send', quoteController.send);
+router.post('/:id/convert', quoteController.convert);
 
 export default router;

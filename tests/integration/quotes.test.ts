@@ -535,3 +535,149 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
     expect(response.body.error.code).toBe('ALREADY_SENT');
   });
 });
+
+describe('POST /api/v1/quotes/:id/convert', () => {
+  let token: string;
+  let clientId: string;
+  let serviceId: string;
+  let quoteId: string;
+
+  const buildQuotePayload = () => ({
+    client_id: clientId,
+    fecha: '2026-03-01',
+    notas: 'Presupuesto de consultoría',
+    lines: [
+      { service_id: serviceId, descripcion: 'Consultoría web', cantidad: 5, precio_unitario: 200, iva_porcentaje: 21 },
+      { descripcion: 'Reunión de seguimiento', cantidad: 2, precio_unitario: 75, iva_porcentaje: 21 },
+    ],
+  });
+
+  beforeEach(async () => {
+    token = await createUserAndGetToken();
+
+    const clientRes = await request(app)
+      .post(CLIENTS_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validClient);
+    clientId = clientRes.body.data.id;
+
+    const serviceRes = await request(app)
+      .post(SERVICES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validService);
+    serviceId = serviceRes.body.data.id;
+
+    const quoteRes = await request(app)
+      .post(QUOTES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(buildQuotePayload());
+    quoteId = quoteRes.body.data.id;
+  });
+
+  it('should return 401 without auth token', async () => {
+    const response = await request(app).post(`${QUOTES_URL}/${quoteId}/convert`);
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe('NO_TOKEN');
+  });
+
+  it('should convert a borrador quote and return 201 with a new invoice', async () => {
+    const response = await request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(201);
+    expect(response.body.success).toBe(true);
+
+    const invoice = response.body.data;
+    expect(invoice.estado).toBe('borrador');
+    expect(invoice.numero).toBeNull();
+    expect(invoice.client_id).toBe(clientId);
+    expect(Number(invoice.subtotal)).toBe(1150);
+    expect(Number(invoice.total_iva)).toBeCloseTo(241.5, 1);
+    expect(Number(invoice.total)).toBeCloseTo(1391.5, 1);
+    expect(invoice.notas).toBe('Presupuesto de consultoría');
+    expect(invoice.lines).toHaveLength(2);
+  });
+
+  it('should copy all lines verbatim from the quote', async () => {
+    const response = await request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(201);
+    const lines = response.body.data.lines;
+    const descriptions = lines.map((l: { descripcion: string }) => l.descripcion);
+    expect(descriptions).toContain('Consultoría web');
+    expect(descriptions).toContain('Reunión de seguimiento');
+    expect(Number(lines.find((l: { descripcion: string }) => l.descripcion === 'Consultoría web').subtotal)).toBe(1000);
+    expect(Number(lines.find((l: { descripcion: string }) => l.descripcion === 'Reunión de seguimiento').subtotal)).toBe(150);
+  });
+
+  it('should convert an enviado quote and return 201', async () => {
+    await request(app)
+      .patch(`${QUOTES_URL}/${quoteId}/send`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const response = await request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.estado).toBe('borrador');
+    expect(response.body.data.client_id).toBe(clientId);
+  });
+
+  it('should use provided fecha_emision when given', async () => {
+    const response = await request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ fecha_emision: '2026-06-15' });
+
+    expect(response.status).toBe(201);
+    const invoiceFecha = response.body.data.fecha_emision;
+    expect(invoiceFecha).toMatch(/^2026-06-15/);
+  });
+
+  it('should set fecha_emision when not provided', async () => {
+    const response = await request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.fecha_emision).not.toBeNull();
+  });
+
+  it('should return 400 when fecha_emision has invalid format', async () => {
+    const response = await request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ fecha_emision: 'not-a-date' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('should return 404 for non-existent quote', async () => {
+    const response = await request(app)
+      .post(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/convert`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('should not modify the original quote after conversion', async () => {
+    await request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const quoteRes = await request(app)
+      .get(QUOTES_URL)
+      .set('Authorization', `Bearer ${token}`);
+
+    const original = quoteRes.body.data.find((q: { id: string }) => q.id === quoteId);
+    expect(original).toBeDefined();
+    expect(original.estado).toBe('borrador');
+  });
+});

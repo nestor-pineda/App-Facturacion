@@ -143,6 +143,40 @@ export const remove = async (userId: string, id: string) => {
   await prisma.quote.delete({ where: { id } });
 };
 
+export const convertToInvoice = async (userId: string, quoteId: string, fechaEmision?: string) => {
+  const quote = await prisma.quote.findFirst({
+    where: { id: quoteId, user_id: userId },
+    include: { lines: true },
+  });
+
+  if (!quote) {
+    throw new Error(QUOTE_NOT_FOUND);
+  }
+
+  return prisma.invoice.create({
+    data: {
+      user_id: userId,
+      client_id: quote.client_id,
+      fecha_emision: fechaEmision ? new Date(fechaEmision) : new Date(),
+      notas: quote.notas,
+      subtotal: quote.subtotal,
+      total_iva: quote.total_iva,
+      total: quote.total,
+      lines: {
+        create: quote.lines.map((line) => ({
+          service_id: line.service_id,
+          descripcion: line.descripcion,
+          cantidad: line.cantidad,
+          precio_unitario: line.precio_unitario,
+          iva_porcentaje: line.iva_porcentaje,
+          subtotal: line.subtotal,
+        })),
+      },
+    },
+    include: { lines: true },
+  });
+};
+
 export const send = async (userId: string, id: string) => {
   const quote = await prisma.quote.findFirst({ where: { id, user_id: userId } });
 

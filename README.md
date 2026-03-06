@@ -18,7 +18,7 @@ Sistema de facturación para autónomos. Backend REST API construido con Node.js
 10. [Solución de problemas frecuentes](#10-solución-de-problemas-frecuentes)
 11. [Documentación adicional](#11-documentación-adicional)
 
-> La sección **Probar la API paso a paso** cubre 18 pasos: registro, login, clientes, servicios, presupuestos (crear, enviar, listar, editar, eliminar) y facturas (crear, emitir, listar, editar, eliminar).
+> La sección **Probar la API paso a paso** cubre 19 pasos: registro, login, clientes, servicios, presupuestos (crear, enviar, listar, editar, eliminar, convertir a factura) y facturas (crear, emitir, listar, editar, eliminar).
 
 ---
 
@@ -483,6 +483,43 @@ Respuesta esperada (`200 OK`):
 ```
 
 Si el presupuesto ya está en estado `enviado`, se devuelve `409 ALREADY_SENT`.
+
+---
+
+### Paso 13 — Convertir un presupuesto en factura
+
+Convierte un presupuesto (en cualquier estado) en una nueva factura en estado `borrador`. El presupuesto original no se modifica y se pueden generar múltiples facturas del mismo presupuesto.
+
+```bash
+# Sin fecha_emision (usa la fecha de hoy)
+curl -X POST http://localhost:3000/api/v1/quotes/UUID_DEL_PRESUPUESTO/convert \
+  -H "Authorization: Bearer TU_TOKEN"
+
+# Con fecha_emision explícita
+curl -X POST http://localhost:3000/api/v1/quotes/UUID_DEL_PRESUPUESTO/convert \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -d '{ "fecha_emision": "2026-06-01" }'
+```
+
+Respuesta esperada (`201 Created`):
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid-de-la-nueva-factura",
+    "estado": "borrador",
+    "numero": null,
+    "client_id": "UUID_DEL_CLIENTE",
+    "fecha_emision": "2026-06-01T00:00:00.000Z",
+    "subtotal": 1000,
+    "total_iva": 210,
+    "total": 1210,
+    "lines": [ ... ]
+  }
+}
+```
 
 ---
 

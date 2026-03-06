@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createQuoteSchema, updateQuoteSchema } from '../schemas/document.schema';
+import { createQuoteSchema, updateQuoteSchema, convertQuoteSchema } from '../schemas/document.schema';
 import * as quoteService from '../../services/quote.service';
 
 const ERROR_CODES = {
@@ -113,6 +113,42 @@ export const remove = async (req: Request, res: Response) => {
           error: { message: 'El presupuesto ya fue enviado y no puede eliminarse', code: ERROR_CODES.ALREADY_SENT },
         });
       }
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
+    });
+  }
+};
+
+export const convert = async (req: Request, res: Response) => {
+  const parsed = convertQuoteSchema.safeParse(req.body ?? {});
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        message: 'Datos de entrada inválidos',
+        code: ERROR_CODES.VALIDATION_ERROR,
+        details: parsed.error.flatten(),
+      },
+    });
+  }
+
+  try {
+    const invoice = await quoteService.convertToInvoice(
+      req.user!.id,
+      req.params.id as string,
+      parsed.data.fecha_emision,
+    );
+    return res.status(201).json({ success: true, data: invoice });
+  } catch (error) {
+    if (error instanceof Error && error.message === quoteService.QUOTE_NOT_FOUND) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
+      });
     }
 
     return res.status(500).json({
