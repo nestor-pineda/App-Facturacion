@@ -256,7 +256,7 @@ En Fase 2 post-MVP, añadir selector de IVA con opciones:
 
 ---
 
-## [2026-02-26] PDF generado en backend (futuro), no en frontend
+## [2026-02-26] PDF generado en backend, no en frontend
 
 ### Decisión
 Cuando se implemente generación de PDF (Fase 6), hacerlo en **backend con Puppeteer o PDFKit**.
@@ -278,6 +278,44 @@ Los PDFs de facturas se pueden generar en frontend (jsPDF) o backend (Puppeteer/
 ✅ PDFs profesionales y consistentes  
 ✅ Validación de permisos server-side  
 ⚠️ Puppeteer consume más recursos (pero solo se usa bajo demanda)
+
+---
+
+## [2026-03-06] Puppeteer para generación de PDFs — Implementación
+
+### Decisión
+Implementado **Puppeteer** para la generación on-demand de PDFs de facturas y presupuestos.
+
+### Contexto
+Necesitamos entregar facturas en formato PDF para cumplimiento legal en España (Real Decreto 1619/2012). Además, los autónomos necesitan PDFs para enviar a clientes e imprimir.
+
+### Implementación
+- Templates HTML con CSS embebido en `src/templates/pdf/` (subcarpeta separada de templates de email)
+- Generación on-demand sin almacenamiento en disco ni S3 (stream directo HTTP)
+- Validación de permisos mediante `userId` del JWT antes de generar
+- Facturas: solo se pueden descargar en estado `enviada` (con número asignado)
+- Presupuestos: descarga disponible en ambos estados (`borrador` y `enviado`)
+- Browser de Puppeteer siempre se cierra en bloque `finally` para evitar memory leaks
+- Puppeteer lanzado con `--no-sandbox` y `--disable-setuid-sandbox` para compatibilidad con entornos PaaS (Railway/Render)
+
+### Nuevos endpoints
+- `GET /api/v1/invoices/:id/pdf` — devuelve `application/pdf` o 422 si es borrador
+- `GET /api/v1/quotes/:id/pdf` — devuelve `application/pdf` en cualquier estado
+
+### Alternativas descartadas
+- **PDFKit:** API imperativa más verbosa, sin preview HTML durante desarrollo
+- **Servicios externos (DocRaptor, PDFShift):** Costos recurrentes y privacidad de datos
+- **jsPDF en frontend:** Inconsistente entre navegadores y sin validación server-side
+- **Almacenar PDFs en S3:** Complejidad de sincronización e invalidación de caché innecesaria en MVP
+
+### Consecuencias
+✅ Cumplimiento legal de facturación española  
+✅ PDFs visuales consistentes con HTML/CSS estándar  
+✅ Sin costos externos de terceros  
+✅ Control total sobre el contenido y formato  
+⚠️ Puppeteer consume ~150MB RAM por generación (liberada al cerrar el browser)  
+⚠️ Tiempo de generación de 2-5 segundos (acceptable para uso ocasional)  
+⚠️ Requiere Chromium en el servidor de producción (~300MB, descargado una vez)
 
 ---
 

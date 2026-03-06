@@ -160,9 +160,22 @@ Elimina una factura en estado `borrador`. Las líneas se eliminan en cascada.
 
 ### GET `/invoices/:id/pdf`
 
-Genera el documento legal en PDF.
+Genera y descarga el PDF de una factura en estado `enviada`.
 
-* **Response 200:** Archivo binario (Application/pdf).
+* **Auth:** Requiere Bearer Token
+* **Response 200:** Archivo binario (`application/pdf`). Header `Content-Disposition: attachment; filename="factura-YYYY-NNN.pdf"`
+* **Response 422:** `{ success: false, error: { message: "...", code: "INVOICE_DRAFT" } }` — la factura está en estado `borrador`. Envíala primero.
+* **Response 404:** `{ success: false, error: { message: "...", code: "NOT_FOUND" } }` — factura no encontrada o no pertenece al usuario.
+* **Response 401:** Token JWT ausente, expirado o inválido.
+
+### GET `/quotes/:id/pdf`
+
+Genera y descarga el PDF de un presupuesto. Disponible en ambos estados (`borrador` y `enviado`).
+
+* **Auth:** Requiere Bearer Token
+* **Response 200:** Archivo binario (`application/pdf`). Header `Content-Disposition: attachment; filename="presupuesto-YYYY-NNN.pdf"` (o `presupuesto-{id}.pdf` si el presupuesto es borrador sin número)
+* **Response 404:** `{ success: false, error: { message: "...", code: "NOT_FOUND" } }` — presupuesto no encontrado o no pertenece al usuario.
+* **Response 401:** Token JWT ausente, expirado o inválido.
 
 ---
 

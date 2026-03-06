@@ -1,7 +1,7 @@
 # Design Doc: Generación de PDFs On-Demand para Facturas y Presupuestos
 
 ## Estado
-[X] Borrador | [ ] En revisión | [ ] Aprobado | [ ] Implementado
+[ ] Borrador | [ ] En revisión | [ ] Aprobado | [X] Implementado
 
 **Fecha de creación:** 2026-03-06  
 **Autor:** Sistema de Facturación MVP  
@@ -1839,5 +1839,38 @@ npm run test:watch -- pdf
 
 ---
 
-**Última actualización:** 2026-03-06  
-**Próxima revisión:** Después de implementación (Día 7)
+**Última actualización:** 2026-03-06 (implementación completada)
+**Próxima revisión:** Si se añaden nuevas features (logo, multi-idioma, caché)
+
+---
+
+## Notas de implementación
+
+### Adaptaciones respecto al diseño original
+
+- **Paths de archivos:** Controlador en `src/api/controllers/pdf.controller.ts` y rutas añadidas a los routers existentes (`invoice.routes.ts`, `quote.routes.ts`), no en un `src/routes/pdf.routes.ts` separado, para mantener consistencia con el codebase.
+- **Templates en subfolder:** `src/templates/pdf/` en lugar de `src/templates/` para separar de los templates de email en `src/templates/email/`.
+- **`req.user!.id`** (no `.userId`): El tipo `express.d.ts` expone `id`, no `userId`.
+- **`formatCurrency` sin `style: 'currency'`:** La implementación usa `Intl.NumberFormat` sin currency style y añade ` €` manualmente para evitar diferencias de espacio NBSP (`\u00a0`) en distintas versiones de Node.js/ICU.
+
+### Archivos creados
+- `src/services/pdf.service.ts`
+- `src/templates/pdf/invoice.template.ts`
+- `src/templates/pdf/quote.template.ts`
+- `src/templates/pdf/styles/document.styles.ts`
+- `src/templates/pdf/utils/formatters.ts`
+- `src/api/controllers/pdf.controller.ts`
+- `src/types/pdf.types.ts`
+
+### Archivos modificados
+- `src/services/invoice.service.ts` — añadido `getById` y `INVOICE_DRAFT` constant
+- `src/services/quote.service.ts` — añadido `getById`
+- `src/api/routes/invoice.routes.ts` — añadida ruta `GET /:id/pdf`
+- `src/api/routes/quote.routes.ts` — añadida ruta `GET /:id/pdf`
+
+### Tests escritos (TDD)
+- `tests/unit/templates/pdf/formatters.test.ts` (15 tests)
+- `tests/unit/services/pdf.service.test.ts` (7 tests)
+- `tests/unit/templates/pdf/invoice.template.test.ts` (15 tests)
+- `tests/unit/templates/pdf/quote.template.test.ts` (14 tests)
+- `tests/integration/pdf.test.ts` (14 tests)

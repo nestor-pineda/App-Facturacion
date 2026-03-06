@@ -46,6 +46,7 @@
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^8.0.1",
     "pg": "^8.19.0",
+    "puppeteer": "^24.38.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

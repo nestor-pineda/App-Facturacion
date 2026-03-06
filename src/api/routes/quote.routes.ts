@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/auth.middleware';
 import * as quoteController from '../controllers/quote.controller';
+import * as pdfController from '../controllers/pdf.controller';
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.put('/:id', quoteController.update);
 router.delete('/:id', quoteController.remove);
 router.patch('/:id/send', quoteController.send);
 router.post('/:id/convert', quoteController.convert);
+router.get('/:id/pdf', pdfController.generateQuotePDF);
 
 export default router;

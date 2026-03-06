@@ -5,6 +5,7 @@ import { sendInvoiceEmail } from './email.service';
 
 export const INVOICE_NOT_FOUND = 'INVOICE_NOT_FOUND';
 export const ALREADY_SENT = 'ALREADY_SENT';
+export const INVOICE_DRAFT = 'INVOICE_DRAFT';
 
 const roundTwo = (n: number) => Math.round(n * 100) / 100;
 
@@ -29,6 +30,19 @@ const calculateDocumentTotals = (lines: DocumentLineInput[]) => {
     total_iva: roundTwo(total_iva),
     total: roundTwo(subtotal + total_iva),
   };
+};
+
+export const getById = async (userId: string, id: string) => {
+  const invoice = await prisma.invoice.findFirst({
+    where: { id, user_id: userId },
+    include: { lines: true, client: true, user: true },
+  });
+
+  if (!invoice) {
+    throw new Error(INVOICE_NOT_FOUND);
+  }
+
+  return invoice;
 };
 
 export interface InvoiceFilters {

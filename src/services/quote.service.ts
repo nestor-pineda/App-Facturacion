@@ -5,6 +5,19 @@ import { sendQuoteEmail } from './email.service';
 export const QUOTE_NOT_FOUND = 'QUOTE_NOT_FOUND';
 export const QUOTE_ALREADY_SENT = 'QUOTE_ALREADY_SENT';
 
+export const getById = async (userId: string, id: string) => {
+  const quote = await prisma.quote.findFirst({
+    where: { id, user_id: userId },
+    include: { lines: true, client: true, user: true },
+  });
+
+  if (!quote) {
+    throw new Error(QUOTE_NOT_FOUND);
+  }
+
+  return quote;
+};
+
 export interface QuoteFilters {
   estado?: 'borrador' | 'enviado';
   client_id?: string;
