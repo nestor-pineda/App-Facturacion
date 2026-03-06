@@ -121,6 +121,139 @@ describe('POST /api/v1/quotes', () => {
   });
 });
 
+describe('GET /api/v1/quotes', () => {
+  let token: string;
+
+  beforeEach(async () => {
+    token = await createUserAndGetToken();
+  });
+
+  it('should return 401 without auth token', async () => {
+    const response = await request(app).get(QUOTES_URL);
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe('NO_TOKEN');
+  });
+
+  it('should return 200 with empty array when no quotes exist', async () => {
+    const response = await request(app)
+      .get(QUOTES_URL)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(Array.isArray(response.body.data)).toBe(true);
+    expect(response.body.data).toHaveLength(0);
+  });
+
+  it('should return only quotes belonging to the authenticated user', async () => {
+    const { createSecondUserAndGetToken } = await import('../helpers/auth.helper');
+    const otherToken = await createSecondUserAndGetToken();
+
+    const clientRes = await request(app)
+      .post(CLIENTS_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validClient);
+    const serviceRes = await request(app)
+      .post(SERVICES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validService);
+
+    await request(app)
+      .post(QUOTES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        client_id: clientRes.body.data.id,
+        fecha: '2026-01-15',
+        lines: [{ service_id: serviceRes.body.data.id, descripcion: 'Test', cantidad: 1, precio_unitario: 100, iva_porcentaje: 21 }],
+      });
+
+    const response = await request(app)
+      .get(QUOTES_URL)
+      .set('Authorization', `Bearer ${otherToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(0);
+  });
+
+  it('should filter quotes by estado query param', async () => {
+    const clientRes = await request(app)
+      .post(CLIENTS_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validClient);
+    const serviceRes = await request(app)
+      .post(SERVICES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validService);
+
+    const clientId = clientRes.body.data.id;
+    const serviceId = serviceRes.body.data.id;
+
+    const quotePayload = {
+      client_id: clientId,
+      fecha: '2026-01-15',
+      lines: [{ service_id: serviceId, descripcion: 'Test', cantidad: 1, precio_unitario: 100, iva_porcentaje: 21 }],
+    };
+
+    const q1Res = await request(app)
+      .post(QUOTES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(quotePayload);
+
+    await request(app)
+      .post(QUOTES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(quotePayload);
+
+    await request(app)
+      .patch(`${QUOTES_URL}/${q1Res.body.data.id}/send`)
+      .set('Authorization', `Bearer ${token}`);
+
+    const response = await request(app)
+      .get(`${QUOTES_URL}?estado=enviado`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0].estado).toBe('enviado');
+  });
+
+  it('should filter quotes by client_id query param', async () => {
+    const client1Res = await request(app)
+      .post(CLIENTS_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validClient);
+    const client2Res = await request(app)
+      .post(CLIENTS_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ ...validClient, email: 'otro@cliente.com', cif_nif: 'B87654321' });
+    const serviceRes = await request(app)
+      .post(SERVICES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validService);
+
+    const linePayload = [{ service_id: serviceRes.body.data.id, descripcion: 'Test', cantidad: 1, precio_unitario: 100, iva_porcentaje: 21 }];
+
+    await request(app)
+      .post(QUOTES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ client_id: client1Res.body.data.id, fecha: '2026-01-15', lines: linePayload });
+
+    await request(app)
+      .post(QUOTES_URL)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ client_id: client2Res.body.data.id, fecha: '2026-01-15', lines: linePayload });
+
+    const response = await request(app)
+      .get(`${QUOTES_URL}?client_id=${client1Res.body.data.id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0].client_id).toBe(client1Res.body.data.id);
+  });
+});
+
 describe('PATCH /api/v1/quotes/:id/send', () => {
   let token: string;
   let clientId: string;

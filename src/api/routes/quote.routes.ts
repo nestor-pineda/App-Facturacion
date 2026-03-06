@@ -6,6 +6,7 @@ const router = Router();
 
 router.use(authenticate);
 
+router.get('/', quoteController.list);
 router.post('/', quoteController.create);
 router.patch('/:id/send', quoteController.send);
 

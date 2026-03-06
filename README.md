@@ -18,6 +18,8 @@ Sistema de facturación para autónomos. Backend REST API construido con Node.js
 10. [Solución de problemas frecuentes](#10-solución-de-problemas-frecuentes)
 11. [Documentación adicional](#11-documentación-adicional)
 
+> La sección **Probar la API paso a paso** cubre 13 pasos: registro, login, clientes, servicios, presupuestos (crear, enviar, listar) y facturas (crear, emitir, listar).
+
 ---
 
 ## 1. Requisitos previos
@@ -379,7 +381,51 @@ Respuesta esperada (`200 OK`):
 
 ---
 
-### Paso 10 — Crear una factura
+### Paso 10 — Listar presupuestos (con filtros opcionales)
+
+```bash
+# Todos los presupuestos
+curl http://localhost:3000/api/v1/quotes \
+  -H "Authorization: Bearer TU_TOKEN"
+
+# Solo presupuestos en borrador
+curl "http://localhost:3000/api/v1/quotes?estado=borrador" \
+  -H "Authorization: Bearer TU_TOKEN"
+
+# Solo presupuestos enviados
+curl "http://localhost:3000/api/v1/quotes?estado=enviado" \
+  -H "Authorization: Bearer TU_TOKEN"
+
+# Por cliente
+curl "http://localhost:3000/api/v1/quotes?client_id=UUID_DEL_CLIENTE" \
+  -H "Authorization: Bearer TU_TOKEN"
+
+# Por rango de fechas
+curl "http://localhost:3000/api/v1/quotes?desde=2026-01-01&hasta=2026-12-31" \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
+Respuesta esperada (`200 OK`):
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid-del-presupuesto",
+      "estado": "enviado",
+      "subtotal": 750,
+      "total_iva": 157.5,
+      "total": 907.5,
+      "lines": [ ... ]
+    }
+  ]
+}
+```
+
+---
+
+### Paso 11 — Crear una factura
 
 El proceso es idéntico al presupuesto. La factura se crea en estado `borrador` y sin número legal:
 
@@ -422,7 +468,7 @@ Respuesta esperada (`201 Created`):
 
 ---
 
-### Paso 11 — Emitir la factura (asigna número legal)
+### Paso 12 — Emitir la factura (asigna número legal)
 
 Este paso genera automáticamente el número correlativo `YYYY/NNN` y bloquea la factura:
 
@@ -447,7 +493,7 @@ Respuesta esperada (`200 OK`):
 
 ---
 
-### Paso 12 — Listar facturas (con filtros opcionales)
+### Paso 13 — Listar facturas (con filtros opcionales)
 
 ```bash
 # Todas las facturas

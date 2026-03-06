@@ -8,6 +8,25 @@ const ERROR_CODES = {
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;
 
+export const list = async (req: Request, res: Response) => {
+  const { estado, client_id, desde, hasta } = req.query as Record<string, string | undefined>;
+
+  try {
+    const quotes = await quoteService.list(req.user!.id, {
+      estado: estado as quoteService.QuoteFilters['estado'],
+      client_id,
+      desde,
+      hasta,
+    });
+    return res.status(200).json({ success: true, data: quotes });
+  } catch {
+    return res.status(500).json({
+      success: false,
+      error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
+    });
+  }
+};
+
 export const create = async (req: Request, res: Response) => {
   const parsed = createQuoteSchema.safeParse(req.body);
 

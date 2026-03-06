@@ -47,7 +47,7 @@ export const list = async (userId: string, filters: InvoiceFilters = {}) => {
         ? {
             fecha_emision: {
               ...(filters.desde && { gte: new Date(filters.desde) }),
-              ...(filters.hasta && { lte: new Date(filters.hasta) }),
+              ...(filters.hasta && { lte: new Date(filters.hasta + 'T23:59:59.999Z') }),
             },
           }
         : {}),

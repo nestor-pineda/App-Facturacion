@@ -3,6 +3,33 @@ import type { CreateQuoteInput, DocumentLineInput } from '../api/schemas/documen
 
 export const QUOTE_NOT_FOUND = 'QUOTE_NOT_FOUND';
 
+export interface QuoteFilters {
+  estado?: 'borrador' | 'enviado';
+  client_id?: string;
+  desde?: string;
+  hasta?: string;
+}
+
+export const list = async (userId: string, filters: QuoteFilters = {}) => {
+  return prisma.quote.findMany({
+    where: {
+      user_id: userId,
+      ...(filters.estado && { estado: filters.estado }),
+      ...(filters.client_id && { client_id: filters.client_id }),
+      ...(filters.desde || filters.hasta
+        ? {
+            fecha: {
+              ...(filters.desde && { gte: new Date(filters.desde) }),
+              ...(filters.hasta && { lte: new Date(filters.hasta + 'T23:59:59.999Z') }),
+            },
+          }
+        : {}),
+    },
+    include: { lines: true },
+    orderBy: { created_at: 'desc' },
+  });
+};
+
 const roundTwo = (n: number) => Math.round(n * 100) / 100;
 
 const calculateLineTotals = (line: DocumentLineInput) => {
