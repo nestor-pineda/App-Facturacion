@@ -100,9 +100,10 @@ Elimina un presupuesto en estado `borrador`. Las líneas se eliminan en cascada.
 
 ### PATCH `/quotes/:id/send`
 
-Marca como `enviado`. Bloquea futuras ediciones.
+Marca como `enviado`. Bloquea futuras ediciones. Si las variables SMTP están configuradas, envía un email HTML al cliente con el resumen del presupuesto (líneas, totales, notas). El fallo en el envío de email no afecta a la respuesta HTTP.
 
 * **Response 200:** `{ success: true, data: Quote }`
+* **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — el presupuesto ya fue enviado.
 
 ### POST `/quotes/:id/convert`
 
@@ -151,7 +152,7 @@ Elimina una factura en estado `borrador`. Las líneas se eliminan en cascada.
 
 ### PATCH `/invoices/:id/send`
 
-**Acción Crítica:** Genera número legal `YYYY/NNN` y cambia estado a `enviada`.
+**Acción Crítica:** Genera número legal `YYYY/NNN` y cambia estado a `enviada`. Si las variables SMTP están configuradas, envía un email HTML al cliente con el número de factura, líneas, totales y notas. El fallo en el envío de email no afecta a la respuesta HTTP.
 
 * **Regla:** Solo si la factura actual es `borrador`. Una vez enviada, es inmutable.
 * **Response 200:** `{ success: true, data: Invoice }`

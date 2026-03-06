@@ -1,5 +1,6 @@
 import { prisma } from '../config/database';
 import type { CreateQuoteInput, DocumentLineInput, UpdateQuoteInput } from '../api/schemas/document.schema';
+import { sendQuoteEmail } from './email.service';
 
 export const QUOTE_NOT_FOUND = 'QUOTE_NOT_FOUND';
 export const QUOTE_ALREADY_SENT = 'QUOTE_ALREADY_SENT';
@@ -178,7 +179,10 @@ export const convertToInvoice = async (userId: string, quoteId: string, fechaEmi
 };
 
 export const send = async (userId: string, id: string) => {
-  const quote = await prisma.quote.findFirst({ where: { id, user_id: userId } });
+  const quote = await prisma.quote.findFirst({
+    where: { id, user_id: userId },
+    include: { client: true, user: true },
+  });
 
   if (!quote) {
     throw new Error(QUOTE_NOT_FOUND);
@@ -188,9 +192,34 @@ export const send = async (userId: string, id: string) => {
     throw new Error(QUOTE_ALREADY_SENT);
   }
 
-  return prisma.quote.update({
+  const sent = await prisma.quote.update({
     where: { id },
     data: { estado: 'enviado' },
     include: { lines: true },
   });
+
+  try {
+    await sendQuoteEmail({
+      client: { nombre: quote.client.nombre, email: quote.client.email },
+      user: { nombre_comercial: quote.user.nombre_comercial ?? '', nif: quote.user.nif ?? '' },
+      quote: {
+        fecha: sent.fecha,
+        notas: sent.notas,
+        subtotal: Number(sent.subtotal),
+        total_iva: Number(sent.total_iva),
+        total: Number(sent.total),
+        lines: sent.lines.map((l) => ({
+          descripcion: l.descripcion,
+          cantidad: Number(l.cantidad),
+          precio_unitario: Number(l.precio_unitario),
+          iva_porcentaje: Number(l.iva_porcentaje),
+          subtotal: Number(l.subtotal),
+        })),
+      },
+    });
+  } catch (err) {
+    console.error('[email] Failed to send quote email:', err);
+  }
+
+  return sent;
 };

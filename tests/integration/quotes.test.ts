@@ -1,7 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '../../src/app';
 import { createUserAndGetToken } from '../helpers/auth.helper';
+
+vi.mock('../../src/services/email.service', () => ({
+  sendQuoteEmail: vi.fn().mockResolvedValue(undefined),
+  sendInvoiceEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
+import * as emailService from '../../src/services/email.service';
 
 const CLIENTS_URL = '/api/v1/clients';
 const SERVICES_URL = '/api/v1/services';
@@ -494,6 +501,9 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
       });
     const quoteId = createRes.body.data.id;
 
+    const sendQuoteEmailSpy = vi.mocked(emailService.sendQuoteEmail);
+    sendQuoteEmailSpy.mockClear();
+
     const response = await request(app)
       .patch(`${QUOTES_URL}/${quoteId}/send`)
       .set('Authorization', `Bearer ${token}`);
@@ -501,6 +511,8 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     expect(response.body.data.estado).toBe('enviado');
+    expect(sendQuoteEmailSpy).toHaveBeenCalledOnce();
+    expect(sendQuoteEmailSpy.mock.calls[0][0].client.email).toBe(validClient.email);
   });
 
   it('should return 404 for non-existent quote', async () => {

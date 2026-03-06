@@ -12,6 +12,11 @@ const envSchema = z.object({
   PORT: z.string().transform(Number).pipe(z.number().positive()),
   NODE_ENV: z.enum(['development', 'production', 'test']),
   ALLOWED_ORIGINS: z.string(),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.string().transform(Number).pipe(z.number().positive()).optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().default('Facturación <noreply@facturacion.app>'),
 });
 
 const parsed = envSchema.safeParse(process.env);

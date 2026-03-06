@@ -1,7 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '../../src/app';
 import { createUserAndGetToken } from '../helpers/auth.helper';
+
+vi.mock('../../src/services/email.service', () => ({
+  sendQuoteEmail: vi.fn().mockResolvedValue(undefined),
+  sendInvoiceEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
+import * as emailService from '../../src/services/email.service';
 
 const CLIENTS_URL = '/api/v1/clients';
 const SERVICES_URL = '/api/v1/services';
@@ -395,6 +402,9 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
       .send(buildInvoicePayload(clientId, serviceId));
     const invoiceId = createRes.body.data.id;
 
+    const sendInvoiceEmailSpy = vi.mocked(emailService.sendInvoiceEmail);
+    sendInvoiceEmailSpy.mockClear();
+
     const response = await request(app)
       .patch(`${INVOICES_URL}/${invoiceId}/send`)
       .set('Authorization', `Bearer ${token}`);
@@ -403,6 +413,8 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data.estado).toBe('enviada');
     expect(response.body.data.numero).toMatch(/^\d{4}\/\d{3}$/);
+    expect(sendInvoiceEmailSpy).toHaveBeenCalledOnce();
+    expect(sendInvoiceEmailSpy.mock.calls[0][0].client.email).toBe(validClient.email);
   });
 
   it('should generate correlative numbers (YYYY/001, YYYY/002)', async () => {

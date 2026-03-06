@@ -25,6 +25,28 @@ Este documento define las variables de entorno necesarias para el funcionamiento
 | :--- | :--- | :--- |
 | `ALLOWED_ORIGINS` | Dominios permitidos para peticiones CORS (lista separada por comas) | `http://localhost:5173,https://app.example.com` |
 
+## 📧 Email / SMTP (Opcional)
+
+Estas variables son **opcionales**. Si no se definen, el sistema omite el envío de emails silenciosamente (sin error). El resto de la funcionalidad no se ve afectada.
+
+| Variable | Descripción | Ejemplo |
+| :--- | :--- | :--- |
+| `SMTP_HOST` | Servidor SMTP | `sandbox.smtp.mailtrap.io` |
+| `SMTP_PORT` | Puerto SMTP | `2525` (Mailtrap) / `587` (TLS) |
+| `SMTP_USER` | Usuario SMTP | proporcionado por tu proveedor |
+| `SMTP_PASS` | Contraseña SMTP | proporcionada por tu proveedor |
+| `SMTP_FROM` | Dirección de envío (remitente) | `"Mi Empresa <noreply@empresa.com>"` |
+
+**Para desarrollo local** se recomienda [Mailtrap](https://mailtrap.io) (sandbox gratuito que captura emails sin enviarlos realmente):
+
+```
+SMTP_HOST=sandbox.smtp.mailtrap.io
+SMTP_PORT=2525
+SMTP_USER=<tu-user-de-mailtrap>
+SMTP_PASS=<tu-pass-de-mailtrap>
+SMTP_FROM="Facturación <noreply@facturacion.app>"
+```
+
 La variable acepta uno o varios orígenes separados por coma. En desarrollo se suele poner solo el origen del frontend local. En producción se añade el dominio real de la aplicación.
 
 ```

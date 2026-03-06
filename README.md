@@ -18,7 +18,7 @@ Sistema de facturación para autónomos. Backend REST API construido con Node.js
 10. [Solución de problemas frecuentes](#10-solución-de-problemas-frecuentes)
 11. [Documentación adicional](#11-documentación-adicional)
 
-> La sección **Probar la API paso a paso** cubre 19 pasos: registro, login, clientes, servicios, presupuestos (crear, enviar, listar, editar, eliminar, convertir a factura) y facturas (crear, emitir, listar, editar, eliminar).
+> La sección **Probar la API paso a paso** cubre 20 pasos: registro, login, clientes, servicios, configuración SMTP (opcional), presupuestos (crear, enviar, listar, editar, eliminar, convertir a factura) y facturas (crear, emitir, listar, editar, eliminar).
 
 ---
 
@@ -315,6 +315,25 @@ curl http://localhost:3000/api/v1/services \
 
 ---
 
+### Paso 7b — Configurar SMTP para envío de emails (opcional)
+
+Si quieres que el sistema envíe emails reales al cliente cuando se envía un presupuesto o una factura, añade las siguientes variables a tu `.env`. Si se omiten, el envío de email se silencia automáticamente sin afectar a ninguna otra funcionalidad.
+
+**Para desarrollo local** se recomienda [Mailtrap](https://mailtrap.io) (sandbox gratuito que captura los emails sin enviarlos de verdad):
+
+```bash
+# .env
+SMTP_HOST=sandbox.smtp.mailtrap.io
+SMTP_PORT=2525
+SMTP_USER=<tu-user-de-mailtrap>
+SMTP_PASS=<tu-pass-de-mailtrap>
+SMTP_FROM="Facturación App <noreply@facturacion.app>"
+```
+
+Reinicia el servidor tras añadir las variables (`npm run dev`). A partir de ese momento, cada vez que se llame a `PATCH /quotes/:id/send` o `PATCH /invoices/:id/send`, el cliente recibirá un email HTML con el resumen del documento.
+
+---
+
 ### Paso 8 — Crear un presupuesto
 
 Usa el `id` del cliente y del servicio del paso anterior:
@@ -359,7 +378,7 @@ Respuesta esperada (`201 Created`) — el presupuesto se crea en estado `borrado
 
 ### Paso 9 — Enviar un presupuesto
 
-Una vez enviado, el presupuesto queda bloqueado y no se puede editar:
+Marca el presupuesto como `enviado` (bloqueado, no editable). Si el SMTP está configurado, el sistema envía automáticamente un email HTML con el resumen al correo del cliente:
 
 ```bash
 curl -X PATCH http://localhost:3000/api/v1/quotes/UUID_DEL_PRESUPUESTO/send \
@@ -568,7 +587,7 @@ Respuesta esperada (`201 Created`):
 
 ### Paso 15 — Emitir la factura (asigna número legal)
 
-Este paso genera automáticamente el número correlativo `YYYY/NNN` y bloquea la factura:
+Genera el número correlativo `YYYY/NNN`, bloquea la factura (inmutable). Si el SMTP está configurado, envía un email HTML con la factura al cliente:
 
 ```bash
 curl -X PATCH http://localhost:3000/api/v1/invoices/UUID_DE_LA_FACTURA/send \

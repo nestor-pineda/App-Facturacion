@@ -1,6 +1,7 @@
 import { prisma } from '../config/database';
 import type { CreateInvoiceInput, DocumentLineInput, UpdateInvoiceInput } from '../api/schemas/document.schema';
 import { generateInvoiceNumber } from './numbering.service';
+import { sendInvoiceEmail } from './email.service';
 
 export const INVOICE_NOT_FOUND = 'INVOICE_NOT_FOUND';
 export const ALREADY_SENT = 'ALREADY_SENT';
@@ -147,6 +148,7 @@ export const remove = async (userId: string, id: string) => {
 export const send = async (userId: string, id: string) => {
   const invoice = await prisma.invoice.findFirst({
     where: { id, user_id: userId },
+    include: { client: true, user: true },
   });
 
   if (!invoice) {
@@ -159,10 +161,35 @@ export const send = async (userId: string, id: string) => {
 
   const numero = await generateInvoiceNumber(userId);
 
-  await prisma.invoice.updateMany({
-    where: { id, user_id: userId },
+  const sent = await prisma.invoice.update({
+    where: { id },
     data: { estado: 'enviada', numero },
+    include: { lines: true },
   });
 
-  return prisma.invoice.findFirst({ where: { id, user_id: userId }, include: { lines: true } });
+  try {
+    await sendInvoiceEmail({
+      client: { nombre: invoice.client.nombre, email: invoice.client.email },
+      user: { nombre_comercial: invoice.user.nombre_comercial ?? '', nif: invoice.user.nif ?? '' },
+      invoice: {
+        numero: sent.numero,
+        fecha_emision: sent.fecha_emision,
+        notas: sent.notas,
+        subtotal: sent.subtotal,
+        total_iva: sent.total_iva,
+        total: sent.total,
+        lines: sent.lines.map((l) => ({
+          descripcion: l.descripcion,
+          cantidad: Number(l.cantidad),
+          precio_unitario: Number(l.precio_unitario),
+          iva_porcentaje: Number(l.iva_porcentaje),
+          subtotal: Number(l.subtotal),
+        })),
+      },
+    });
+  } catch (err) {
+    console.error('[email] Failed to send invoice email:', err);
+  }
+
+  return sent;
 };
