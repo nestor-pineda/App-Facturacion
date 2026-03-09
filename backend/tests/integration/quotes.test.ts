@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '@/app';
-import { createUserAndGetToken } from '../helpers/auth.helper';
+import { createUserAndGetCookies } from '../helpers/auth.helper';
 
 vi.mock('@/services/email.service', () => ({
   sendQuoteEmail: vi.fn().mockResolvedValue(undefined),
@@ -28,22 +28,22 @@ const validService = {
 };
 
 describe('POST /api/v1/quotes', () => {
-  let token: string;
+  let cookies: string[];
   let clientId: string;
   let serviceId: string;
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
   });
@@ -58,7 +58,7 @@ describe('POST /api/v1/quotes', () => {
   it('should create a quote in borrador state and return 201', async () => {
     const response = await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({
         client_id: clientId,
         fecha: '2026-01-15',
@@ -85,7 +85,7 @@ describe('POST /api/v1/quotes', () => {
   it('should store snapshot data on lines (not live service data)', async () => {
     const response = await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({
         client_id: clientId,
         fecha: '2026-01-15',
@@ -110,7 +110,7 @@ describe('POST /api/v1/quotes', () => {
   it('should return 400 when required fields are missing', async () => {
     const response = await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ client_id: clientId });
 
     expect(response.status).toBe(400);
@@ -120,7 +120,7 @@ describe('POST /api/v1/quotes', () => {
   it('should return 400 when lines array is empty', async () => {
     const response = await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ client_id: clientId, fecha: '2026-01-15', lines: [] });
 
     expect(response.status).toBe(400);
@@ -129,10 +129,10 @@ describe('POST /api/v1/quotes', () => {
 });
 
 describe('GET /api/v1/quotes', () => {
-  let token: string;
+  let cookies: string[];
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
   });
 
   it('should return 401 without auth token', async () => {
@@ -145,7 +145,7 @@ describe('GET /api/v1/quotes', () => {
   it('should return 200 with empty array when no quotes exist', async () => {
     const response = await request(app)
       .get(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -154,21 +154,21 @@ describe('GET /api/v1/quotes', () => {
   });
 
   it('should return only quotes belonging to the authenticated user', async () => {
-    const { createSecondUserAndGetToken } = await import('../helpers/auth.helper');
-    const otherToken = await createSecondUserAndGetToken();
+    const { createSecondUserAndGetCookies } = await import('../helpers/auth.helper');
+    const otherCookies = await createSecondUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
 
     await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({
         client_id: clientRes.body.data.id,
         fecha: '2026-01-15',
@@ -177,7 +177,7 @@ describe('GET /api/v1/quotes', () => {
 
     const response = await request(app)
       .get(QUOTES_URL)
-      .set('Authorization', `Bearer ${otherToken}`);
+      .set('Cookie', otherCookies);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(0);
@@ -186,11 +186,11 @@ describe('GET /api/v1/quotes', () => {
   it('should filter quotes by estado query param', async () => {
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
 
     const clientId = clientRes.body.data.id;
@@ -204,21 +204,21 @@ describe('GET /api/v1/quotes', () => {
 
     const q1Res = await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(quotePayload);
 
     await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(quotePayload);
 
     await request(app)
       .patch(`${QUOTES_URL}/${q1Res.body.data.id}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const response = await request(app)
       .get(`${QUOTES_URL}?estado=enviado`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(1);
@@ -228,32 +228,32 @@ describe('GET /api/v1/quotes', () => {
   it('should filter quotes by client_id query param', async () => {
     const client1Res = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     const client2Res = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ ...validClient, email: 'otro@cliente.com', cif_nif: 'B87654321' });
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
 
     const linePayload = [{ service_id: serviceRes.body.data.id, descripcion: 'Test', cantidad: 1, precio_unitario: 100, iva_porcentaje: 21 }];
 
     await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ client_id: client1Res.body.data.id, fecha: '2026-01-15', lines: linePayload });
 
     await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ client_id: client2Res.body.data.id, fecha: '2026-01-15', lines: linePayload });
 
     const response = await request(app)
       .get(`${QUOTES_URL}?client_id=${client1Res.body.data.id}`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(1);
@@ -262,7 +262,7 @@ describe('GET /api/v1/quotes', () => {
 });
 
 describe('PUT /api/v1/quotes/:id', () => {
-  let token: string;
+  let cookies: string[];
   let clientId: string;
   let serviceId: string;
   let quoteId: string;
@@ -276,23 +276,23 @@ describe('PUT /api/v1/quotes/:id', () => {
   });
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
     const quoteRes = await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(basePayload());
     quoteId = quoteRes.body.data.id;
   });
@@ -316,7 +316,7 @@ describe('PUT /api/v1/quotes/:id', () => {
 
     const response = await request(app)
       .put(`${QUOTES_URL}/${quoteId}`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(updatedPayload);
 
     expect(response.status).toBe(200);
@@ -341,7 +341,7 @@ describe('PUT /api/v1/quotes/:id', () => {
 
     const response = await request(app)
       .put(`${QUOTES_URL}/${quoteId}`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(updatedPayload);
 
     expect(response.status).toBe(200);
@@ -354,7 +354,7 @@ describe('PUT /api/v1/quotes/:id', () => {
   it('should return 400 when validation fails', async () => {
     const response = await request(app)
       .put(`${QUOTES_URL}/${quoteId}`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ client_id: clientId });
 
     expect(response.status).toBe(400);
@@ -364,7 +364,7 @@ describe('PUT /api/v1/quotes/:id', () => {
   it('should return 404 for non-existent quote', async () => {
     const response = await request(app)
       .put(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(basePayload());
 
     expect(response.status).toBe(404);
@@ -374,11 +374,11 @@ describe('PUT /api/v1/quotes/:id', () => {
   it('should return 409 ALREADY_SENT when trying to update an enviado quote', async () => {
     await request(app)
       .patch(`${QUOTES_URL}/${quoteId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const response = await request(app)
       .put(`${QUOTES_URL}/${quoteId}`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(basePayload());
 
     expect(response.status).toBe(409);
@@ -387,29 +387,29 @@ describe('PUT /api/v1/quotes/:id', () => {
 });
 
 describe('DELETE /api/v1/quotes/:id', () => {
-  let token: string;
+  let cookies: string[];
   let clientId: string;
   let serviceId: string;
   let quoteId: string;
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
     const quoteRes = await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({
         client_id: clientId,
         fecha: '2026-01-15',
@@ -428,21 +428,21 @@ describe('DELETE /api/v1/quotes/:id', () => {
   it('should delete a borrador quote and return 200', async () => {
     const response = await request(app)
       .delete(`${QUOTES_URL}/${quoteId}`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
 
     const listResponse = await request(app)
       .get(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
     expect(listResponse.body.data).toHaveLength(0);
   });
 
   it('should return 404 for non-existent quote', async () => {
     const response = await request(app)
       .delete(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe('NOT_FOUND');
@@ -451,11 +451,11 @@ describe('DELETE /api/v1/quotes/:id', () => {
   it('should return 409 ALREADY_SENT when trying to delete an enviado quote', async () => {
     await request(app)
       .patch(`${QUOTES_URL}/${quoteId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const response = await request(app)
       .delete(`${QUOTES_URL}/${quoteId}`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe('ALREADY_SENT');
@@ -463,22 +463,22 @@ describe('DELETE /api/v1/quotes/:id', () => {
 });
 
 describe('PATCH /api/v1/quotes/:id/send', () => {
-  let token: string;
+  let cookies: string[];
   let clientId: string;
   let serviceId: string;
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
   });
@@ -493,7 +493,7 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
   it('should mark a borrador quote as enviado and return 200', async () => {
     const createRes = await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({
         client_id: clientId,
         fecha: '2026-01-15',
@@ -506,7 +506,7 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
 
     const response = await request(app)
       .patch(`${QUOTES_URL}/${quoteId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -518,7 +518,7 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
   it('should return 404 for non-existent quote', async () => {
     const response = await request(app)
       .patch(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe('NOT_FOUND');
@@ -527,7 +527,7 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
   it('should return 409 ALREADY_SENT when trying to send an already-sent quote', async () => {
     const createRes = await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({
         client_id: clientId,
         fecha: '2026-01-15',
@@ -537,11 +537,11 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
 
     await request(app)
       .patch(`${QUOTES_URL}/${quoteId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const response = await request(app)
       .patch(`${QUOTES_URL}/${quoteId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe('ALREADY_SENT');
@@ -549,7 +549,7 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
 });
 
 describe('POST /api/v1/quotes/:id/convert', () => {
-  let token: string;
+  let cookies: string[];
   let clientId: string;
   let serviceId: string;
   let quoteId: string;
@@ -565,23 +565,23 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   });
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
     const quoteRes = await request(app)
       .post(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(buildQuotePayload());
     quoteId = quoteRes.body.data.id;
   });
@@ -596,7 +596,7 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   it('should convert a borrador quote and return 201 with a new invoice', async () => {
     const response = await request(app)
       .post(`${QUOTES_URL}/${quoteId}/convert`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
@@ -615,7 +615,7 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   it('should copy all lines verbatim from the quote', async () => {
     const response = await request(app)
       .post(`${QUOTES_URL}/${quoteId}/convert`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
     const lines = response.body.data.lines;
@@ -629,11 +629,11 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   it('should convert an enviado quote and return 201', async () => {
     await request(app)
       .patch(`${QUOTES_URL}/${quoteId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const response = await request(app)
       .post(`${QUOTES_URL}/${quoteId}/convert`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
     expect(response.body.data.estado).toBe('borrador');
@@ -643,7 +643,7 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   it('should use provided fecha_emision when given', async () => {
     const response = await request(app)
       .post(`${QUOTES_URL}/${quoteId}/convert`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ fecha_emision: '2026-06-15' });
 
     expect(response.status).toBe(201);
@@ -654,7 +654,7 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   it('should set fecha_emision when not provided', async () => {
     const response = await request(app)
       .post(`${QUOTES_URL}/${quoteId}/convert`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
     expect(response.body.data.fecha_emision).not.toBeNull();
@@ -663,7 +663,7 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   it('should return 400 when fecha_emision has invalid format', async () => {
     const response = await request(app)
       .post(`${QUOTES_URL}/${quoteId}/convert`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ fecha_emision: 'not-a-date' });
 
     expect(response.status).toBe(400);
@@ -673,7 +673,7 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   it('should return 404 for non-existent quote', async () => {
     const response = await request(app)
       .post(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/convert`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe('NOT_FOUND');
@@ -682,11 +682,11 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   it('should not modify the original quote after conversion', async () => {
     await request(app)
       .post(`${QUOTES_URL}/${quoteId}/convert`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const quoteRes = await request(app)
       .get(QUOTES_URL)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const original = quoteRes.body.data.find((q: { id: string }) => q.id === quoteId);
     expect(original).toBeDefined();

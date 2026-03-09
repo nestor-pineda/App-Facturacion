@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '@/app';
-import { createUserAndGetToken, createSecondUserAndGetToken } from '../helpers/auth.helper';
+import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
 const CLIENTS_URL = '/api/v1/clients';
 
@@ -21,11 +21,11 @@ describe('GET /api/v1/clients', () => {
   });
 
   it('should return 200 with empty array when no clients exist', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const response = await request(app)
       .get(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -35,17 +35,17 @@ describe('GET /api/v1/clients', () => {
   });
 
   it('should only return clients belonging to the authenticated user', async () => {
-    const token1 = await createUserAndGetToken();
-    const token2 = await createSecondUserAndGetToken();
+    const cookies1 = await createUserAndGetCookies();
+    const cookies2 = await createSecondUserAndGetCookies();
 
     await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token1}`)
+      .set('Cookie', cookies1)
       .send(validClient);
 
     const response = await request(app)
       .get(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token2}`);
+      .set('Cookie', cookies2);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(0);
@@ -61,11 +61,11 @@ describe('POST /api/v1/clients', () => {
   });
 
   it('should create a client and return 201', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const response = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
 
     expect(response.status).toBe(201);
@@ -77,11 +77,11 @@ describe('POST /api/v1/clients', () => {
   });
 
   it('should return 400 when required fields are missing', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const response = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ nombre: 'Solo nombre' });
 
     expect(response.status).toBe(400);
@@ -90,11 +90,11 @@ describe('POST /api/v1/clients', () => {
   });
 
   it('should return 400 with invalid email', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const response = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ ...validClient, email: 'not-an-email' });
 
     expect(response.status).toBe(400);
@@ -113,18 +113,18 @@ describe('PUT /api/v1/clients/:id', () => {
   });
 
   it('should update a client and return 200', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const createRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
 
     const clientId = createRes.body.data.id;
 
     const response = await request(app)
       .put(`${CLIENTS_URL}/${clientId}`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ ...validClient, nombre: 'Nombre Actualizado' });
 
     expect(response.status).toBe(200);
@@ -133,11 +133,11 @@ describe('PUT /api/v1/clients/:id', () => {
   });
 
   it('should return 404 when client does not exist', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const response = await request(app)
       .put(`${CLIENTS_URL}/00000000-0000-0000-0000-000000000000`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
 
     expect(response.status).toBe(404);
@@ -145,19 +145,19 @@ describe('PUT /api/v1/clients/:id', () => {
   });
 
   it('should return 404 when client belongs to another user', async () => {
-    const token1 = await createUserAndGetToken();
-    const token2 = await createSecondUserAndGetToken();
+    const cookies1 = await createUserAndGetCookies();
+    const cookies2 = await createSecondUserAndGetCookies();
 
     const createRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token1}`)
+      .set('Cookie', cookies1)
       .send(validClient);
 
     const clientId = createRes.body.data.id;
 
     const response = await request(app)
       .put(`${CLIENTS_URL}/${clientId}`)
-      .set('Authorization', `Bearer ${token2}`)
+      .set('Cookie', cookies2)
       .send(validClient);
 
     expect(response.status).toBe(404);

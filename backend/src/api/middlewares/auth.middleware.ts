@@ -8,8 +8,7 @@ const ERROR_CODES = {
 } as const;
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+  const token = req.cookies.accessToken as string | undefined;
 
   if (!token) {
     return res.status(401).json({

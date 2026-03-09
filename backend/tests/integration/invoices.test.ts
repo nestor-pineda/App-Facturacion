@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '@/app';
-import { createUserAndGetToken } from '../helpers/auth.helper';
+import { createUserAndGetCookies } from '../helpers/auth.helper';
 
 vi.mock('@/services/email.service', () => ({
   sendQuoteEmail: vi.fn().mockResolvedValue(undefined),
@@ -42,10 +42,10 @@ const buildInvoicePayload = (clientId: string, serviceId: string) => ({
 });
 
 describe('GET /api/v1/invoices', () => {
-  let token: string;
+  let cookies: string[];
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
   });
 
   it('should return 401 without auth token', async () => {
@@ -58,7 +58,7 @@ describe('GET /api/v1/invoices', () => {
   it('should return 200 with empty array when no invoices exist', async () => {
     const response = await request(app)
       .get(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -69,11 +69,11 @@ describe('GET /api/v1/invoices', () => {
   it('should filter invoices by estado query param', async () => {
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
 
     const clientId = clientRes.body.data.id;
@@ -81,22 +81,22 @@ describe('GET /api/v1/invoices', () => {
 
     const inv1Res = await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
 
     await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
 
     // Send only the first invoice
     await request(app)
       .patch(`${INVOICES_URL}/${inv1Res.body.data.id}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const response = await request(app)
       .get(`${INVOICES_URL}?estado=enviada`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(1);
@@ -105,22 +105,22 @@ describe('GET /api/v1/invoices', () => {
 });
 
 describe('POST /api/v1/invoices', () => {
-  let token: string;
+  let cookies: string[];
   let clientId: string;
   let serviceId: string;
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
   });
@@ -135,7 +135,7 @@ describe('POST /api/v1/invoices', () => {
   it('should create an invoice in borrador state with numero null', async () => {
     const response = await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
 
     expect(response.status).toBe(201);
@@ -150,7 +150,7 @@ describe('POST /api/v1/invoices', () => {
   it('should return 400 when required fields are missing', async () => {
     const response = await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ client_id: clientId });
 
     expect(response.status).toBe(400);
@@ -160,7 +160,7 @@ describe('POST /api/v1/invoices', () => {
   it('should return 400 when lines array is empty', async () => {
     const response = await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ client_id: clientId, fecha_emision: '2026-01-20', lines: [] });
 
     expect(response.status).toBe(400);
@@ -169,7 +169,7 @@ describe('POST /api/v1/invoices', () => {
 });
 
 describe('PUT /api/v1/invoices/:id', () => {
-  let token: string;
+  let cookies: string[];
   let clientId: string;
   let serviceId: string;
   let invoiceId: string;
@@ -183,23 +183,23 @@ describe('PUT /api/v1/invoices/:id', () => {
   });
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
     const invRes = await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(basePayload(clientId, serviceId));
     invoiceId = invRes.body.data.id;
   });
@@ -225,7 +225,7 @@ describe('PUT /api/v1/invoices/:id', () => {
 
     const response = await request(app)
       .put(`${INVOICES_URL}/${invoiceId}`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(updatedPayload);
 
     expect(response.status).toBe(200);
@@ -250,7 +250,7 @@ describe('PUT /api/v1/invoices/:id', () => {
 
     const response = await request(app)
       .put(`${INVOICES_URL}/${invoiceId}`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(updatedPayload);
 
     expect(response.status).toBe(200);
@@ -263,7 +263,7 @@ describe('PUT /api/v1/invoices/:id', () => {
   it('should return 400 when validation fails', async () => {
     const response = await request(app)
       .put(`${INVOICES_URL}/${invoiceId}`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ client_id: clientId });
 
     expect(response.status).toBe(400);
@@ -273,7 +273,7 @@ describe('PUT /api/v1/invoices/:id', () => {
   it('should return 404 for non-existent invoice', async () => {
     const response = await request(app)
       .put(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(basePayload(clientId, serviceId));
 
     expect(response.status).toBe(404);
@@ -283,11 +283,11 @@ describe('PUT /api/v1/invoices/:id', () => {
   it('should return 409 ALREADY_SENT when trying to update an enviada invoice', async () => {
     await request(app)
       .patch(`${INVOICES_URL}/${invoiceId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const response = await request(app)
       .put(`${INVOICES_URL}/${invoiceId}`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(basePayload(clientId, serviceId));
 
     expect(response.status).toBe(409);
@@ -296,29 +296,29 @@ describe('PUT /api/v1/invoices/:id', () => {
 });
 
 describe('DELETE /api/v1/invoices/:id', () => {
-  let token: string;
+  let cookies: string[];
   let clientId: string;
   let serviceId: string;
   let invoiceId: string;
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
     const invRes = await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
     invoiceId = invRes.body.data.id;
   });
@@ -333,21 +333,21 @@ describe('DELETE /api/v1/invoices/:id', () => {
   it('should delete a borrador invoice and return 200', async () => {
     const response = await request(app)
       .delete(`${INVOICES_URL}/${invoiceId}`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
 
     const listResponse = await request(app)
       .get(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
     expect(listResponse.body.data).toHaveLength(0);
   });
 
   it('should return 404 for non-existent invoice', async () => {
     const response = await request(app)
       .delete(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe('NOT_FOUND');
@@ -356,11 +356,11 @@ describe('DELETE /api/v1/invoices/:id', () => {
   it('should return 409 ALREADY_SENT when trying to delete an enviada invoice', async () => {
     await request(app)
       .patch(`${INVOICES_URL}/${invoiceId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const response = await request(app)
       .delete(`${INVOICES_URL}/${invoiceId}`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe('ALREADY_SENT');
@@ -368,22 +368,22 @@ describe('DELETE /api/v1/invoices/:id', () => {
 });
 
 describe('PATCH /api/v1/invoices/:id/send', () => {
-  let token: string;
+  let cookies: string[];
   let clientId: string;
   let serviceId: string;
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
   });
@@ -398,7 +398,7 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
   it('should generate a numero and change estado to enviada', async () => {
     const createRes = await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
     const invoiceId = createRes.body.data.id;
 
@@ -407,7 +407,7 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
 
     const response = await request(app)
       .patch(`${INVOICES_URL}/${invoiceId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -422,21 +422,21 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
 
     const inv1Res = await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
 
     const inv2Res = await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
 
     await request(app)
       .patch(`${INVOICES_URL}/${inv1Res.body.data.id}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const sendRes2 = await request(app)
       .patch(`${INVOICES_URL}/${inv2Res.body.data.id}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(sendRes2.body.data.numero).toBe(`${year}/002`);
   });
@@ -444,17 +444,17 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
   it('should return 409 ALREADY_SENT if invoice is already enviada', async () => {
     const createRes = await request(app)
       .post(INVOICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
     const invoiceId = createRes.body.data.id;
 
     await request(app)
       .patch(`${INVOICES_URL}/${invoiceId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     const response = await request(app)
       .patch(`${INVOICES_URL}/${invoiceId}/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe('ALREADY_SENT');
@@ -463,7 +463,7 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
   it('should return 404 for non-existent invoice', async () => {
     const response = await request(app)
       .patch(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000/send`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe('NOT_FOUND');

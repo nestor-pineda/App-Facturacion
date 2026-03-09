@@ -20,16 +20,16 @@ const SECOND_USER = {
   direccion_fiscal: 'Calle Otra 2, Barcelona',
 };
 
-export const createUserAndGetToken = async (
+export const createUserAndGetCookies = async (
   user: typeof DEFAULT_USER = DEFAULT_USER,
-): Promise<string> => {
+): Promise<string[]> => {
   await request(app).post(REGISTER_URL).send(user);
   const res = await request(app)
     .post(LOGIN_URL)
     .send({ email: user.email, password: user.password });
-  return res.body.data.accessToken;
+  return res.headers['set-cookie'] as string[];
 };
 
-export const createSecondUserAndGetToken = async (): Promise<string> => {
-  return createUserAndGetToken(SECOND_USER);
+export const createSecondUserAndGetCookies = async (): Promise<string[]> => {
+  return createUserAndGetCookies(SECOND_USER);
 };

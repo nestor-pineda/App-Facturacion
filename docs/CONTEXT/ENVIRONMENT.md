@@ -24,6 +24,9 @@ Este documento define las variables de entorno necesarias para el funcionamiento
 | Variable | Descripción | Ejemplo |
 | :--- | :--- | :--- |
 | `ALLOWED_ORIGINS` | Dominios permitidos para peticiones CORS (lista separada por comas) | `http://localhost:5173,https://app.example.com` |
+| `FRONTEND_URL` | Origen principal del frontend (usado para el header `Access-Control-Allow-Origin` con `credentials: true`) | `http://localhost:5173` |
+
+> **Nota:** `FRONTEND_URL` es obligatorio para que las httpOnly cookies funcionen correctamente. CORS con `credentials: true` requiere un origen único y exacto, no un wildcard.
 
 ## 📧 Email / SMTP (Opcional)
 

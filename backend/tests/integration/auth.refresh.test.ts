@@ -17,43 +17,49 @@ const validUser = {
 };
 
 describe('POST /api/v1/auth/refresh', () => {
-  let refreshToken: string;
+  let loginCookies: string[];
 
   beforeEach(async () => {
     await request(app).post(REGISTER_URL).send(validUser);
     const loginRes = await request(app)
       .post(LOGIN_URL)
       .send({ email: validUser.email, password: validUser.password });
-    refreshToken = loginRes.body.data.refreshToken;
+    loginCookies = loginRes.headers['set-cookie'] as string[];
   });
 
-  it('should return 200 with a new accessToken on a valid refreshToken', async () => {
+  it('should set a new accessToken cookie on a valid refreshToken cookie', async () => {
     // Act
-    const response = await request(app).post(REFRESH_URL).send({ refreshToken });
+    const response = await request(app)
+      .post(REFRESH_URL)
+      .set('Cookie', loginCookies);
 
     // Assert
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
-    expect(response.body.data).toHaveProperty('accessToken');
-    expect(typeof response.body.data.accessToken).toBe('string');
-    expect(response.body.data).not.toHaveProperty('refreshToken');
+    expect(response.body.data).toHaveProperty('message');
+    expect(response.body.data).not.toHaveProperty('accessToken');
+
+    const cookies: string[] = response.headers['set-cookie'];
+    expect(cookies).toBeDefined();
+    expect(cookies.some((c) => c.startsWith('accessToken='))).toBe(true);
+    expect(cookies.some((c) => c.includes('HttpOnly'))).toBe(true);
   });
 
-  it('should return 400 when refreshToken field is missing', async () => {
+  it('should return 401 NO_REFRESH_TOKEN when no cookie is sent', async () => {
     // Act
-    const response = await request(app).post(REFRESH_URL).send({});
+    const response = await request(app).post(REFRESH_URL);
 
     // Assert
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.code).toBe('NO_REFRESH_TOKEN');
   });
 
-  it('should return 401 INVALID_TOKEN when token is malformed', async () => {
+  it('should return 401 INVALID_TOKEN when refreshToken cookie is malformed', async () => {
     // Act
     const response = await request(app)
       .post(REFRESH_URL)
-      .send({ refreshToken: 'this.is.not.a.valid.jwt' });
+      .set('Cookie', ['refreshToken=this.is.not.a.valid.jwt']);
 
     // Assert
     expect(response.status).toBe(401);
@@ -61,15 +67,17 @@ describe('POST /api/v1/auth/refresh', () => {
     expect(response.body.error.code).toBe('INVALID_TOKEN');
   });
 
-  it('should return 401 INVALID_TOKEN when token is expired', async () => {
-    // Arrange - refresh token con exp en el pasado
+  it('should return 401 INVALID_TOKEN when refreshToken cookie is expired', async () => {
+    // Arrange - expired refresh token
     const expiredToken = jwt.sign(
       { userId: 'some-user-id', exp: Math.floor(Date.now() / 1000) - 3600 },
       env.JWT_REFRESH_SECRET,
     );
 
     // Act
-    const response = await request(app).post(REFRESH_URL).send({ refreshToken: expiredToken });
+    const response = await request(app)
+      .post(REFRESH_URL)
+      .set('Cookie', [`refreshToken=${expiredToken}`]);
 
     // Assert
     expect(response.status).toBe(401);
@@ -77,8 +85,8 @@ describe('POST /api/v1/auth/refresh', () => {
     expect(response.body.error.code).toBe('INVALID_TOKEN');
   });
 
-  it('should return 401 INVALID_TOKEN when an accessToken is used instead of refreshToken', async () => {
-    // Arrange - usar el accessToken (firmado con JWT_SECRET) como si fuera refreshToken
+  it('should return 401 INVALID_TOKEN when an accessToken is used as refreshToken cookie', async () => {
+    // Arrange - accessToken signed with JWT_SECRET, not JWT_REFRESH_SECRET
     const accessTokenUsedAsRefresh = jwt.sign(
       { userId: 'some-user-id' },
       env.JWT_SECRET,
@@ -88,7 +96,7 @@ describe('POST /api/v1/auth/refresh', () => {
     // Act
     const response = await request(app)
       .post(REFRESH_URL)
-      .send({ refreshToken: accessTokenUsedAsRefresh });
+      .set('Cookie', [`refreshToken=${accessTokenUsedAsRefresh}`]);
 
     // Assert
     expect(response.status).toBe(401);

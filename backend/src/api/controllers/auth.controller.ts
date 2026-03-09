@@ -1,12 +1,18 @@
 import { Request, Response } from 'express';
-import { registerSchema, loginSchema, refreshSchema } from '@/api/schemas/auth.schema';
+import { registerSchema, loginSchema } from '@/api/schemas/auth.schema';
 import * as authService from '@/services/auth.service';
+import {
+  getCookieOptions,
+  ACCESS_TOKEN_MAX_AGE,
+  REFRESH_TOKEN_MAX_AGE,
+} from '@/api/utils/cookie-config';
 
 const ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   EMAIL_ALREADY_EXISTS: 'EMAIL_ALREADY_EXISTS',
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   INVALID_TOKEN: 'INVALID_TOKEN',
+  NO_REFRESH_TOKEN: 'NO_REFRESH_TOKEN',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;
 
@@ -63,8 +69,12 @@ export const login = async (req: Request, res: Response) => {
   }
 
   try {
-    const tokens = await authService.login(parsed.data);
-    return res.status(200).json({ success: true, data: tokens });
+    const { user, accessToken, refreshToken } = await authService.login(parsed.data);
+
+    res.cookie('accessToken', accessToken, getCookieOptions(ACCESS_TOKEN_MAX_AGE));
+    res.cookie('refreshToken', refreshToken, getCookieOptions(REFRESH_TOKEN_MAX_AGE));
+
+    return res.status(200).json({ success: true, data: { user } });
   } catch (error) {
     if (error instanceof Error && error.message === authService.INVALID_CREDENTIALS) {
       return res.status(401).json({
@@ -87,22 +97,27 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const refresh = (req: Request, res: Response) => {
-  const parsed = refreshSchema.safeParse(req.body);
+  const refreshToken = req.cookies.refreshToken as string | undefined;
 
-  if (!parsed.success) {
-    return res.status(400).json({
+  if (!refreshToken) {
+    return res.status(401).json({
       success: false,
       error: {
-        message: 'Datos de entrada inválidos',
-        code: ERROR_CODES.VALIDATION_ERROR,
-        details: parsed.error.flatten(),
+        message: 'Refresh token requerido',
+        code: ERROR_CODES.NO_REFRESH_TOKEN,
       },
     });
   }
 
   try {
-    const tokens = authService.refresh(parsed.data);
-    return res.status(200).json({ success: true, data: tokens });
+    const { accessToken } = authService.refresh(refreshToken);
+
+    res.cookie('accessToken', accessToken, getCookieOptions(ACCESS_TOKEN_MAX_AGE));
+
+    return res.status(200).json({
+      success: true,
+      data: { message: 'Token renovado correctamente' },
+    });
   } catch {
     return res.status(401).json({
       success: false,
@@ -112,4 +127,14 @@ export const refresh = (req: Request, res: Response) => {
       },
     });
   }
+};
+
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie('accessToken', getCookieOptions(0));
+  res.clearCookie('refreshToken', getCookieOptions(0));
+
+  return res.status(200).json({
+    success: true,
+    data: { message: 'Sesión cerrada correctamente' },
+  });
 };

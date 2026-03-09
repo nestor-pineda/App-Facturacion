@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '@/app';
-import { createUserAndGetToken, createSecondUserAndGetToken } from '../helpers/auth.helper';
+import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
 vi.mock('@/services/email.service', () => ({
   sendInvoiceEmail: vi.fn().mockResolvedValue(undefined),
@@ -59,22 +59,22 @@ const buildQuotePayload = (clientId: string, serviceId: string) => ({
 });
 
 describe('PDF endpoints', () => {
-  let token: string;
+  let cookies: string[];
   let clientId: string;
   let serviceId: string;
 
   beforeEach(async () => {
-    token = await createUserAndGetToken();
+    cookies = await createUserAndGetCookies();
 
     const clientRes = await request(app)
       .post(CLIENTS_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
     const serviceRes = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
   });
@@ -89,13 +89,13 @@ describe('PDF endpoints', () => {
     it('should return 422 INVOICE_DRAFT for a borrador invoice', async () => {
       const createRes = await request(app)
         .post(INVOICES_URL)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', cookies)
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       expect(response.status).toBe(422);
       expect(response.body.success).toBe(false);
@@ -105,18 +105,18 @@ describe('PDF endpoints', () => {
     it('should return 404 for an invoice belonging to another user', async () => {
       const createRes = await request(app)
         .post(INVOICES_URL)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', cookies)
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
       await request(app)
         .patch(`${INVOICES_URL}/${invoiceId}/send`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
-      const otherToken = await createSecondUserAndGetToken();
+      const otherCookies = await createSecondUserAndGetCookies();
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
-        .set('Authorization', `Bearer ${otherToken}`);
+        .set('Cookie', otherCookies);
 
       expect(response.status).toBe(404);
     });
@@ -124,17 +124,17 @@ describe('PDF endpoints', () => {
     it('should return 200 with PDF buffer for a sent invoice', async () => {
       const createRes = await request(app)
         .post(INVOICES_URL)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', cookies)
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
       await request(app)
         .patch(`${INVOICES_URL}/${invoiceId}/send`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       expect(response.status).toBe(200);
     });
@@ -142,17 +142,17 @@ describe('PDF endpoints', () => {
     it('should set Content-Type to application/pdf for sent invoice', async () => {
       const createRes = await request(app)
         .post(INVOICES_URL)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', cookies)
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
       await request(app)
         .patch(`${INVOICES_URL}/${invoiceId}/send`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       expect(response.headers['content-type']).toContain('application/pdf');
     });
@@ -160,17 +160,17 @@ describe('PDF endpoints', () => {
     it('should set Content-Disposition attachment with filename for sent invoice', async () => {
       const createRes = await request(app)
         .post(INVOICES_URL)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', cookies)
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
       await request(app)
         .patch(`${INVOICES_URL}/${invoiceId}/send`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       expect(response.headers['content-disposition']).toMatch(/attachment/);
       expect(response.headers['content-disposition']).toMatch(/factura-.*\.pdf/);
@@ -179,7 +179,7 @@ describe('PDF endpoints', () => {
     it('should return 404 for non-existent invoice id', async () => {
       const response = await request(app)
         .get(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000/pdf`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       expect(response.status).toBe(404);
     });
@@ -195,13 +195,13 @@ describe('PDF endpoints', () => {
     it('should return 200 for a borrador quote', async () => {
       const createRes = await request(app)
         .post(QUOTES_URL)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', cookies)
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;
 
       const response = await request(app)
         .get(`${QUOTES_URL}/${quoteId}/pdf`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       expect(response.status).toBe(200);
     });
@@ -209,17 +209,17 @@ describe('PDF endpoints', () => {
     it('should return 200 for an enviado quote', async () => {
       const createRes = await request(app)
         .post(QUOTES_URL)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', cookies)
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;
 
       await request(app)
         .patch(`${QUOTES_URL}/${quoteId}/send`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       const response = await request(app)
         .get(`${QUOTES_URL}/${quoteId}/pdf`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       expect(response.status).toBe(200);
     });
@@ -227,13 +227,13 @@ describe('PDF endpoints', () => {
     it('should set Content-Type to application/pdf for quote', async () => {
       const createRes = await request(app)
         .post(QUOTES_URL)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', cookies)
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;
 
       const response = await request(app)
         .get(`${QUOTES_URL}/${quoteId}/pdf`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       expect(response.headers['content-type']).toContain('application/pdf');
     });
@@ -241,13 +241,13 @@ describe('PDF endpoints', () => {
     it('should set Content-Disposition attachment with filename for borrador quote', async () => {
       const createRes = await request(app)
         .post(QUOTES_URL)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', cookies)
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;
 
       const response = await request(app)
         .get(`${QUOTES_URL}/${quoteId}/pdf`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       expect(response.headers['content-disposition']).toMatch(/attachment/);
       expect(response.headers['content-disposition']).toMatch(/presupuesto-.*\.pdf/);
@@ -256,14 +256,14 @@ describe('PDF endpoints', () => {
     it('should return 404 for quote belonging to another user', async () => {
       const createRes = await request(app)
         .post(QUOTES_URL)
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', cookies)
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;
 
-      const otherToken = await createSecondUserAndGetToken();
+      const otherCookies = await createSecondUserAndGetCookies();
       const response = await request(app)
         .get(`${QUOTES_URL}/${quoteId}/pdf`)
-        .set('Authorization', `Bearer ${otherToken}`);
+        .set('Cookie', otherCookies);
 
       expect(response.status).toBe(404);
     });
@@ -271,7 +271,7 @@ describe('PDF endpoints', () => {
     it('should return 404 for non-existent quote id', async () => {
       const response = await request(app)
         .get(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/pdf`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Cookie', cookies);
 
       expect(response.status).toBe(404);
     });

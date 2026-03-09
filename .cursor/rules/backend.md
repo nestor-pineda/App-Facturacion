@@ -31,7 +31,8 @@ App-Facturacion/
 │   │   ├── controllers/     # Manejo de request/response
 │   │   ├── middlewares/     # Auth, validación, error handling
 │   │   ├── routes/          # Definición de endpoints y routers
-│   │   └── schemas/         # Esquemas de validación con Zod
+│   │   ├── schemas/         # Esquemas de validación con Zod
+│   │   └── utils/           # Utilidades de capa API (ej: cookie-config.ts)
 │   ├── config/              # Variables de entorno y constantes
 │   ├── lib/                 # Utilidades genéricas (cálculos, PDF futuro)
 │   ├── models/              # Tipos e interfaces de TypeScript
@@ -340,14 +341,16 @@ export const create = async (userId: string, data: CreateInvoiceData) => {
 
 **Responsabilidad:** Autenticación, autorización, validación, error handling
 
-#### Autenticación
+#### Autenticación (httpOnly Cookies)
 ```typescript
 // src/api/middlewares/auth.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { env } from '@/config/env';
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  // Token se lee de la cookie httpOnly, no del header Authorization
+  const token = req.cookies.accessToken as string | undefined;
 
   if (!token) {
     return res.status(401).json({
@@ -360,10 +363,10 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+    const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: string };
     req.user = { id: decoded.userId };
     next();
-  } catch (error) {
+  } catch {
     return res.status(401).json({
       success: false,
       error: {
@@ -374,6 +377,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   }
 };
 ```
+
+> **Importante:** No usar `Authorization: Bearer` header. El token viaja exclusivamente en la cookie `accessToken` (httpOnly, sameSite=strict). El frontend debe configurar `withCredentials: true` en su cliente HTTP.
 
 #### Error Handler Global
 ```typescript
@@ -501,10 +506,25 @@ export const updateInvoiceSchema = z.object({
 
 ## 🔐 Reglas de Seguridad
 
-### Autenticación
-- ✅ Todos los endpoints (excepto `/auth/*`) requieren JWT válido
-- ✅ Tokens expiran en 1h (access) y 7d (refresh)
+### Autenticación (httpOnly Cookies)
+- ✅ Todos los endpoints (excepto `/auth/register`, `/auth/login`) requieren cookie `accessToken` válida
+- ✅ Tokens se almacenan exclusivamente en httpOnly cookies (inaccesibles por JavaScript → inmunes a XSS)
+- ✅ Access token expira en 1h; refresh token expira en 7d
+- ✅ Cookies configuradas con `sameSite: 'strict'` (protección CSRF) y `secure: true` en producción
 - ✅ Contraseñas hasheadas con bcrypt (nunca texto plano)
+- ✅ `cookie-parser` debe estar registrado en `app.ts` antes de cualquier ruta
+- ✅ CORS configurado con `credentials: true` y `origin` exacto (no wildcard)
+- ❌ No leer tokens del header `Authorization` en ningún middleware ni controlador
+- ❌ No devolver `accessToken` ni `refreshToken` en el body de ninguna respuesta
+
+### Cookie Config centralizada
+Usar siempre `getCookieOptions(maxAge)` de `src/api/utils/cookie-config.ts`:
+```typescript
+import { getCookieOptions, ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE } from '@/api/utils/cookie-config';
+
+res.cookie('accessToken', accessToken, getCookieOptions(ACCESS_TOKEN_MAX_AGE));
+res.cookie('refreshToken', refreshToken, getCookieOptions(REFRESH_TOKEN_MAX_AGE));
+```
 
 ### Autorización y Aislamiento de Datos
 - ✅ **SIEMPRE** filtrar por `user_id` en queries

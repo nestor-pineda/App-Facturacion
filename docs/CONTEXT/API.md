@@ -6,7 +6,7 @@ Copia el siguiente bloque de código para crear tu archivo:
 # API Reference — Sistema de Facturación MVP
 
 **Base URL:** `/api/v1`  
-**Auth:** Bearer Token en header `Authorization` (JWT)  
+**Auth:** httpOnly Cookie (`accessToken`) enviada automáticamente por el browser. No se usa `Authorization` header.  
 **Formato de Respuesta:** Siempre `{ success: boolean, data?: any, error?: { message, code, details } }`
 
 ---
@@ -19,9 +19,24 @@ Registra un nuevo autónomo en el sistema.
 - **Response 201:** `{ success: true, data: { user } }`
 
 ### POST `/auth/login`
-Inicia sesión y devuelve tokens de acceso.
+Inicia sesión. Los tokens se envían como httpOnly cookies, nunca en el body.
 - **Body:** `{ email, password }`
-- **Response 200:** `{ success: true, data: { accessToken, refreshToken } }`
+- **Response 200:** `{ success: true, data: { user } }`
+- **Set-Cookie:** `accessToken` (httpOnly, maxAge 1h) + `refreshToken` (httpOnly, maxAge 7d)
+
+### POST `/auth/refresh`
+Renueva el accessToken usando el refreshToken de la cookie.
+- **Body:** vacío
+- **Cookie requerida:** `refreshToken`
+- **Response 200:** `{ success: true, data: { message: "Token renovado correctamente" } }`
+- **Set-Cookie:** nuevo `accessToken` (httpOnly, maxAge 1h)
+- **Response 401:** Cookie ausente o token inválido/expirado.
+
+### POST `/auth/logout`
+Cierra la sesión eliminando ambas cookies del browser.
+- **Body:** vacío
+- **Response 200:** `{ success: true, data: { message: "Sesión cerrada correctamente" } }`
+- **Set-Cookie:** `accessToken` y `refreshToken` con `maxAge=0` (borradas)
 
 ---
 
@@ -162,7 +177,7 @@ Elimina una factura en estado `borrador`. Las líneas se eliminan en cascada.
 
 Genera y descarga el PDF de una factura en estado `enviada`.
 
-* **Auth:** Requiere Bearer Token
+* **Auth:** Requiere cookie `accessToken`
 * **Response 200:** Archivo binario (`application/pdf`). Header `Content-Disposition: attachment; filename="factura-YYYY-NNN.pdf"`
 * **Response 422:** `{ success: false, error: { message: "...", code: "INVOICE_DRAFT" } }` — la factura está en estado `borrador`. Envíala primero.
 * **Response 404:** `{ success: false, error: { message: "...", code: "NOT_FOUND" } }` — factura no encontrada o no pertenece al usuario.
@@ -172,7 +187,7 @@ Genera y descarga el PDF de una factura en estado `enviada`.
 
 Genera y descarga el PDF de un presupuesto. Disponible en ambos estados (`borrador` y `enviado`).
 
-* **Auth:** Requiere Bearer Token
+* **Auth:** Requiere cookie `accessToken`
 * **Response 200:** Archivo binario (`application/pdf`). Header `Content-Disposition: attachment; filename="presupuesto-YYYY-NNN.pdf"` (o `presupuesto-{id}.pdf` si el presupuesto es borrador sin número)
 * **Response 404:** `{ success: false, error: { message: "...", code: "NOT_FOUND" } }` — presupuesto no encontrado o no pertenece al usuario.
 * **Response 401:** Token JWT ausente, expirado o inválido.

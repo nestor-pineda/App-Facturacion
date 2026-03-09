@@ -4,8 +4,8 @@ import jwt from 'jsonwebtoken';
 import { authenticate } from '@/api/middlewares/auth.middleware';
 import { env } from '@/config/env';
 
-const makeReq = (headers: Record<string, string> = {}) =>
-  ({ headers } as unknown as Request);
+const makeReq = (cookies: Record<string, string> = {}) =>
+  ({ cookies } as unknown as Request);
 
 const makeRes = () => {
   const res = {
@@ -18,11 +18,11 @@ const makeRes = () => {
 const makeNext = () => vi.fn() as unknown as NextFunction;
 
 describe('authenticate middleware', () => {
-  it('should call next() and set req.user with a valid token', () => {
+  it('should call next() and set req.user with a valid accessToken cookie', () => {
     // Arrange
     const userId = 'abc-123';
     const token = jwt.sign({ userId }, env.JWT_SECRET, { expiresIn: '1h' });
-    const req = makeReq({ authorization: `Bearer ${token}` });
+    const req = makeReq({ accessToken: token });
     const res = makeRes();
     const next = makeNext();
 
@@ -35,7 +35,7 @@ describe('authenticate middleware', () => {
     expect(res.status).not.toHaveBeenCalled();
   });
 
-  it('should return 401 NO_TOKEN when Authorization header is missing', () => {
+  it('should return 401 NO_TOKEN when accessToken cookie is absent', () => {
     // Arrange
     const req = makeReq({});
     const res = makeRes();
@@ -55,29 +55,9 @@ describe('authenticate middleware', () => {
     );
   });
 
-  it('should return 401 NO_TOKEN when Authorization header has no Bearer prefix', () => {
-    // Arrange
-    const req = makeReq({ authorization: 'some-token-without-bearer' });
-    const res = makeRes();
-    const next = makeNext();
-
-    // Act
-    authenticate(req, res, next);
-
-    // Assert
-    expect(next).not.toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: expect.objectContaining({ code: 'NO_TOKEN' }),
-      }),
-    );
-  });
-
   it('should return 401 INVALID_TOKEN when token is malformed', () => {
     // Arrange
-    const req = makeReq({ authorization: 'Bearer this.is.not.a.valid.jwt' });
+    const req = makeReq({ accessToken: 'this.is.not.a.valid.jwt' });
     const res = makeRes();
     const next = makeNext();
 
@@ -102,7 +82,7 @@ describe('authenticate middleware', () => {
       { userId, exp: Math.floor(Date.now() / 1000) - 3600 },
       env.JWT_SECRET,
     );
-    const req = makeReq({ authorization: `Bearer ${expiredToken}` });
+    const req = makeReq({ accessToken: expiredToken });
     const res = makeRes();
     const next = makeNext();
 
@@ -126,7 +106,7 @@ describe('authenticate middleware', () => {
     const wrongSecretToken = jwt.sign({ userId }, 'wrong-secret-min-32-chars-padding-xx', {
       expiresIn: '1h',
     });
-    const req = makeReq({ authorization: `Bearer ${wrongSecretToken}` });
+    const req = makeReq({ accessToken: wrongSecretToken });
     const res = makeRes();
     const next = makeNext();
 

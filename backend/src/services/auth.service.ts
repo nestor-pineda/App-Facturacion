@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/config/database';
 import { env } from '@/config/env';
-import type { RegisterInput, LoginInput, RefreshInput } from '@/api/schemas/auth.schema';
+import type { RegisterInput, LoginInput } from '@/api/schemas/auth.schema';
 
 const SALT_ROUNDS = 12;
 
@@ -59,12 +59,14 @@ export const login = async (data: LoginInput) => {
     { expiresIn: env.JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions,
   );
 
-  return { accessToken, refreshToken };
+  const { password: _password, ...userWithoutPassword } = user;
+
+  return { user: userWithoutPassword, accessToken, refreshToken };
 };
 
-export const refresh = (data: RefreshInput) => {
+export const refresh = (refreshToken: string) => {
   try {
-    const decoded = jwt.verify(data.refreshToken, env.JWT_REFRESH_SECRET) as { userId: string };
+    const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { userId: string };
 
     const accessToken = jwt.sign(
       { userId: decoded.userId },

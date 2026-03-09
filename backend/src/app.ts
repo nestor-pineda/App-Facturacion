@@ -1,6 +1,7 @@
 import express, { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { env } from '@/config/env';
 import { generalLimiter, authLimiter } from '@/api/middlewares/rate-limit.middleware';
 import authRouter from '@/api/routes/auth.routes';
@@ -16,6 +17,7 @@ const app = express();
 
 app.use(helmet());
 app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cookieParser());
 app.use(express.json());
 
 app.get('/health', (_req, res) => {

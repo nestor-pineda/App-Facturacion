@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '@/app';
-import { createUserAndGetToken, createSecondUserAndGetToken } from '../helpers/auth.helper';
+import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
 const SERVICES_URL = '/api/v1/services';
 
@@ -20,11 +20,11 @@ describe('GET /api/v1/services', () => {
   });
 
   it('should return 200 with empty array when no services exist', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const response = await request(app)
       .get(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -33,17 +33,17 @@ describe('GET /api/v1/services', () => {
   });
 
   it('should only return services belonging to the authenticated user', async () => {
-    const token1 = await createUserAndGetToken();
-    const token2 = await createSecondUserAndGetToken();
+    const cookies1 = await createUserAndGetCookies();
+    const cookies2 = await createSecondUserAndGetCookies();
 
     await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token1}`)
+      .set('Cookie', cookies1)
       .send(validService);
 
     const response = await request(app)
       .get(SERVICES_URL)
-      .set('Authorization', `Bearer ${token2}`);
+      .set('Cookie', cookies2);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(0);
@@ -59,11 +59,11 @@ describe('POST /api/v1/services', () => {
   });
 
   it('should create a service and return 201 with default IVA 21%', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const response = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send(validService);
 
     expect(response.status).toBe(201);
@@ -75,11 +75,11 @@ describe('POST /api/v1/services', () => {
   });
 
   it('should create a service with custom IVA', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const response = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ ...validService, iva_porcentaje: 10 });
 
     expect(response.status).toBe(201);
@@ -87,11 +87,11 @@ describe('POST /api/v1/services', () => {
   });
 
   it('should return 400 when required fields are missing', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const response = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ nombre: 'Solo nombre' });
 
     expect(response.status).toBe(400);
@@ -99,11 +99,11 @@ describe('POST /api/v1/services', () => {
   });
 
   it('should return 400 when precio_base is not a positive number', async () => {
-    const token = await createUserAndGetToken();
+    const cookies = await createUserAndGetCookies();
 
     const response = await request(app)
       .post(SERVICES_URL)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', cookies)
       .send({ ...validService, precio_base: -10 });
 
     expect(response.status).toBe(400);

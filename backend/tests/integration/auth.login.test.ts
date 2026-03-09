@@ -15,23 +15,30 @@ const validUser = {
 
 describe('POST /api/v1/auth/login', () => {
   beforeEach(async () => {
-    // Arrange - crear el usuario antes de cada test de login
     await request(app).post(REGISTER_URL).send(validUser);
   });
 
-  it('should return 200 with accessToken and refreshToken on valid credentials', async () => {
+  it('should set httpOnly cookies and return user on valid credentials', async () => {
     // Act
     const response = await request(app)
       .post(LOGIN_URL)
       .send({ email: validUser.email, password: validUser.password });
 
-    // Assert
+    // Assert - status and body
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
-    expect(response.body.data).toHaveProperty('accessToken');
-    expect(response.body.data).toHaveProperty('refreshToken');
-    expect(typeof response.body.data.accessToken).toBe('string');
-    expect(typeof response.body.data.refreshToken).toBe('string');
+    expect(response.body.data).toHaveProperty('user');
+    expect(response.body.data.user).toHaveProperty('email', validUser.email);
+    expect(response.body.data).not.toHaveProperty('accessToken');
+    expect(response.body.data).not.toHaveProperty('refreshToken');
+
+    // Assert - cookies
+    const cookies: string[] = response.headers['set-cookie'];
+    expect(cookies).toBeDefined();
+    expect(cookies.some((c) => c.startsWith('accessToken='))).toBe(true);
+    expect(cookies.some((c) => c.startsWith('refreshToken='))).toBe(true);
+    expect(cookies.every((c) => c.includes('HttpOnly'))).toBe(true);
+    expect(cookies.every((c) => c.includes('SameSite=Strict'))).toBe(true);
   });
 
   it('should return 401 with wrong password', async () => {
@@ -44,6 +51,7 @@ describe('POST /api/v1/auth/login', () => {
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('INVALID_CREDENTIALS');
+    expect(response.headers['set-cookie']).toBeUndefined();
   });
 
   it('should return 401 with non-existent email', async () => {
