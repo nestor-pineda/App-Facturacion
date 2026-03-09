@@ -84,7 +84,7 @@ const mapQuoteToTemplateData = (
  */
 export const generateInvoicePDF = async (req: Request, res: Response) => {
   const userId = req.user!.id;
-  const invoiceId = req.params.id;
+  const invoiceId = req.params.id as string;
 
   try {
     const invoice = await invoiceService.getById(userId, invoiceId);
@@ -132,7 +132,7 @@ export const generateInvoicePDF = async (req: Request, res: Response) => {
  */
 export const generateQuotePDF = async (req: Request, res: Response) => {
   const userId = req.user!.id;
-  const quoteId = req.params.id;
+  const quoteId = req.params.id as string;
 
   try {
     const quote = await quoteService.getById(userId, quoteId);

@@ -60,7 +60,7 @@ export const update = async (req: Request, res: Response) => {
   }
 
   try {
-    const client = await clientService.update(req.user!.id, req.params.id, parsed.data);
+    const client = await clientService.update(req.user!.id, req.params.id as string, parsed.data);
     return res.status(200).json({ success: true, data: client });
   } catch (error) {
     if (error instanceof Error && error.message === clientService.CLIENT_NOT_FOUND) {

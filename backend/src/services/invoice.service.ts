@@ -189,9 +189,9 @@ export const send = async (userId: string, id: string) => {
         numero: sent.numero,
         fecha_emision: sent.fecha_emision,
         notas: sent.notas,
-        subtotal: sent.subtotal,
-        total_iva: sent.total_iva,
-        total: sent.total,
+        subtotal: Number(sent.subtotal),
+        total_iva: Number(sent.total_iva),
+        total: Number(sent.total),
         lines: sent.lines.map((l) => ({
           descripcion: l.descripcion,
           cantidad: Number(l.cantidad),
