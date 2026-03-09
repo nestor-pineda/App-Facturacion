@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { createClientSchema, updateClientSchema } from '../schemas/client.schema';
-import * as clientService from '../../services/client.service';
+import { createClientSchema, updateClientSchema } from '@/api/schemas/client.schema';
+import * as clientService from '@/services/client.service';
 
 const ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',

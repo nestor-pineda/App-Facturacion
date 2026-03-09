@@ -1,5 +1,5 @@
-import { prisma } from '../config/database';
-import type { CreateClientInput, UpdateClientInput } from '../api/schemas/client.schema';
+import { prisma } from '@/config/database';
+import type { CreateClientInput, UpdateClientInput } from '@/api/schemas/client.schema';
 
 export const CLIENT_NOT_FOUND = 'CLIENT_NOT_FOUND';
 

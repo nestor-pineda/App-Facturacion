@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { authenticate } from '../middlewares/auth.middleware';
-import * as quoteController from '../controllers/quote.controller';
-import * as pdfController from '../controllers/pdf.controller';
+import { authenticate } from '@/api/middlewares/auth.middleware';
+import * as quoteController from '@/api/controllers/quote.controller';
+import * as pdfController from '@/api/controllers/pdf.controller';
 
 const router = Router();
 

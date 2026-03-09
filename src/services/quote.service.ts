@@ -1,6 +1,6 @@
-import { prisma } from '../config/database';
-import type { CreateQuoteInput, DocumentLineInput, UpdateQuoteInput } from '../api/schemas/document.schema';
-import { sendQuoteEmail } from './email.service';
+import { prisma } from '@/config/database';
+import type { CreateQuoteInput, DocumentLineInput, UpdateQuoteInput } from '@/api/schemas/document.schema';
+import { sendQuoteEmail } from '@/services/email.service';
 
 export const QUOTE_NOT_FOUND = 'QUOTE_NOT_FOUND';
 export const QUOTE_ALREADY_SENT = 'QUOTE_ALREADY_SENT';

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { renderQuoteTemplate } from '../../../../src/templates/pdf/quote.template';
-import type { QuoteTemplateData } from '../../../../src/types/pdf.types';
+import { renderQuoteTemplate } from '@/templates/pdf/quote.template';
+import type { QuoteTemplateData } from '@/types/pdf.types';
 
 const baseQuoteData: QuoteTemplateData = {
   tipo: 'presupuesto',

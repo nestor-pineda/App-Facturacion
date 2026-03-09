@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { authenticate } from '../../../src/api/middlewares/auth.middleware';
-import { env } from '../../../src/config/env';
+import { authenticate } from '@/api/middlewares/auth.middleware';
+import { env } from '@/config/env';
 
 const makeReq = (headers: Record<string, string> = {}) =>
   ({ headers } as unknown as Request);

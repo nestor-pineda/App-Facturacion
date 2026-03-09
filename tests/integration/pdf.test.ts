@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
-import app from '../../src/app';
+import app from '@/app';
 import { createUserAndGetToken, createSecondUserAndGetToken } from '../helpers/auth.helper';
 
-vi.mock('../../src/services/email.service', () => ({
+vi.mock('@/services/email.service', () => ({
   sendInvoiceEmail: vi.fn().mockResolvedValue(undefined),
   sendQuoteEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('../../src/services/pdf.service', () => ({
+vi.mock('@/services/pdf.service', () => ({
   generatePDF: vi.fn().mockResolvedValue(Buffer.from('%PDF-1.4 fake-pdf-content')),
 }));
 

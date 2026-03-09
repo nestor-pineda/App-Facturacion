@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../../../src/config/env', () => ({
+vi.mock('@/config/env', () => ({
   env: {
     SMTP_HOST: 'smtp.mailtrap.io',
     SMTP_PORT: 2525,
@@ -18,7 +18,7 @@ vi.mock('nodemailer', () => ({
 }));
 
 import nodemailer from 'nodemailer';
-import * as emailService from '../../../src/services/email.service';
+import * as emailService from '@/services/email.service';
 
 const baseQuoteData: emailService.QuoteEmailData = {
   client: { nombre: 'Empresa Test SL', email: 'cliente@empresa.com' },

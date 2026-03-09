@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import * as invoiceService from '../../services/invoice.service';
-import * as quoteService from '../../services/quote.service';
-import * as pdfService from '../../services/pdf.service';
-import { renderInvoiceTemplate } from '../../templates/pdf/invoice.template';
-import { renderQuoteTemplate } from '../../templates/pdf/quote.template';
-import type { InvoiceTemplateData, QuoteTemplateData } from '../../types/pdf.types';
+import * as invoiceService from '@/services/invoice.service';
+import * as quoteService from '@/services/quote.service';
+import * as pdfService from '@/services/pdf.service';
+import { renderInvoiceTemplate } from '@/templates/pdf/invoice.template';
+import { renderQuoteTemplate } from '@/templates/pdf/quote.template';
+import type { InvoiceTemplateData, QuoteTemplateData } from '@/types/pdf.types';
 
 const PDF_ERROR_CODES = {
   NOT_FOUND: 'NOT_FOUND',

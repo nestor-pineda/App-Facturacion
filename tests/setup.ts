@@ -1,5 +1,5 @@
 import { afterAll, beforeEach } from 'vitest';
-import { prisma } from '../src/config/database';
+import { prisma } from '@/config/database';
 
 afterAll(async () => {
   await prisma.$disconnect();

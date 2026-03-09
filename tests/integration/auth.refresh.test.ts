@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-import app from '../../src/app';
-import { env } from '../../src/config/env';
+import app from '@/app';
+import { env } from '@/config/env';
 
 const REGISTER_URL = '/api/v1/auth/register';
 const LOGIN_URL = '/api/v1/auth/login';

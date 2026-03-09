@@ -1,7 +1,7 @@
-import { prisma } from '../config/database';
-import type { CreateInvoiceInput, DocumentLineInput, UpdateInvoiceInput } from '../api/schemas/document.schema';
-import { generateInvoiceNumber } from './numbering.service';
-import { sendInvoiceEmail } from './email.service';
+import { prisma } from '@/config/database';
+import type { CreateInvoiceInput, DocumentLineInput, UpdateInvoiceInput } from '@/api/schemas/document.schema';
+import { generateInvoiceNumber } from '@/services/numbering.service';
+import { sendInvoiceEmail } from '@/services/email.service';
 
 export const INVOICE_NOT_FOUND = 'INVOICE_NOT_FOUND';
 export const ALREADY_SENT = 'ALREADY_SENT';

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import app from '../../src/app';
+import app from '@/app';
 import { createUserAndGetToken, createSecondUserAndGetToken } from '../helpers/auth.helper';
 
 const CLIENTS_URL = '/api/v1/clients';

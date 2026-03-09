@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../../../src/config/database', () => ({
+vi.mock('@/config/database', () => ({
   prisma: {
     quote: {
       findMany: vi.fn().mockResolvedValue([]),
@@ -8,8 +8,8 @@ vi.mock('../../../src/config/database', () => ({
   },
 }));
 
-import * as quoteService from '../../../src/services/quote.service';
-import { prisma } from '../../../src/config/database';
+import * as quoteService from '@/services/quote.service';
+import { prisma } from '@/config/database';
 
 describe('quoteService.list — date boundary handling', () => {
   beforeEach(() => {

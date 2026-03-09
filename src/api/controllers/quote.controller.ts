@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { createQuoteSchema, updateQuoteSchema, convertQuoteSchema } from '../schemas/document.schema';
-import * as quoteService from '../../services/quote.service';
+import { createQuoteSchema, updateQuoteSchema, convertQuoteSchema } from '@/api/schemas/document.schema';
+import * as quoteService from '@/services/quote.service';
 
 const ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',

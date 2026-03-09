@@ -1,13 +1,13 @@
 import express, { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import { env } from './config/env';
-import { generalLimiter, authLimiter } from './api/middlewares/rate-limit.middleware';
-import authRouter from './api/routes/auth.routes';
-import clientRouter from './api/routes/client.routes';
-import serviceRouter from './api/routes/service.routes';
-import quoteRouter from './api/routes/quote.routes';
-import invoiceRouter from './api/routes/invoice.routes';
+import { env } from '@/config/env';
+import { generalLimiter, authLimiter } from '@/api/middlewares/rate-limit.middleware';
+import authRouter from '@/api/routes/auth.routes';
+import clientRouter from '@/api/routes/client.routes';
+import serviceRouter from '@/api/routes/service.routes';
+import quoteRouter from '@/api/routes/quote.routes';
+import invoiceRouter from '@/api/routes/invoice.routes';
 
 const isDev = env.NODE_ENV === 'development';
 const allowedOrigins = env.ALLOWED_ORIGINS.split(',').map(o => o.trim());

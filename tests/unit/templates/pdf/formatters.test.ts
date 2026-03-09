@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatCurrency, formatDate, escapeHtml } from '../../../../src/templates/pdf/utils/formatters';
+import { formatCurrency, formatDate, escapeHtml } from '@/templates/pdf/utils/formatters';
 
 describe('formatCurrency', () => {
   it('should format integer amount with € symbol in Spanish locale', () => {

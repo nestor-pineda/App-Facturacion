@@ -1,5 +1,5 @@
-import { prisma } from '../config/database';
-import type { CreateServiceInput } from '../api/schemas/service.schema';
+import { prisma } from '@/config/database';
+import type { CreateServiceInput } from '@/api/schemas/service.schema';
 
 export const list = async (userId: string) => {
   return prisma.service.findMany({

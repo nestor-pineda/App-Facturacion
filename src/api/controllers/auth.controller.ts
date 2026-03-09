@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { registerSchema, loginSchema, refreshSchema } from '../schemas/auth.schema';
-import * as authService from '../../services/auth.service';
+import { registerSchema, loginSchema, refreshSchema } from '@/api/schemas/auth.schema';
+import * as authService from '@/services/auth.service';
 
 const ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',

@@ -1,4 +1,4 @@
-import { prisma } from '../config/database';
+import { prisma } from '@/config/database';
 
 export const generateInvoiceNumber = async (userId: string): Promise<string> => {
   const year = new Date().getFullYear();

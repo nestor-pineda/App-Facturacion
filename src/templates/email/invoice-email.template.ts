@@ -5,7 +5,7 @@ import {
   formatDate,
   escapeHtml,
   type EmailLine,
-} from './shared';
+} from '@/templates/email/shared';
 
 export interface InvoiceTemplateData {
   client: { nombre: string; email: string };

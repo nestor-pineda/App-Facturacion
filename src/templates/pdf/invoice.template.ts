@@ -1,6 +1,6 @@
-import type { InvoiceTemplateData } from '../../types/pdf.types';
-import { documentStyles } from './styles/document.styles';
-import { formatCurrency, formatDate, escapeHtml } from './utils/formatters';
+import type { InvoiceTemplateData } from '@/types/pdf.types';
+import { documentStyles } from '@/templates/pdf/styles/document.styles';
+import { formatCurrency, formatDate, escapeHtml } from '@/templates/pdf/utils/formatters';
 
 /**
  * Renders a complete HTML document for an invoice PDF.

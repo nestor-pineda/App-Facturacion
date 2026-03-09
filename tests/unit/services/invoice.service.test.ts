@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../../../src/config/database', () => ({
+vi.mock('@/config/database', () => ({
   prisma: {
     invoice: {
       findMany: vi.fn().mockResolvedValue([]),
@@ -8,8 +8,8 @@ vi.mock('../../../src/config/database', () => ({
   },
 }));
 
-import * as invoiceService from '../../../src/services/invoice.service';
-import { prisma } from '../../../src/config/database';
+import * as invoiceService from '@/services/invoice.service';
+import { prisma } from '@/config/database';
 
 describe('invoiceService.list — date boundary handling', () => {
   beforeEach(() => {

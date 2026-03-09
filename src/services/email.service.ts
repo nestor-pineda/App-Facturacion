@@ -1,8 +1,8 @@
 import nodemailer from 'nodemailer';
-import { env } from '../config/env';
-import { renderQuoteEmailHtml, type QuoteTemplateData } from '../templates/email/quote-email.template';
-import { renderInvoiceEmailHtml, type InvoiceTemplateData } from '../templates/email/invoice-email.template';
-import type { EmailLine } from '../templates/email/shared';
+import { env } from '@/config/env';
+import { renderQuoteEmailHtml, type QuoteTemplateData } from '@/templates/email/quote-email.template';
+import { renderInvoiceEmailHtml, type InvoiceTemplateData } from '@/templates/email/invoice-email.template';
+import type { EmailLine } from '@/templates/email/shared';
 
 export type { EmailLine };
 

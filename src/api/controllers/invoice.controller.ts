@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { createInvoiceSchema, updateInvoiceSchema } from '../schemas/document.schema';
-import * as invoiceService from '../../services/invoice.service';
+import { createInvoiceSchema, updateInvoiceSchema } from '@/api/schemas/document.schema';
+import * as invoiceService from '@/services/invoice.service';
 
 const ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',

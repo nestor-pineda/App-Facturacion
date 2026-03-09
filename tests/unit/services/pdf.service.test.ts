@@ -22,7 +22,7 @@ vi.mock('puppeteer', () => ({
   default: { launch: mockLaunchFn },
 }));
 
-import { generatePDF } from '../../../src/services/pdf.service';
+import { generatePDF } from '@/services/pdf.service';
 
 const SIMPLE_HTML = '<html><body><p>Test</p></body></html>';
 

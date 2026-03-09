@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { renderInvoiceTemplate } from '../../../../src/templates/pdf/invoice.template';
-import type { InvoiceTemplateData } from '../../../../src/types/pdf.types';
+import { renderInvoiceTemplate } from '@/templates/pdf/invoice.template';
+import type { InvoiceTemplateData } from '@/types/pdf.types';
 
 const baseInvoiceData: InvoiceTemplateData = {
   tipo: 'factura',
