@@ -11,12 +11,7 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { formatCurrency } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADA, ESTADO_ENVIADO } from "@/lib/constants";
 import type { EstadoDocument } from "@/types/enums";
-
-const actions = [
-  { label: "Nuevo presupuesto", icon: FileText, path: "/quotes/new", description: "Crear propuesta de precio" },
-  { label: "Nueva factura", icon: Receipt, path: "/invoices/new", description: "Generar una factura" },
-  { label: "Nuevo cliente", icon: Users, path: "/clients", description: "Registrar un nuevo cliente" },
-];
+import { useTranslation } from "react-i18next";
 
 type FilterType = "all" | "quote" | "invoice";
 
@@ -31,6 +26,7 @@ interface RecentItem {
 }
 
 const Index = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
@@ -52,7 +48,7 @@ const Index = () => {
     ...(invoices ?? []).map((inv) => ({
       id: inv.id,
       type: 'invoice' as const,
-      number: inv.numero ?? '(borrador)',
+      number: inv.numero ?? t('common.draft'),
       clientName: inv.client.nombre,
       total: inv.total,
       status: inv.estado as EstadoDocument,
@@ -61,7 +57,7 @@ const Index = () => {
     ...(quotes ?? []).map((q) => ({
       id: q.id,
       type: 'quote' as const,
-      number: q.numero ?? '(borrador)',
+      number: q.numero ?? t('common.draft'),
       clientName: q.client.nombre,
       total: q.total,
       status: q.estado as EstadoDocument,
@@ -79,29 +75,43 @@ const Index = () => {
     return matchesType && matchesSearch;
   });
 
+  const actions = [
+    { label: t('dashboard.actions.newQuote'), icon: FileText, path: "/quotes/new", description: t('dashboard.actions.newQuoteDesc') },
+    { label: t('dashboard.actions.newInvoice'), icon: Receipt, path: "/invoices/new", description: t('dashboard.actions.newInvoiceDesc') },
+    { label: t('dashboard.actions.newClient'), icon: Users, path: "/clients", description: t('dashboard.actions.newClientDesc') },
+  ];
+
+  const filterOptions = [
+    { value: "all" as FilterType, label: t('dashboard.filterAll') },
+    { value: "quote" as FilterType, label: t('dashboard.filterQuotes') },
+    { value: "invoice" as FilterType, label: t('dashboard.filterInvoices') },
+  ];
+
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Resumen y acciones rápidas</p>
+        <h1 className="page-title">{t('dashboard.title')}</h1>
+        <p className="page-subtitle">{t('dashboard.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div className="stat-card">
-          <p className="text-sm text-muted-foreground">Facturas</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.invoices')}</p>
           <p className="text-2xl font-bold">{totalInvoices}</p>
-          <p className="text-xs text-muted-foreground">{invoicesDraft} borrador · {invoicesSent} enviadas</p>
+          <p className="text-xs text-muted-foreground">
+            {t('dashboard.draftCount', { count: invoicesDraft })} · {t('dashboard.sentCount', { count: invoicesSent })}
+          </p>
         </div>
         <div className="stat-card">
-          <p className="text-sm text-muted-foreground">Presupuestos</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.quotes')}</p>
           <p className="text-2xl font-bold">{totalQuotes}</p>
         </div>
         <div className="stat-card">
-          <p className="text-sm text-muted-foreground">Clientes</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.clients')}</p>
           <p className="text-2xl font-bold">{totalClients}</p>
         </div>
         <div className="stat-card">
-          <p className="text-sm text-muted-foreground">Facturado</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.revenue')}</p>
           <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
         </div>
       </div>
@@ -124,25 +134,21 @@ const Index = () => {
 
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Actividad reciente</h2>
+          <h2 className="text-xl font-bold">{t('dashboard.recentActivity')}</h2>
         </div>
 
         <div className="filter-bar">
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por número o cliente..."
+              placeholder={t('dashboard.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
             />
           </div>
           <div className="flex gap-1 bg-muted rounded-lg p-1">
-            {([
-              { value: "all" as FilterType, label: "Todos" },
-              { value: "quote" as FilterType, label: "Presupuestos" },
-              { value: "invoice" as FilterType, label: "Facturas" },
-            ]).map((f) => (
+            {filterOptions.map((f) => (
               <button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
@@ -162,12 +168,12 @@ const Index = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Número</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Cliente</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Tipo</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Estado</th>
-                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Total</th>
-                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Fecha</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.number')}</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.client')}</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.type')}</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.status')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.total')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.date')}</th>
               </tr>
             </thead>
             <tbody>
@@ -179,7 +185,9 @@ const Index = () => {
                 >
                   <td className="px-5 py-4 font-mono text-sm font-medium">{item.number}</td>
                   <td className="px-5 py-4 text-sm">{item.clientName}</td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">{item.type === 'invoice' ? 'Factura' : 'Presupuesto'}</td>
+                  <td className="px-5 py-4 text-sm text-muted-foreground">
+                    {item.type === 'invoice' ? t('dashboard.typeLabel.invoice') : t('dashboard.typeLabel.quote')}
+                  </td>
                   <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
                   <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(item.total)}</td>
                   <td className="px-5 py-4 text-sm text-right text-muted-foreground">{item.date}</td>
@@ -188,7 +196,7 @@ const Index = () => {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">
-                    No hay actividad reciente
+                    {t('dashboard.noActivity')}
                   </td>
                 </tr>
               )}

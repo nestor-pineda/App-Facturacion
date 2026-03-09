@@ -1,18 +1,21 @@
 import { z } from 'zod';
+import i18next from 'i18next';
 
-export const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Mínimo 6 caracteres'),
-});
+export const createLoginSchema = () =>
+  z.object({
+    email: z.string().email(i18next.t('validation.emailInvalid')),
+    password: z.string().min(6, i18next.t('validation.minPassword')),
+  });
 
-export const registerSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Mínimo 6 caracteres'),
-  nombreComercial: z.string().min(1, 'Nombre comercial obligatorio'),
-  nif: z.string().min(1, 'NIF obligatorio'),
-  direccionFiscal: z.string().min(1, 'Dirección fiscal obligatoria'),
-  telefono: z.string().optional(),
-});
+export const createRegisterSchema = () =>
+  z.object({
+    email: z.string().email(i18next.t('validation.emailInvalid')),
+    password: z.string().min(6, i18next.t('validation.minPassword')),
+    nombreComercial: z.string().min(1, i18next.t('validation.businessNameRequired')),
+    nif: z.string().min(1, i18next.t('validation.nifRequired')),
+    direccionFiscal: z.string().min(1, i18next.t('validation.fiscalAddressRequired')),
+    telefono: z.string().optional(),
+  });
 
-export type LoginInput = z.infer<typeof loginSchema>;
-export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<ReturnType<typeof createLoginSchema>>;
+export type RegisterInput = z.infer<ReturnType<typeof createRegisterSchema>>;

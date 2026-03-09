@@ -9,8 +9,10 @@ import { ClientForm } from "@/components/forms/ClientForm";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import type { Client } from "@/types/entities";
 import type { ClientInput } from "@/schemas/client.schema";
+import { useTranslation } from "react-i18next";
 
 const Clients = () => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -49,25 +51,30 @@ const Clients = () => {
     <div className="page-container">
       <div className="flex items-center justify-between page-header">
         <div>
-          <h1 className="page-title">Clientes</h1>
-          <p className="page-subtitle">{clients?.length ?? 0} clientes registrados</p>
+          <h1 className="page-title">{t('clients.title')}</h1>
+          <p className="page-subtitle">{t('clients.subtitle', { count: clients?.length ?? 0 })}</p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo cliente
+          {t('clients.newButton')}
         </Button>
       </div>
 
       <div className="filter-bar">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar clientes..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input
+            placeholder={t('clients.searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
         </div>
       </div>
 
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          {search ? 'No se encontraron clientes' : 'Aún no tienes clientes. Crea el primero.'}
+          {search ? t('clients.notFound') : t('clients.empty')}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -101,7 +108,7 @@ const Clients = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleEdit(client)}>Editar</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleEdit(client)}>{t('clients.edit')}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -112,7 +119,7 @@ const Clients = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nuevo cliente</DialogTitle>
+            <DialogTitle>{t('clients.dialogNew')}</DialogTitle>
           </DialogHeader>
           <ClientForm onSubmit={handleCreate} isLoading={createMutation.isPending} />
         </DialogContent>
@@ -121,7 +128,7 @@ const Clients = () => {
       <Dialog open={!!editingClient} onOpenChange={(open) => !open && setEditingClient(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar cliente</DialogTitle>
+            <DialogTitle>{t('clients.dialogEdit')}</DialogTitle>
           </DialogHeader>
           {editingClient && (
             <ClientForm

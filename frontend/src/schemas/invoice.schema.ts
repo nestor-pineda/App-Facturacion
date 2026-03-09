@@ -1,20 +1,23 @@
 import { z } from 'zod';
+import i18next from 'i18next';
 import { IVA_DEFAULT } from '@/lib/constants';
 
-export const invoiceLineSchema = z.object({
-  serviceId: z.string().uuid().nullable().default(null),
-  descripcion: z.string().min(1, 'Descripción obligatoria'),
-  cantidad: z.coerce.number().min(0.01, 'Cantidad debe ser mayor a 0'),
-  precioUnitario: z.coerce.number().min(0, 'El precio no puede ser negativo'),
-  ivaPorcentaje: z.coerce.number().default(IVA_DEFAULT),
-});
+export const createInvoiceLineSchema = () =>
+  z.object({
+    serviceId: z.string().uuid().nullable().default(null),
+    descripcion: z.string().min(1, i18next.t('validation.descriptionRequired')),
+    cantidad: z.coerce.number().min(0.01, i18next.t('validation.quantityMin')),
+    precioUnitario: z.coerce.number().min(0, i18next.t('validation.negativePriceNotAllowed')),
+    ivaPorcentaje: z.coerce.number().default(IVA_DEFAULT),
+  });
 
-export const createInvoiceSchema = z.object({
-  clientId: z.string().uuid('Cliente inválido'),
-  fechaEmision: z.string().min(1, 'Fecha obligatoria'),
-  notas: z.string().optional(),
-  lines: z.array(invoiceLineSchema).min(1, 'Debe agregar al menos una línea'),
-});
+export const createInvoiceSchema = () =>
+  z.object({
+    clientId: z.string().uuid(i18next.t('validation.clientInvalid')),
+    fechaEmision: z.string().min(1, i18next.t('validation.dateRequired')),
+    notas: z.string().optional(),
+    lines: z.array(createInvoiceLineSchema()).min(1, i18next.t('validation.minOneLine')),
+  });
 
-export type InvoiceLineInput = z.infer<typeof invoiceLineSchema>;
-export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
+export type InvoiceLineInput = z.infer<ReturnType<typeof createInvoiceLineSchema>>;
+export type CreateInvoiceInput = z.infer<ReturnType<typeof createInvoiceSchema>>;

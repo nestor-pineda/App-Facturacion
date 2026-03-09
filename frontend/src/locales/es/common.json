@@ -1,0 +1,322 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "clients": "Clientes",
+    "services": "Servicios",
+    "quotes": "Presupuestos",
+    "invoices": "Facturas",
+    "settings": "Ajustes",
+    "logout": "Cerrar sesión",
+    "menu": "Menú"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Accede a tu cuenta de facturación",
+      "password": "Contraseña",
+      "submit": "Iniciar sesión",
+      "submitting": "Iniciando sesión...",
+      "noAccount": "¿No tienes cuenta?",
+      "register": "Regístrate",
+      "error": "Error al iniciar sesión"
+    },
+    "register": {
+      "title": "Crear cuenta",
+      "subtitle": "Regístrate para empezar a facturar",
+      "businessName": "Nombre comercial",
+      "nif": "NIF",
+      "fiscalAddress": "Dirección fiscal",
+      "phone": "Teléfono (opcional)",
+      "submit": "Crear cuenta",
+      "submitting": "Creando cuenta...",
+      "success": "Cuenta creada correctamente. Inicia sesión.",
+      "error": "Error al registrar",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "loginLink": "Iniciar sesión"
+    }
+  },
+  "common": {
+    "back": "Volver",
+    "delete": "Eliminar",
+    "send": "Enviar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "saving": "Guardando...",
+    "download": "Descargar PDF",
+    "downloading": "Descargando...",
+    "noNumber": "(sin número)",
+    "draft": "(borrador)"
+  },
+  "status": {
+    "draft": "Borrador",
+    "sent_f": "Enviada",
+    "sent_m": "Enviado"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Resumen y acciones rápidas",
+    "invoices": "Facturas",
+    "quotes": "Presupuestos",
+    "clients": "Clientes",
+    "revenue": "Facturado",
+    "recentActivity": "Actividad reciente",
+    "noActivity": "No hay actividad reciente",
+    "searchPlaceholder": "Buscar por número o cliente...",
+    "filterAll": "Todos",
+    "filterQuotes": "Presupuestos",
+    "filterInvoices": "Facturas",
+    "draftCount": "{{count}} borrador",
+    "sentCount": "{{count}} enviadas",
+    "table": {
+      "number": "Número",
+      "client": "Cliente",
+      "type": "Tipo",
+      "status": "Estado",
+      "total": "Total",
+      "date": "Fecha"
+    },
+    "actions": {
+      "newQuote": "Nuevo presupuesto",
+      "newQuoteDesc": "Crear propuesta de precio",
+      "newInvoice": "Nueva factura",
+      "newInvoiceDesc": "Generar una factura",
+      "newClient": "Nuevo cliente",
+      "newClientDesc": "Registrar un nuevo cliente"
+    },
+    "typeLabel": {
+      "invoice": "Factura",
+      "quote": "Presupuesto"
+    }
+  },
+  "clients": {
+    "title": "Clientes",
+    "subtitle": "{{count}} clientes registrados",
+    "newButton": "Nuevo cliente",
+    "searchPlaceholder": "Buscar clientes...",
+    "empty": "Aún no tienes clientes. Crea el primero.",
+    "notFound": "No se encontraron clientes",
+    "edit": "Editar",
+    "dialogNew": "Nuevo cliente",
+    "dialogEdit": "Editar cliente"
+  },
+  "services": {
+    "title": "Servicios",
+    "subtitle": "{{count}} servicios disponibles",
+    "newButton": "Nuevo servicio",
+    "searchPlaceholder": "Buscar servicios...",
+    "empty": "Aún no tienes servicios. Crea el primero.",
+    "notFound": "No se encontraron servicios",
+    "dialogNew": "Nuevo servicio",
+    "table": {
+      "service": "Servicio",
+      "description": "Descripción",
+      "basePrice": "Precio base",
+      "vat": "IVA"
+    }
+  },
+  "quotes": {
+    "title": "Presupuestos",
+    "subtitle": "{{count}} presupuestos",
+    "newButton": "Nuevo presupuesto",
+    "searchPlaceholder": "Buscar presupuestos...",
+    "notFound": "No se encontraron presupuestos",
+    "filterAll": "Todos",
+    "filterDraft": "Borrador",
+    "filterSent": "Enviado",
+    "table": {
+      "number": "Número",
+      "client": "Cliente",
+      "status": "Estado",
+      "lines": "Líneas",
+      "total": "Total",
+      "date": "Fecha"
+    },
+    "create": {
+      "title": "Nuevo presupuesto",
+      "subtitle": "Crea un presupuesto para un cliente"
+    },
+    "detail": {
+      "title": "Presupuesto {{number}}",
+      "notFound": "Presupuesto no encontrado",
+      "backLink": "Volver a presupuestos",
+      "date": "Fecha:",
+      "client": "Cliente:",
+      "notes": "Notas:",
+      "convertToInvoice": "Convertir a factura",
+      "table": {
+        "description": "Descripción",
+        "quantity": "Cantidad",
+        "price": "Precio",
+        "vat": "IVA",
+        "subtotal": "Subtotal"
+      },
+      "totals": {
+        "subtotal": "Subtotal:",
+        "vat": "IVA:",
+        "total": "Total:"
+      },
+      "confirmSend": {
+        "title": "Enviar presupuesto",
+        "description": "Una vez enviado, el presupuesto no podrá editarse. ¿Continuar?",
+        "confirm": "Enviar"
+      },
+      "confirmDelete": {
+        "title": "Eliminar presupuesto",
+        "description": "Esta acción no se puede deshacer. ¿Eliminar?",
+        "confirm": "Eliminar"
+      },
+      "confirmConvert": {
+        "title": "Convertir a factura",
+        "description": "Se creará una nueva factura en borrador con los datos de este presupuesto.",
+        "confirm": "Convertir"
+      }
+    }
+  },
+  "invoices": {
+    "title": "Facturas",
+    "subtitle": "{{count}} facturas",
+    "newButton": "Nueva factura",
+    "searchPlaceholder": "Buscar facturas...",
+    "notFound": "No se encontraron facturas",
+    "filterAll": "Todas",
+    "filterDraft": "Borrador",
+    "filterSent": "Enviada",
+    "table": {
+      "number": "Número",
+      "client": "Cliente",
+      "status": "Estado",
+      "total": "Total",
+      "date": "Fecha"
+    },
+    "create": {
+      "title": "Nueva factura",
+      "subtitle": "Crea una factura para un cliente"
+    },
+    "detail": {
+      "title": "Factura {{number}}",
+      "notFound": "Factura no encontrada",
+      "backLink": "Volver a facturas",
+      "issueDate": "Fecha de emisión:",
+      "client": "Cliente:",
+      "number": "Número:",
+      "notes": "Notas:",
+      "sendInvoice": "Enviar factura",
+      "table": {
+        "description": "Descripción",
+        "quantity": "Cantidad",
+        "price": "Precio",
+        "vat": "IVA",
+        "subtotal": "Subtotal"
+      },
+      "totals": {
+        "subtotal": "Subtotal:",
+        "vat": "IVA:",
+        "total": "Total:"
+      },
+      "confirmSend": {
+        "title": "Enviar factura",
+        "description": "Al enviar, se generará un número legal correlativo y la factura será inmutable. Esta acción no se puede deshacer.",
+        "confirm": "Enviar factura"
+      },
+      "confirmDelete": {
+        "title": "Eliminar factura",
+        "description": "Esta acción no se puede deshacer. ¿Eliminar la factura?",
+        "confirm": "Eliminar"
+      }
+    }
+  },
+  "forms": {
+    "name": "Nombre",
+    "email": "Email",
+    "cifNif": "CIF/NIF",
+    "address": "Dirección",
+    "phone": "Teléfono (opcional)",
+    "description": "Descripción (opcional)",
+    "basePrice": "Precio base (€)",
+    "client": "Cliente",
+    "date": "Fecha",
+    "issueDate": "Fecha de emisión",
+    "notes": "Notas (opcional)",
+    "lines": "Líneas",
+    "lineN": "Línea {{n}}",
+    "fromCatalog": "Desde catálogo...",
+    "lineDescription": "Descripción",
+    "quantity": "Cantidad",
+    "unitPrice": "Precio unitario (€)",
+    "addLine": "Añadir línea",
+    "selectClient": "Seleccionar cliente",
+    "saving": "Guardando...",
+    "createClient": "Crear cliente",
+    "updateClient": "Actualizar cliente",
+    "createService": "Crear servicio",
+    "createQuote": "Crear presupuesto",
+    "createInvoice": "Crear factura",
+    "notesPlaceholder": "Notas adicionales...",
+    "descriptionPlaceholder": "Descripción del servicio",
+    "clientPlaceholder": "Nombre del cliente"
+  },
+  "validation": {
+    "emailInvalid": "Email inválido",
+    "minPassword": "Mínimo 6 caracteres",
+    "businessNameRequired": "Nombre comercial obligatorio",
+    "nifRequired": "NIF obligatorio",
+    "fiscalAddressRequired": "Dirección fiscal obligatoria",
+    "nameRequired": "Nombre obligatorio",
+    "cifNifRequired": "CIF/NIF obligatorio",
+    "addressRequired": "Dirección obligatoria",
+    "negativePriceNotAllowed": "El precio no puede ser negativo",
+    "descriptionRequired": "Descripción obligatoria",
+    "quantityMin": "Cantidad debe ser mayor a 0",
+    "clientInvalid": "Cliente inválido",
+    "dateRequired": "Fecha obligatoria",
+    "minOneLine": "Debe agregar al menos una línea"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "subtitle": "Gestiona tu cuenta y preferencias",
+    "language": "Idioma",
+    "languageLabel": "Selecciona el idioma de la aplicación",
+    "langEs": "Español",
+    "langEn": "English",
+    "theme": "Apariencia",
+    "themeLabel": "Modo oscuro",
+    "themeDescription": "Activa el modo oscuro para una experiencia más cómoda en entornos con poca luz"
+  },
+  "toast": {
+    "loggedOut": "Sesión cerrada",
+    "clientCreated": "Cliente creado correctamente",
+    "clientCreateError": "Error al crear cliente",
+    "clientUpdated": "Cliente actualizado correctamente",
+    "clientUpdateError": "Error al actualizar cliente",
+    "serviceCreated": "Servicio creado correctamente",
+    "serviceCreateError": "Error al crear servicio",
+    "quoteCreated": "Presupuesto creado correctamente",
+    "quoteCreateError": "Error al crear presupuesto",
+    "quoteUpdated": "Presupuesto actualizado",
+    "quoteUpdateError": "Error al actualizar presupuesto",
+    "quoteDeleted": "Presupuesto eliminado",
+    "quoteDeleteError": "Error al eliminar presupuesto",
+    "quoteSent": "Presupuesto enviado correctamente",
+    "quoteSendError": "Error al enviar presupuesto",
+    "quoteConverted": "Presupuesto convertido a factura",
+    "quoteConvertError": "Error al convertir presupuesto",
+    "invoiceCreated": "Factura creada correctamente",
+    "invoiceCreateError": "Error al crear factura",
+    "invoiceUpdated": "Factura actualizada",
+    "invoiceUpdateError": "Error al actualizar factura",
+    "invoiceDeleted": "Factura eliminada",
+    "invoiceDeleteError": "Error al eliminar factura",
+    "invoiceSent": "Factura enviada y numerada correctamente",
+    "invoiceSendError": "Error al enviar factura",
+    "pdfDownloaded": "PDF descargado",
+    "pdfDownloadError": "Error al descargar PDF",
+    "accountCreated": "Cuenta creada correctamente. Inicia sesión.",
+    "loginError": "Error al iniciar sesión",
+    "registerError": "Error al registrar"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "message": "La página que buscas no existe.",
+    "backHome": "Volver al inicio"
+  }
+}

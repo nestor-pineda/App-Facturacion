@@ -3,6 +3,7 @@ import { getClients, createClient, updateClient } from '@/api/endpoints/clients'
 import { QUERY_KEYS } from '@/lib/constants';
 import { toast } from 'sonner';
 import type { ClientInput } from '@/schemas/client.schema';
+import i18next from 'i18next';
 
 export const useClients = () =>
   useQuery({
@@ -17,10 +18,10 @@ export const useCreateClient = () => {
     mutationFn: createClient,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CLIENTS] });
-      toast.success('Cliente creado correctamente');
+      toast.success(i18next.t('toast.clientCreated'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al crear cliente');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.clientCreateError'));
     },
   });
 };
@@ -31,10 +32,10 @@ export const useUpdateClient = () => {
     mutationFn: ({ id, data }: { id: string; data: ClientInput }) => updateClient(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CLIENTS] });
-      toast.success('Cliente actualizado correctamente');
+      toast.success(i18next.t('toast.clientUpdated'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al actualizar cliente');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.clientUpdateError'));
     },
   });
 };

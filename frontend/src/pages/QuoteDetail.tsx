@@ -8,8 +8,10 @@ import { formatCurrency } from '@/lib/calculations';
 import { ESTADO_BORRADOR } from '@/lib/constants';
 import { ArrowLeft, Send, Trash2, Download, ArrowRightLeft } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function QuoteDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: quotes, isLoading } = useQuotes();
@@ -28,8 +30,8 @@ export default function QuoteDetail() {
   if (!quote) {
     return (
       <div className="page-container text-center py-12">
-        <p className="text-muted-foreground">Presupuesto no encontrado</p>
-        <Button variant="link" onClick={() => navigate('/quotes')}>Volver a presupuestos</Button>
+        <p className="text-muted-foreground">{t('quotes.detail.notFound')}</p>
+        <Button variant="link" onClick={() => navigate('/quotes')}>{t('quotes.detail.backLink')}</Button>
       </div>
     );
   }
@@ -40,11 +42,13 @@ export default function QuoteDetail() {
     <div className="page-container max-w-3xl mx-auto">
       <div className="page-header">
         <Button variant="ghost" size="sm" onClick={() => navigate('/quotes')} className="mb-2">
-          <ArrowLeft className="h-4 w-4 mr-1" /> Volver
+          <ArrowLeft className="h-4 w-4 mr-1" /> {t('common.back')}
         </Button>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="page-title">Presupuesto {quote.numero ?? '(sin número)'}</h1>
+            <h1 className="page-title">
+              {t('quotes.detail.title', { number: quote.numero ?? t('common.noNumber') })}
+            </h1>
             <p className="page-subtitle">{quote.client.nombre}</p>
           </div>
           <StatusBadge status={quote.estado} />
@@ -54,18 +58,18 @@ export default function QuoteDetail() {
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-muted-foreground">Fecha:</span>
+            <span className="text-muted-foreground">{t('quotes.detail.date')}</span>
             <span className="ml-2">{quote.fecha}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">Cliente:</span>
+            <span className="text-muted-foreground">{t('quotes.detail.client')}</span>
             <span className="ml-2">{quote.client.nombre}</span>
           </div>
         </div>
 
         {quote.notas && (
           <div className="text-sm">
-            <span className="text-muted-foreground">Notas:</span>
+            <span className="text-muted-foreground">{t('quotes.detail.notes')}</span>
             <p className="mt-1">{quote.notas}</p>
           </div>
         )}
@@ -74,11 +78,11 @@ export default function QuoteDetail() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase px-5 py-3">Descripción</th>
-                <th className="text-right text-xs font-semibold text-muted-foreground uppercase px-5 py-3">Cantidad</th>
-                <th className="text-right text-xs font-semibold text-muted-foreground uppercase px-5 py-3">Precio</th>
-                <th className="text-right text-xs font-semibold text-muted-foreground uppercase px-5 py-3">IVA</th>
-                <th className="text-right text-xs font-semibold text-muted-foreground uppercase px-5 py-3">Subtotal</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase px-5 py-3">{t('quotes.detail.table.description')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase px-5 py-3">{t('quotes.detail.table.quantity')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase px-5 py-3">{t('quotes.detail.table.price')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase px-5 py-3">{t('quotes.detail.table.vat')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase px-5 py-3">{t('quotes.detail.table.subtotal')}</th>
               </tr>
             </thead>
             <tbody>
@@ -96,28 +100,29 @@ export default function QuoteDetail() {
         </div>
 
         <div className="border-t pt-4 space-y-1 text-right">
-          <p className="text-sm text-muted-foreground">Subtotal: {formatCurrency(quote.subtotal)}</p>
-          <p className="text-sm text-muted-foreground">IVA: {formatCurrency(quote.totalIva)}</p>
-          <p className="text-lg font-bold">Total: {formatCurrency(quote.total)}</p>
+          <p className="text-sm text-muted-foreground">{t('quotes.detail.totals.subtotal')} {formatCurrency(quote.subtotal)}</p>
+          <p className="text-sm text-muted-foreground">{t('quotes.detail.totals.vat')} {formatCurrency(quote.totalIva)}</p>
+          <p className="text-lg font-bold">{t('quotes.detail.totals.total')} {formatCurrency(quote.total)}</p>
         </div>
 
         <div className="flex flex-wrap gap-2 pt-4">
           <Button variant="outline" onClick={() => downloadMutation.mutate(quote.id)} disabled={downloadMutation.isPending}>
-            <Download className="h-4 w-4 mr-1" /> {downloadMutation.isPending ? 'Descargando...' : 'Descargar PDF'}
+            <Download className="h-4 w-4 mr-1" />
+            {downloadMutation.isPending ? t('common.downloading') : t('common.download')}
           </Button>
           {isDraft && (
             <>
               <Button onClick={() => setConfirmSend(true)} disabled={sendMutation.isPending}>
-                <Send className="h-4 w-4 mr-1" /> Enviar
+                <Send className="h-4 w-4 mr-1" /> {t('common.send')}
               </Button>
               <Button variant="destructive" onClick={() => setConfirmDelete(true)} disabled={deleteMutation.isPending}>
-                <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+                <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')}
               </Button>
             </>
           )}
           {!isDraft && (
             <Button variant="outline" onClick={() => setConfirmConvert(true)} disabled={convertMutation.isPending}>
-              <ArrowRightLeft className="h-4 w-4 mr-1" /> Convertir a factura
+              <ArrowRightLeft className="h-4 w-4 mr-1" /> {t('quotes.detail.convertToInvoice')}
             </Button>
           )}
         </div>
@@ -126,26 +131,26 @@ export default function QuoteDetail() {
       <ConfirmDialog
         open={confirmSend}
         onOpenChange={setConfirmSend}
-        title="Enviar presupuesto"
-        description="Una vez enviado, el presupuesto no podrá editarse. ¿Continuar?"
-        confirmLabel="Enviar"
+        title={t('quotes.detail.confirmSend.title')}
+        description={t('quotes.detail.confirmSend.description')}
+        confirmLabel={t('quotes.detail.confirmSend.confirm')}
         onConfirm={() => sendMutation.mutate(quote.id, { onSuccess: () => setConfirmSend(false) })}
       />
       <ConfirmDialog
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
-        title="Eliminar presupuesto"
-        description="Esta acción no se puede deshacer. ¿Eliminar?"
-        confirmLabel="Eliminar"
+        title={t('quotes.detail.confirmDelete.title')}
+        description={t('quotes.detail.confirmDelete.description')}
+        confirmLabel={t('quotes.detail.confirmDelete.confirm')}
         variant="destructive"
         onConfirm={() => deleteMutation.mutate(quote.id, { onSuccess: () => navigate('/quotes') })}
       />
       <ConfirmDialog
         open={confirmConvert}
         onOpenChange={setConfirmConvert}
-        title="Convertir a factura"
-        description="Se creará una nueva factura en borrador con los datos de este presupuesto."
-        confirmLabel="Convertir"
+        title={t('quotes.detail.confirmConvert.title')}
+        description={t('quotes.detail.confirmConvert.description')}
+        confirmLabel={t('quotes.detail.confirmConvert.confirm')}
         onConfirm={() =>
           convertMutation.mutate({ id: quote.id }, { onSuccess: () => navigate('/invoices') })
         }

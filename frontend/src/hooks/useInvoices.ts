@@ -10,6 +10,7 @@ import {
 import { QUERY_KEYS } from '@/lib/constants';
 import { toast } from 'sonner';
 import type { EstadoInvoice } from '@/types/enums';
+import i18next from 'i18next';
 
 interface InvoiceFilters {
   estado?: EstadoInvoice;
@@ -29,10 +30,10 @@ export const useCreateInvoice = () => {
     mutationFn: createInvoice,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
-      toast.success('Factura creada correctamente');
+      toast.success(i18next.t('toast.invoiceCreated'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al crear factura');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.invoiceCreateError'));
     },
   });
 };
@@ -44,10 +45,10 @@ export const useUpdateInvoice = () => {
       updateInvoice(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
-      toast.success('Factura actualizada');
+      toast.success(i18next.t('toast.invoiceUpdated'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al actualizar factura');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.invoiceUpdateError'));
     },
   });
 };
@@ -58,10 +59,10 @@ export const useDeleteInvoice = () => {
     mutationFn: deleteInvoice,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
-      toast.success('Factura eliminada');
+      toast.success(i18next.t('toast.invoiceDeleted'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al eliminar factura');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.invoiceDeleteError'));
     },
   });
 };
@@ -72,10 +73,10 @@ export const useSendInvoice = () => {
     mutationFn: sendInvoice,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
-      toast.success('Factura enviada y numerada correctamente');
+      toast.success(i18next.t('toast.invoiceSent'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al enviar factura');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.invoiceSendError'));
     },
   });
 };
@@ -92,9 +93,9 @@ export const useDownloadInvoicePDF = () =>
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success('PDF descargado');
+      toast.success(i18next.t('toast.pdfDownloaded'));
     },
     onError: () => {
-      toast.error('Error al descargar PDF');
+      toast.error(i18next.t('toast.pdfDownloadError'));
     },
   });

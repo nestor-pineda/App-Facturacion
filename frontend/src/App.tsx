@@ -19,6 +19,8 @@ import QuoteDetail from "./pages/QuoteDetail";
 import InvoiceCreate from "./pages/InvoiceCreate";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import NotFound from "./pages/NotFound";
+import { useThemeStore } from "@/store/themeStore";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,8 +32,24 @@ const queryClient = new QueryClient({
   },
 });
 
+function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const theme = useThemeStore((s) => s.theme);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
+
+  return <>{children}</>;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -61,6 +79,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

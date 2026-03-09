@@ -11,6 +11,7 @@ import { useServices } from '@/hooks/useServices';
 import { calculateTotals, formatCurrency } from '@/lib/calculations';
 import { IVA_DEFAULT } from '@/lib/constants';
 import { Plus, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface InvoiceFormProps {
   onSubmit: (data: CreateInvoiceInput) => void;
@@ -18,6 +19,7 @@ interface InvoiceFormProps {
 }
 
 export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
+  const { t } = useTranslation();
   const { data: clients } = useClients();
   const { data: services } = useServices();
 
@@ -29,7 +31,7 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
     watch,
     formState: { errors },
   } = useForm<CreateInvoiceInput>({
-    resolver: zodResolver(createInvoiceSchema),
+    resolver: zodResolver(createInvoiceSchema()),
     defaultValues: {
       fechaEmision: new Date().toISOString().split('T')[0],
       lines: [{ serviceId: null, descripcion: '', cantidad: 1, precioUnitario: 0, ivaPorcentaje: IVA_DEFAULT }],
@@ -61,10 +63,10 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Cliente</Label>
+          <Label>{t('forms.client')}</Label>
           <Select onValueChange={(v) => setValue('clientId', v)}>
             <SelectTrigger>
-              <SelectValue placeholder="Seleccionar cliente" />
+              <SelectValue placeholder={t('forms.selectClient')} />
             </SelectTrigger>
             <SelectContent>
               {(clients ?? []).map((c) => (
@@ -75,20 +77,20 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
           {errors.clientId && <p className="text-sm text-destructive">{errors.clientId.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="fechaEmision">Fecha de emisión</Label>
+          <Label htmlFor="fechaEmision">{t('forms.issueDate')}</Label>
           <Input id="fechaEmision" type="date" {...register('fechaEmision')} />
           {errors.fechaEmision && <p className="text-sm text-destructive">{errors.fechaEmision.message}</p>}
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="notas">Notas (opcional)</Label>
-        <Textarea id="notas" placeholder="Notas adicionales..." {...register('notas')} />
+        <Label htmlFor="notas">{t('forms.notes')}</Label>
+        <Textarea id="notas" placeholder={t('forms.notesPlaceholder')} {...register('notas')} />
       </div>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Label>Líneas</Label>
+          <Label>{t('forms.lines')}</Label>
           <Button
             type="button"
             variant="outline"
@@ -97,7 +99,7 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
               append({ serviceId: null, descripcion: '', cantidad: 1, precioUnitario: 0, ivaPorcentaje: IVA_DEFAULT })
             }
           >
-            <Plus className="h-4 w-4 mr-1" /> Añadir línea
+            <Plus className="h-4 w-4 mr-1" /> {t('forms.addLine')}
           </Button>
         </div>
         {errors.lines?.root && <p className="text-sm text-destructive">{errors.lines.root.message}</p>}
@@ -105,12 +107,12 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
         {fields.map((field, index) => (
           <div key={field.id} className="border rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Línea {index + 1}</span>
+              <span className="text-sm font-medium">{t('forms.lineN', { n: index + 1 })}</span>
               <div className="flex items-center gap-2">
                 {services && services.length > 0 && (
                   <Select onValueChange={(v) => handleServiceSelect(index, v)}>
                     <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Desde catálogo..." />
+                      <SelectValue placeholder={t('forms.fromCatalog')} />
                     </SelectTrigger>
                     <SelectContent>
                       {services.map((s) => (
@@ -128,18 +130,18 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div className="md:col-span-2 space-y-1">
-                <Label>Descripción</Label>
-                <Input {...register(`lines.${index}.descripcion`)} placeholder="Descripción" />
+                <Label>{t('forms.lineDescription')}</Label>
+                <Input {...register(`lines.${index}.descripcion`)} placeholder={t('forms.lineDescription')} />
                 {errors.lines?.[index]?.descripcion && (
                   <p className="text-xs text-destructive">{errors.lines[index].descripcion.message}</p>
                 )}
               </div>
               <div className="space-y-1">
-                <Label>Cantidad</Label>
+                <Label>{t('forms.quantity')}</Label>
                 <Input type="number" step="0.01" min="0.01" {...register(`lines.${index}.cantidad`)} />
               </div>
               <div className="space-y-1">
-                <Label>Precio unitario (€)</Label>
+                <Label>{t('forms.unitPrice')}</Label>
                 <Input type="number" step="0.01" min="0" {...register(`lines.${index}.precioUnitario`)} />
               </div>
             </div>
@@ -148,13 +150,13 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
       </div>
 
       <div className="border-t pt-4 space-y-1 text-right">
-        <p className="text-sm text-muted-foreground">Subtotal: {formatCurrency(totals.subtotal)}</p>
-        <p className="text-sm text-muted-foreground">IVA: {formatCurrency(totals.totalIva)}</p>
-        <p className="text-lg font-bold">Total: {formatCurrency(totals.total)}</p>
+        <p className="text-sm text-muted-foreground">{t('invoices.detail.totals.subtotal')} {formatCurrency(totals.subtotal)}</p>
+        <p className="text-sm text-muted-foreground">{t('invoices.detail.totals.vat')} {formatCurrency(totals.totalIva)}</p>
+        <p className="text-lg font-bold">{t('invoices.detail.totals.total')} {formatCurrency(totals.total)}</p>
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? 'Guardando...' : 'Crear factura'}
+        {isLoading ? t('forms.saving') : t('forms.createInvoice')}
       </Button>
     </form>
   );

@@ -49,13 +49,12 @@
 
 ```
 frontend/
-├── public/
-│   └── locales/              # Traducciones i18n (pendiente — ver siguientes-pasos.md)
-│       ├── es/
-│       │   └── common.json
-│       └── en/
-│           └── common.json
 ├── src/
+│   ├── locales/              # Traducciones i18n (importadas estáticamente por Vite)
+│   │   ├── es/
+│   │   │   └── common.json
+│   │   └── en/
+│   │       └── common.json
 │   ├── api/                  # Cliente HTTP y endpoints
 │   │   ├── client.ts         # Axios instance + interceptor de refresh token
 │   │   └── endpoints/
@@ -109,13 +108,16 @@ frontend/
 │   │   ├── invoice.schema.ts
 │   │   └── quote.schema.ts
 │   ├── store/
-│   │   └── authStore.ts      # Zustand + persist: user, isAuthenticated
+│   │   ├── authStore.ts      # Zustand + persist: user, isAuthenticated
+│   │   ├── localeStore.ts    # Zustand + persist: locale ('es' | 'en'), setLocale()
+│   │   └── themeStore.ts     # Zustand + persist: theme ('light' | 'dark'), toggleTheme()
 │   ├── types/
 │   │   ├── entities.ts       # User, Client, Service, Invoice, Quote, *Line
 │   │   ├── api.ts            # ApiResponse<T>, ApiError, PaginatedResponse<T>
 │   │   └── enums.ts          # EstadoInvoice, EstadoQuote, EstadoDocument
-│   ├── App.tsx               # Router + QueryClient + rutas protegidas/públicas
-│   ├── main.tsx
+│   ├── i18n.ts               # Configuración de react-i18next + LanguageDetector
+│   ├── App.tsx               # Router + QueryClient + ThemeProvider + rutas protegidas/públicas
+│   ├── main.tsx              # Importa ./i18n antes de montar la app
 │   └── index.css
 ├── test/                     # Tests unitarios básicos (pendiente expansión)
 ├── .env.example
@@ -311,49 +313,49 @@ export const ProtectedRoute = () => {
 ### Configuración
 
 ```typescript
-// i18n.ts
+// src/i18n.ts — importado en main.tsx ANTES de montar la app
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import esCommon from '@/locales/es/common.json';
+import enCommon from '@/locales/en/common.json';
 
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
+    resources: {
+      es: { common: esCommon },
+      en: { common: enCommon },
+    },
+    defaultNS: 'common',
     fallbackLng: 'es',
     supportedLngs: ['es', 'en'],
-    debug: import.meta.env.DEV,
-    interpolation: {
-      escapeValue: false,
-    },
-    resources: {
-      es: {
-        common: require('./public/locales/es/common.json'),
-      },
-      en: {
-        common: require('./public/locales/en/common.json'),
-      },
+    interpolation: { escapeValue: false },
+    detection: {
+      order: ['localStorage', 'navigator'],
+      lookupLocalStorage: 'i18nextLng',
+      caches: ['localStorage'],
     },
   });
 
 export default i18n;
 ```
 
+> Los ficheros JSON de traducciones viven en `src/locales/` (no en `public/`). Vite los importa estáticamente — no se usa `i18next-http-backend`.
+
 ### Uso en componentes
 
 ```typescript
 import { useTranslation } from 'react-i18next';
 
-export const InvoicesList = () => {
-  const { t } = useTranslation('common');
+// En componentes React (hook)
+const { t } = useTranslation(); // defaultNS: 'common'
+t('invoices.title')
 
-  return (
-    <div>
-      <h1>{t('invoices.title')}</h1>
-      <button>{t('invoices.create')}</button>
-    </div>
-  );
-};
+// Fuera de React (hooks, stores) — instancia global
+import i18next from 'i18next';
+i18next.t('toast.invoiceCreated')
 ```
 
 ### Store de idioma
@@ -364,12 +366,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import i18n from '@/i18n';
 
-interface LocaleState {
-  locale: 'es' | 'en';
-  setLocale: (locale: 'es' | 'en') => void;
-}
-
-export const useLocaleStore = create<LocaleState>()(
+export const useLocaleStore = create<{ locale: 'es' | 'en'; setLocale: (l: 'es' | 'en') => void }>()(
   persist(
     (set) => ({
       locale: 'es',
@@ -380,8 +377,11 @@ export const useLocaleStore = create<LocaleState>()(
     }),
     {
       name: 'locale-storage',
-    }
-  )
+      onRehydrateStorage: () => (state) => {
+        if (state?.locale) i18n.changeLanguage(state.locale);
+      },
+    },
+  ),
 );
 ```
 
@@ -415,43 +415,35 @@ module.exports = {
 ### Store de tema
 
 ```typescript
-// store/themeStore.ts
+// store/themeStore.ts — solo estado puro, sin DOM
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 type Theme = 'light' | 'dark';
 
-interface ThemeState {
-  theme: Theme;
-  toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
-}
-
-export const useThemeStore = create<ThemeState>()(
+export const useThemeStore = create<{ theme: Theme; toggleTheme: () => void; setTheme: (t: Theme) => void }>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       theme: 'light',
-      toggleTheme: () =>
-        set((state) => {
-          const newTheme = state.theme === 'light' ? 'dark' : 'light';
-          document.documentElement.classList.toggle('dark', newTheme === 'dark');
-          return { theme: newTheme };
-        }),
-      setTheme: (theme) => {
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-        set({ theme });
-      },
+      toggleTheme: () => set({ theme: get().theme === 'light' ? 'dark' : 'light' }),
+      setTheme: (theme) => set({ theme }),
     }),
-    {
-      name: 'theme-storage',
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          document.documentElement.classList.toggle('dark', state.theme === 'dark');
-        }
-      },
-    }
-  )
+    { name: 'theme-storage' },
+  ),
 );
+```
+
+La clase `dark` se aplica al `<html>` en `App.tsx` mediante un `ThemeProvider` con `useEffect`, **no** dentro del store. Esto garantiza que el tema cubra todas las rutas (incluyendo Login/Register que están fuera de `AppLayout`):
+
+```tsx
+// App.tsx
+function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const theme = useThemeStore((s) => s.theme);
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+  return <>{children}</>;
+}
 ```
 
 ---
@@ -512,45 +504,16 @@ export const useCreateInvoice = () => {
     mutationFn: createInvoice,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      toast.success('Factura creada correctamente');
+      toast.success(i18next.t('toast.invoiceCreated'));       // ← i18next global, no hook
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al crear factura');
-    },
-  });
-};
-
-export const useUpdateInvoice = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => updateInvoice(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      queryClient.invalidateQueries({ queryKey: ['invoice', variables.id] });
-      toast.success('Factura actualizada');
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al actualizar factura');
-    },
-  });
-};
-
-export const useSendInvoice = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => sendInvoice(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      toast.success('Factura enviada y numerada correctamente');
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al enviar factura');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.invoiceCreateError'));
     },
   });
 };
 ```
+
+> Los hooks de mutación viven fuera del ciclo de render; usar `i18next.t()` (instancia global) en lugar de `useTranslation()` (hook). Las claves de toast están bajo `toast.*` en `common.json`.
 
 ### Optimistic Updates
 
@@ -598,37 +561,35 @@ export const useUpdateInvoice = () => {
 
 ## 📋 Formularios con React Hook Form + Zod
 
-### Schema de validación
+### Schema de validación (factory functions para i18n)
+
+Los schemas Zod son **factory functions** que llaman a `i18next.t()` en el momento de la creación, capturando el idioma activo en cada render. Esto garantiza que los mensajes de validación cambien al cambiar de idioma.
 
 ```typescript
 // schemas/invoice.schema.ts
 import { z } from 'zod';
+import i18next from 'i18next';
 
-export const invoiceLineSchema = z.object({
-  serviceId: z.string().uuid().nullable(),
-  descripcion: z.string().min(1, 'La descripción es obligatoria'),
-  cantidad: z.number().min(0.01, 'La cantidad debe ser mayor a 0'),
-  precioUnitario: z.number().min(0, 'El precio no puede ser negativo'),
-  ivaPorcentaje: z.number().default(21),
-});
+export const createInvoiceSchema = () =>
+  z.object({
+    clientId: z.string().uuid(i18next.t('validation.clientRequired')),
+    fechaEmision: z.string().min(1, i18next.t('validation.dateRequired')),
+    lines: z.array(createInvoiceLineSchema()).min(1, i18next.t('validation.atLeastOneLine')),
+    notas: z.string().optional(),
+  });
 
-export const createInvoiceSchema = z.object({
-  clientId: z.string().uuid('Cliente inválido'),
-  fecha: z.date().or(z.string()),
-  lines: z.array(invoiceLineSchema).min(1, 'Debe agregar al menos una línea'),
-  notas: z.string().optional(),
-});
-
-export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
+// El tipo se infiere del retorno de la factory
+export type CreateInvoiceInput = z.infer<ReturnType<typeof createInvoiceSchema>>;
 ```
+
+> **Nunca** exportes un schema estático (`export const createInvoiceSchema = z.object(...)`) si contiene mensajes de error. Usa siempre `() => z.object(...)`.
 
 ### Uso en formulario
 
 ```typescript
-// features/invoices/components/InvoiceForm.tsx
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createInvoiceSchema, CreateInvoiceInput } from '@/schemas/invoice.schema';
+import { createInvoiceSchema, type CreateInvoiceInput } from '@/schemas/invoice.schema';
 
 export const InvoiceForm = ({ onSubmit }: { onSubmit: (data: CreateInvoiceInput) => void }) => {
   const {
@@ -637,7 +598,7 @@ export const InvoiceForm = ({ onSubmit }: { onSubmit: (data: CreateInvoiceInput)
     control,
     formState: { errors },
   } = useForm<CreateInvoiceInput>({
-    resolver: zodResolver(createInvoiceSchema),
+    resolver: zodResolver(createInvoiceSchema()), // ← llamar la factory en cada render
     defaultValues: {
       lines: [
         {
@@ -783,18 +744,19 @@ function App() {
 
 ```typescript
 import { toast } from 'sonner';
+import i18next from 'i18next'; // usar instancia global fuera de componentes React
 
 // Success
-toast.success('Factura creada correctamente');
+toast.success(i18next.t('toast.invoiceCreated'));
 
 // Error
-toast.error('No se pudo crear la factura');
+toast.error(i18next.t('toast.invoiceCreateError'));
 
 // Info
-toast.info('Factura guardada como borrador');
+toast.info(i18next.t('toast.savedAsDraft'));
 
 // Warning
-toast.warning('La factura ya fue enviada');
+toast.warning(i18next.t('toast.alreadySent'));
 
 // Promise
 toast.promise(

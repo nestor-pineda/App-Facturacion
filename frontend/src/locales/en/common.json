@@ -1,0 +1,322 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "clients": "Clients",
+    "services": "Services",
+    "quotes": "Quotes",
+    "invoices": "Invoices",
+    "settings": "Settings",
+    "logout": "Log out",
+    "menu": "Menu"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Access your invoicing account",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "register": "Sign up",
+      "error": "Error signing in"
+    },
+    "register": {
+      "title": "Create account",
+      "subtitle": "Sign up to start invoicing",
+      "businessName": "Business name",
+      "nif": "Tax ID",
+      "fiscalAddress": "Fiscal address",
+      "phone": "Phone (optional)",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "success": "Account created. Please sign in.",
+      "error": "Error registering",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Sign in"
+    }
+  },
+  "common": {
+    "back": "Back",
+    "delete": "Delete",
+    "send": "Send",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "saving": "Saving...",
+    "download": "Download PDF",
+    "downloading": "Downloading...",
+    "noNumber": "(no number)",
+    "draft": "(draft)"
+  },
+  "status": {
+    "draft": "Draft",
+    "sent_f": "Sent",
+    "sent_m": "Sent"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Summary and quick actions",
+    "invoices": "Invoices",
+    "quotes": "Quotes",
+    "clients": "Clients",
+    "revenue": "Revenue",
+    "recentActivity": "Recent activity",
+    "noActivity": "No recent activity",
+    "searchPlaceholder": "Search by number or client...",
+    "filterAll": "All",
+    "filterQuotes": "Quotes",
+    "filterInvoices": "Invoices",
+    "draftCount": "{{count}} draft",
+    "sentCount": "{{count}} sent",
+    "table": {
+      "number": "Number",
+      "client": "Client",
+      "type": "Type",
+      "status": "Status",
+      "total": "Total",
+      "date": "Date"
+    },
+    "actions": {
+      "newQuote": "New quote",
+      "newQuoteDesc": "Create a price proposal",
+      "newInvoice": "New invoice",
+      "newInvoiceDesc": "Generate an invoice",
+      "newClient": "New client",
+      "newClientDesc": "Register a new client"
+    },
+    "typeLabel": {
+      "invoice": "Invoice",
+      "quote": "Quote"
+    }
+  },
+  "clients": {
+    "title": "Clients",
+    "subtitle": "{{count}} registered clients",
+    "newButton": "New client",
+    "searchPlaceholder": "Search clients...",
+    "empty": "No clients yet. Create your first one.",
+    "notFound": "No clients found",
+    "edit": "Edit",
+    "dialogNew": "New client",
+    "dialogEdit": "Edit client"
+  },
+  "services": {
+    "title": "Services",
+    "subtitle": "{{count}} available services",
+    "newButton": "New service",
+    "searchPlaceholder": "Search services...",
+    "empty": "No services yet. Create your first one.",
+    "notFound": "No services found",
+    "dialogNew": "New service",
+    "table": {
+      "service": "Service",
+      "description": "Description",
+      "basePrice": "Base price",
+      "vat": "VAT"
+    }
+  },
+  "quotes": {
+    "title": "Quotes",
+    "subtitle": "{{count}} quotes",
+    "newButton": "New quote",
+    "searchPlaceholder": "Search quotes...",
+    "notFound": "No quotes found",
+    "filterAll": "All",
+    "filterDraft": "Draft",
+    "filterSent": "Sent",
+    "table": {
+      "number": "Number",
+      "client": "Client",
+      "status": "Status",
+      "lines": "Lines",
+      "total": "Total",
+      "date": "Date"
+    },
+    "create": {
+      "title": "New quote",
+      "subtitle": "Create a quote for a client"
+    },
+    "detail": {
+      "title": "Quote {{number}}",
+      "notFound": "Quote not found",
+      "backLink": "Back to quotes",
+      "date": "Date:",
+      "client": "Client:",
+      "notes": "Notes:",
+      "convertToInvoice": "Convert to invoice",
+      "table": {
+        "description": "Description",
+        "quantity": "Quantity",
+        "price": "Price",
+        "vat": "VAT",
+        "subtotal": "Subtotal"
+      },
+      "totals": {
+        "subtotal": "Subtotal:",
+        "vat": "VAT:",
+        "total": "Total:"
+      },
+      "confirmSend": {
+        "title": "Send quote",
+        "description": "Once sent, the quote cannot be edited. Continue?",
+        "confirm": "Send"
+      },
+      "confirmDelete": {
+        "title": "Delete quote",
+        "description": "This action cannot be undone. Delete?",
+        "confirm": "Delete"
+      },
+      "confirmConvert": {
+        "title": "Convert to invoice",
+        "description": "A new draft invoice will be created with the data from this quote.",
+        "confirm": "Convert"
+      }
+    }
+  },
+  "invoices": {
+    "title": "Invoices",
+    "subtitle": "{{count}} invoices",
+    "newButton": "New invoice",
+    "searchPlaceholder": "Search invoices...",
+    "notFound": "No invoices found",
+    "filterAll": "All",
+    "filterDraft": "Draft",
+    "filterSent": "Sent",
+    "table": {
+      "number": "Number",
+      "client": "Client",
+      "status": "Status",
+      "total": "Total",
+      "date": "Date"
+    },
+    "create": {
+      "title": "New invoice",
+      "subtitle": "Create an invoice for a client"
+    },
+    "detail": {
+      "title": "Invoice {{number}}",
+      "notFound": "Invoice not found",
+      "backLink": "Back to invoices",
+      "issueDate": "Issue date:",
+      "client": "Client:",
+      "number": "Number:",
+      "notes": "Notes:",
+      "sendInvoice": "Send invoice",
+      "table": {
+        "description": "Description",
+        "quantity": "Quantity",
+        "price": "Price",
+        "vat": "VAT",
+        "subtotal": "Subtotal"
+      },
+      "totals": {
+        "subtotal": "Subtotal:",
+        "vat": "VAT:",
+        "total": "Total:"
+      },
+      "confirmSend": {
+        "title": "Send invoice",
+        "description": "Sending will generate a legal sequential number and the invoice will become immutable. This action cannot be undone.",
+        "confirm": "Send invoice"
+      },
+      "confirmDelete": {
+        "title": "Delete invoice",
+        "description": "This action cannot be undone. Delete the invoice?",
+        "confirm": "Delete"
+      }
+    }
+  },
+  "forms": {
+    "name": "Name",
+    "email": "Email",
+    "cifNif": "CIF/NIF",
+    "address": "Address",
+    "phone": "Phone (optional)",
+    "description": "Description (optional)",
+    "basePrice": "Base price (€)",
+    "client": "Client",
+    "date": "Date",
+    "issueDate": "Issue date",
+    "notes": "Notes (optional)",
+    "lines": "Lines",
+    "lineN": "Line {{n}}",
+    "fromCatalog": "From catalog...",
+    "lineDescription": "Description",
+    "quantity": "Quantity",
+    "unitPrice": "Unit price (€)",
+    "addLine": "Add line",
+    "selectClient": "Select client",
+    "saving": "Saving...",
+    "createClient": "Create client",
+    "updateClient": "Update client",
+    "createService": "Create service",
+    "createQuote": "Create quote",
+    "createInvoice": "Create invoice",
+    "notesPlaceholder": "Additional notes...",
+    "descriptionPlaceholder": "Service description",
+    "clientPlaceholder": "Client name"
+  },
+  "validation": {
+    "emailInvalid": "Invalid email",
+    "minPassword": "Minimum 6 characters",
+    "businessNameRequired": "Business name is required",
+    "nifRequired": "Tax ID is required",
+    "fiscalAddressRequired": "Fiscal address is required",
+    "nameRequired": "Name is required",
+    "cifNifRequired": "CIF/NIF is required",
+    "addressRequired": "Address is required",
+    "negativePriceNotAllowed": "Price cannot be negative",
+    "descriptionRequired": "Description is required",
+    "quantityMin": "Quantity must be greater than 0",
+    "clientInvalid": "Invalid client",
+    "dateRequired": "Date is required",
+    "minOneLine": "You must add at least one line"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account and preferences",
+    "language": "Language",
+    "languageLabel": "Select the application language",
+    "langEs": "Español",
+    "langEn": "English",
+    "theme": "Appearance",
+    "themeLabel": "Dark mode",
+    "themeDescription": "Enable dark mode for a more comfortable experience in low-light environments"
+  },
+  "toast": {
+    "loggedOut": "Logged out",
+    "clientCreated": "Client created successfully",
+    "clientCreateError": "Error creating client",
+    "clientUpdated": "Client updated successfully",
+    "clientUpdateError": "Error updating client",
+    "serviceCreated": "Service created successfully",
+    "serviceCreateError": "Error creating service",
+    "quoteCreated": "Quote created successfully",
+    "quoteCreateError": "Error creating quote",
+    "quoteUpdated": "Quote updated",
+    "quoteUpdateError": "Error updating quote",
+    "quoteDeleted": "Quote deleted",
+    "quoteDeleteError": "Error deleting quote",
+    "quoteSent": "Quote sent successfully",
+    "quoteSendError": "Error sending quote",
+    "quoteConverted": "Quote converted to invoice",
+    "quoteConvertError": "Error converting quote",
+    "invoiceCreated": "Invoice created successfully",
+    "invoiceCreateError": "Error creating invoice",
+    "invoiceUpdated": "Invoice updated",
+    "invoiceUpdateError": "Error updating invoice",
+    "invoiceDeleted": "Invoice deleted",
+    "invoiceDeleteError": "Error deleting invoice",
+    "invoiceSent": "Invoice sent and numbered successfully",
+    "invoiceSendError": "Error sending invoice",
+    "pdfDownloaded": "PDF downloaded",
+    "pdfDownloadError": "Error downloading PDF",
+    "accountCreated": "Account created. Please sign in.",
+    "loginError": "Error signing in",
+    "registerError": "Error registering"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "message": "The page you're looking for doesn't exist.",
+    "backHome": "Return to home"
+  }
+}

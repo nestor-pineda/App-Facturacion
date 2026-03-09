@@ -11,6 +11,7 @@ import {
 import { QUERY_KEYS } from '@/lib/constants';
 import { toast } from 'sonner';
 import type { EstadoQuote } from '@/types/enums';
+import i18next from 'i18next';
 
 interface QuoteFilters {
   estado?: EstadoQuote;
@@ -30,10 +31,10 @@ export const useCreateQuote = () => {
     mutationFn: createQuote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.QUOTES] });
-      toast.success('Presupuesto creado correctamente');
+      toast.success(i18next.t('toast.quoteCreated'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al crear presupuesto');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.quoteCreateError'));
     },
   });
 };
@@ -45,10 +46,10 @@ export const useUpdateQuote = () => {
       updateQuote(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.QUOTES] });
-      toast.success('Presupuesto actualizado');
+      toast.success(i18next.t('toast.quoteUpdated'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al actualizar presupuesto');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.quoteUpdateError'));
     },
   });
 };
@@ -59,10 +60,10 @@ export const useDeleteQuote = () => {
     mutationFn: deleteQuote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.QUOTES] });
-      toast.success('Presupuesto eliminado');
+      toast.success(i18next.t('toast.quoteDeleted'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al eliminar presupuesto');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.quoteDeleteError'));
     },
   });
 };
@@ -73,10 +74,10 @@ export const useSendQuote = () => {
     mutationFn: sendQuote,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.QUOTES] });
-      toast.success('Presupuesto enviado correctamente');
+      toast.success(i18next.t('toast.quoteSent'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al enviar presupuesto');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.quoteSendError'));
     },
   });
 };
@@ -89,10 +90,10 @@ export const useConvertQuoteToInvoice = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.QUOTES] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
-      toast.success('Presupuesto convertido a factura');
+      toast.success(i18next.t('toast.quoteConverted'));
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || 'Error al convertir presupuesto');
+      toast.error(error.response?.data?.error?.message || i18next.t('toast.quoteConvertError'));
     },
   });
 };
@@ -109,9 +110,9 @@ export const useDownloadQuotePDF = () =>
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success('PDF descargado');
+      toast.success(i18next.t('toast.pdfDownloaded'));
     },
     onError: () => {
-      toast.error('Error al descargar PDF');
+      toast.error(i18next.t('toast.pdfDownloadError'));
     },
   });

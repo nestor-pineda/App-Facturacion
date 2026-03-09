@@ -1,11 +1,13 @@
 import { z } from 'zod';
+import i18next from 'i18next';
 
-export const clientSchema = z.object({
-  nombre: z.string().min(1, 'Nombre obligatorio'),
-  email: z.string().email('Email inválido'),
-  cifNif: z.string().min(1, 'CIF/NIF obligatorio'),
-  direccion: z.string().min(1, 'Dirección obligatoria'),
-  telefono: z.string().optional(),
-});
+export const createClientSchema = () =>
+  z.object({
+    nombre: z.string().min(1, i18next.t('validation.nameRequired')),
+    email: z.string().email(i18next.t('validation.emailInvalid')),
+    cifNif: z.string().min(1, i18next.t('validation.cifNifRequired')),
+    direccion: z.string().min(1, i18next.t('validation.addressRequired')),
+    telefono: z.string().optional(),
+  });
 
-export type ClientInput = z.infer<typeof clientSchema>;
+export type ClientInput = z.infer<ReturnType<typeof createClientSchema>>;

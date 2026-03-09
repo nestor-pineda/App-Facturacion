@@ -339,6 +339,40 @@ Necesitamos entregar facturas en formato PDF para cumplimiento legal en España 
 
 ---
 
+## [2026-03-09] i18n + Dark/Light theme — Patrones de implementación
+
+### Decisión
+Implementar internacionalización (es/en) con `react-i18next` y tema oscuro/claro con Tailwind `darkMode: 'class'`, usando los siguientes patrones específicos.
+
+### Patrones adoptados
+
+**1. Traducciones con importación estática (no HTTP backend)**  
+Los JSON de `src/locales/{lng}/common.json` se importan directamente en `src/i18n.ts` con ES imports. Vite los incluye en el bundle.  
+Descartado: `i18next-http-backend` añade una petición HTTP en arranque sin beneficio real en un bundle de cliente estático.
+
+**2. ThemeProvider con `useEffect` en `App.tsx` (no DOM en store)**  
+El store `themeStore.ts` gestiona solo estado puro (`theme: 'light' | 'dark'`). La aplicación de la clase `dark` al `<html>` se realiza en un `ThemeProvider` como `useEffect` en `App.tsx`.  
+Razón: `App.tsx` es ancestro común de todas las rutas, incluyendo Login y Register (fuera de `AppLayout`). Si el DOM se manipulase en el store, la rehidratación sería imperativa y dependiente del orden de inicialización.
+
+**3. Zod schemas como factory functions**  
+Todos los schemas de validación de formularios se exportan como `createXSchema = () => z.object(...)` en lugar de objetos estáticos. Los formularios llaman a la factory dentro del `resolver`, capturando el idioma activo en cada render.  
+Razón: `i18next.t()` en un objeto estático se evalúa una sola vez al importar el módulo; si el usuario cambia de idioma, los mensajes de validación no se actualizarían.
+
+**4. `i18next.t()` global en hooks de mutación**  
+Los custom hooks de TanStack Query usan `i18next` (instancia global) en lugar de `useTranslation()` (hook) para los mensajes de toast, ya que los callbacks `onSuccess`/`onError` se ejecutan fuera del árbol de componentes React.
+
+**5. Zustand extendido a locale y theme**  
+Revisión de la decisión "[2026-02-26] No usar Redux/Zustand". Se añaden `localeStore.ts` y `themeStore.ts` exclusivamente para estado de UI global que requiere persistencia en `localStorage`. El estado de dominio (facturas, clientes…) sigue en TanStack Query.
+
+### Consecuencias
+✅ Mensajes de validación Zod reactivos al cambio de idioma  
+✅ Tema aplicado globalmente incluyendo páginas de auth  
+✅ Sin peticiones HTTP adicionales para cargar traducciones  
+✅ Idioma y tema persistidos entre sesiones vía `localStorage`  
+⚠️ Las factory functions suponen que los forms se re-montan (o se pasa `key`) al cambiar idioma para que el resolver capture el nuevo idioma
+
+---
+
 ## [2026-02-26] Sin caché en MVP
 
 ### Decisión

@@ -24,21 +24,24 @@ import {
 import { useAuthStore } from "@/store/authStore";
 import { logoutUser } from "@/api/endpoints/auth";
 import { toast } from "sonner";
-
-const mainItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Clients", url: "/clients", icon: Users },
-  { title: "Services", url: "/services", icon: Wrench },
-  { title: "Quotes", url: "/quotes", icon: FileText },
-  { title: "Invoices", url: "/invoices", icon: Receipt },
-];
+import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 
 export function AppSidebar() {
+  const { t } = useTranslation();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
+
+  const mainItems = [
+    { title: t('nav.dashboard'), url: "/", icon: LayoutDashboard },
+    { title: t('nav.clients'), url: "/clients", icon: Users },
+    { title: t('nav.services'), url: "/services", icon: Wrench },
+    { title: t('nav.quotes'), url: "/quotes", icon: FileText },
+    { title: t('nav.invoices'), url: "/invoices", icon: Receipt },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -47,7 +50,7 @@ export function AppSidebar() {
       // Even if the API call fails, we still logout locally
     }
     logout();
-    toast.success("Sesión cerrada");
+    toast.success(i18next.t('toast.loggedOut'));
     navigate("/login");
   };
 
@@ -68,11 +71,11 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('nav.menu')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
@@ -106,14 +109,14 @@ export function AppSidebar() {
                 activeClassName="bg-accent text-foreground font-semibold"
               >
                 <Settings className="mr-2 h-4 w-4" />
-                {!collapsed && <span>Settings</span>}
+                {!collapsed && <span>{t('nav.settings')}</span>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleLogout} className="hover:bg-accent/80 cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />
-              {!collapsed && <span>Cerrar sesión</span>}
+              {!collapsed && <span>{t('nav.logout')}</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

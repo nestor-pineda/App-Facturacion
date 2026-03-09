@@ -9,11 +9,13 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { formatCurrency } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADO } from "@/lib/constants";
 import type { EstadoQuote } from "@/types/enums";
+import { useTranslation } from "react-i18next";
 
 const STATUS_FILTER_ALL = 'all' as const;
 type StatusFilter = typeof STATUS_FILTER_ALL | EstadoQuote;
 
 const Quotes = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(STATUS_FILTER_ALL);
@@ -31,28 +33,33 @@ const Quotes = () => {
   if (isLoading) return <LoadingSpinner />;
 
   const filterOptions: { value: StatusFilter; label: string }[] = [
-    { value: STATUS_FILTER_ALL, label: 'Todos' },
-    { value: ESTADO_BORRADOR, label: 'Borrador' },
-    { value: ESTADO_ENVIADO, label: 'Enviado' },
+    { value: STATUS_FILTER_ALL, label: t('quotes.filterAll') },
+    { value: ESTADO_BORRADOR, label: t('quotes.filterDraft') },
+    { value: ESTADO_ENVIADO, label: t('quotes.filterSent') },
   ];
 
   return (
     <div className="page-container">
       <div className="flex items-center justify-between page-header">
         <div>
-          <h1 className="page-title">Presupuestos</h1>
-          <p className="page-subtitle">{quotes?.length ?? 0} presupuestos</p>
+          <h1 className="page-title">{t('quotes.title')}</h1>
+          <p className="page-subtitle">{t('quotes.subtitle', { count: quotes?.length ?? 0 })}</p>
         </div>
         <Button onClick={() => navigate('/quotes/new')}>
           <Plus className="h-4 w-4 mr-2" />
-          Nuevo presupuesto
+          {t('quotes.newButton')}
         </Button>
       </div>
 
       <div className="filter-bar">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar presupuestos..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input
+            placeholder={t('quotes.searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
         </div>
         <div className="flex gap-1 bg-muted rounded-lg p-1">
           {filterOptions.map((f) => (
@@ -73,12 +80,12 @@ const Quotes = () => {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Número</th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Cliente</th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Estado</th>
-              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Líneas</th>
-              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Total</th>
-              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Fecha</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.number')}</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.client')}</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.status')}</th>
+              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.lines')}</th>
+              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.total')}</th>
+              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.date')}</th>
               <th className="w-12"></th>
             </tr>
           </thead>
@@ -103,7 +110,7 @@ const Quotes = () => {
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-5 py-12 text-center text-muted-foreground">No se encontraron presupuestos</td></tr>
+              <tr><td colSpan={7} className="px-5 py-12 text-center text-muted-foreground">{t('quotes.notFound')}</td></tr>
             )}
           </tbody>
         </table>
