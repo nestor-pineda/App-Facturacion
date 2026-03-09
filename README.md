@@ -22,6 +22,26 @@ cp .env.example .env   # Configurar variables de entorno
 npm run dev
 ```
 
+### Popular la base de datos (datos de prueba)
+
+Tras levantar el servidor y aplicar las migraciones, ejecuta el seed para tener datos listos para testear:
+
+```bash
+cd backend
+npm run seed
+```
+
+Esto crea un usuario de prueba con clientes, servicios, presupuestos y facturas de ejemplo.
+
+**Credenciales de acceso:**
+
+| Campo    | Valor                    |
+|----------|--------------------------|
+| Email    | `admin@facturacion.test` |
+| Password | `Test1234!`              |
+
+> El script es idempotente: si lo ejecutas varias veces, limpia los datos del usuario de prueba y los vuelve a insertar desde cero.
+
 ### Monorepo (ambos a la vez)
 
 ```bash
