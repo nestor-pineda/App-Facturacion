@@ -1,65 +1,137 @@
-import { Plus, Search, MoreHorizontal, Mail, Phone } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Mail, Phone, MapPin, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-
-const mockClients = [
-  { id: 1, name: "Acme Corp", email: "contact@acme.com", phone: "+1 555-0100", projects: 3 },
-  { id: 2, name: "TechStart Ltd", email: "hello@techstart.io", phone: "+1 555-0200", projects: 1 },
-  { id: 3, name: "Design Studio", email: "info@designstudio.co", phone: "+1 555-0300", projects: 5 },
-  { id: 4, name: "CloudNine Inc", email: "team@cloudnine.com", phone: "+1 555-0400", projects: 2 },
-];
+import { useClients, useCreateClient, useUpdateClient } from "@/hooks/useClients";
+import { ClientForm } from "@/components/forms/ClientForm";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import type { Client } from "@/types/entities";
+import type { ClientInput } from "@/schemas/client.schema";
 
 const Clients = () => {
   const [search, setSearch] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
 
-  const filtered = mockClients.filter(
+  const { data: clients, isLoading } = useClients();
+  const createMutation = useCreateClient();
+  const updateMutation = useUpdateClient();
+
+  const filtered = (clients ?? []).filter(
     (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.nombre.toLowerCase().includes(search.toLowerCase()) ||
       c.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleCreate = (data: ClientInput) => {
+    createMutation.mutate(data, {
+      onSuccess: () => setDialogOpen(false),
+    });
+  };
+
+  const handleUpdate = (data: ClientInput) => {
+    if (!editingClient) return;
+    updateMutation.mutate(
+      { id: editingClient.id, data },
+      { onSuccess: () => setEditingClient(null) },
+    );
+  };
+
+  const handleEdit = (client: Client) => {
+    setEditingClient(client);
+  };
+
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="page-container">
       <div className="flex items-center justify-between page-header">
         <div>
-          <h1 className="page-title">Clients</h1>
-          <p className="page-subtitle">{mockClients.length} registered clients</p>
+          <h1 className="page-title">Clientes</h1>
+          <p className="page-subtitle">{clients?.length ?? 0} clientes registrados</p>
         </div>
-        <Button>
+        <Button onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Client
+          Nuevo cliente
         </Button>
       </div>
 
       <div className="filter-bar">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search clients..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Buscar clientes..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map((client) => (
-          <div key={client.id} className="stat-card flex items-start justify-between">
-            <div>
-              <h3 className="font-bold text-base">{client.name}</h3>
-              <div className="flex items-center gap-1.5 mt-2 text-sm text-muted-foreground">
-                <Mail className="h-3.5 w-3.5" />
-                {client.email}
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          {search ? 'No se encontraron clientes' : 'Aún no tienes clientes. Crea el primero.'}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filtered.map((client) => (
+            <div key={client.id} className="stat-card flex items-start justify-between">
+              <div>
+                <h3 className="font-bold text-base">{client.nombre}</h3>
+                <div className="flex items-center gap-1.5 mt-2 text-sm text-muted-foreground">
+                  <Mail className="h-3.5 w-3.5" />
+                  {client.email}
+                </div>
+                {client.telefono && (
+                  <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
+                    <Phone className="h-3.5 w-3.5" />
+                    {client.telefono}
+                  </div>
+                )}
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
+                  <FileText className="h-3.5 w-3.5" />
+                  {client.cifNif}
+                </div>
+                <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {client.direccion}
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
-                <Phone className="h-3.5 w-3.5" />
-                {client.phone}
-              </div>
-              <p className="text-xs text-muted-foreground mt-3">{client.projects} project{client.projects !== 1 ? "s" : ""}</p>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleEdit(client)}>Editar</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nuevo cliente</DialogTitle>
+          </DialogHeader>
+          <ClientForm onSubmit={handleCreate} isLoading={createMutation.isPending} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingClient} onOpenChange={(open) => !open && setEditingClient(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar cliente</DialogTitle>
+          </DialogHeader>
+          {editingClient && (
+            <ClientForm
+              defaultValues={editingClient}
+              onSubmit={handleUpdate}
+              isLoading={updateMutation.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

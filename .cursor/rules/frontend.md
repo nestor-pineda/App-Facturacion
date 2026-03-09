@@ -45,144 +45,85 @@
 
 ## 📁 Estructura de Carpetas
 
+> La estructura actual implementada usa un enfoque flat por tipo (`pages/`, `hooks/`, `components/`) en lugar de `features/`. La migración a `features/` está planificada en `siguientes-pasos.md`.
+
 ```
 frontend/
 ├── public/
-│   └── locales/              # Traducciones i18n
+│   └── locales/              # Traducciones i18n (pendiente — ver siguientes-pasos.md)
 │       ├── es/
 │       │   └── common.json
 │       └── en/
 │           └── common.json
 ├── src/
 │   ├── api/                  # Cliente HTTP y endpoints
-│   │   ├── client.ts         # Axios instance configurada
-│   │   ├── endpoints/
-│   │   │   ├── auth.ts
-│   │   │   ├── clients.ts
-│   │   │   ├── services.ts
-│   │   │   ├── quotes.ts
-│   │   │   └── invoices.ts
-│   │   └── types/            # Tipos de respuesta API
-│   │       └── api.types.ts
+│   │   ├── client.ts         # Axios instance + interceptor de refresh token
+│   │   └── endpoints/
+│   │       ├── auth.ts
+│   │       ├── clients.ts
+│   │       ├── services.ts
+│   │       ├── quotes.ts
+│   │       └── invoices.ts
 │   ├── components/           # Componentes reutilizables
 │   │   ├── ui/               # shadcn/ui components
-│   │   │   ├── button.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── dialog.tsx
-│   │   │   ├── table.tsx
-│   │   │   └── ...
-│   │   ├── layout/
-│   │   │   ├── Header.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   └── Layout.tsx
 │   │   ├── forms/
 │   │   │   ├── ClientForm.tsx
 │   │   │   ├── ServiceForm.tsx
 │   │   │   ├── InvoiceForm.tsx
 │   │   │   └── QuoteForm.tsx
-│   │   └── common/
-│   │       ├── LoadingSpinner.tsx
-│   │       ├── ErrorBoundary.tsx
-│   │       ├── ConfirmDialog.tsx
-│   │       └── ThemeToggle.tsx
-│   ├── features/             # Módulos por funcionalidad
-│   │   ├── auth/
-│   │   │   ├── components/
-│   │   │   │   ├── LoginForm.tsx
-│   │   │   │   └── RegisterForm.tsx
-│   │   │   ├── hooks/
-│   │   │   │   └── useAuth.ts
-│   │   │   └── pages/
-│   │   │       ├── LoginPage.tsx
-│   │   │       └── RegisterPage.tsx
-│   │   ├── clients/
-│   │   │   ├── components/
-│   │   │   │   ├── ClientList.tsx
-│   │   │   │   ├── ClientCard.tsx
-│   │   │   │   └── ClientDetails.tsx
-│   │   │   ├── hooks/
-│   │   │   │   ├── useClients.ts
-│   │   │   │   └── useClientMutations.ts
-│   │   │   └── pages/
-│   │   │       ├── ClientsPage.tsx
-│   │   │       └── ClientDetailPage.tsx
-│   │   ├── services/
-│   │   │   ├── components/
-│   │   │   ├── hooks/
-│   │   │   └── pages/
-│   │   ├── quotes/
-│   │   │   ├── components/
-│   │   │   ├── hooks/
-│   │   │   └── pages/
-│   │   ├── invoices/
-│   │   │   ├── components/
-│   │   │   │   ├── InvoiceList.tsx
-│   │   │   │   ├── InvoiceDetails.tsx
-│   │   │   │   ├── InvoiceLineTable.tsx
-│   │   │   │   └── InvoiceStatusBadge.tsx
-│   │   │   ├── hooks/
-│   │   │   │   ├── useInvoices.ts
-│   │   │   │   ├── useInvoiceMutations.ts
-│   │   │   │   └── useInvoicePDF.ts
-│   │   │   └── pages/
-│   │   │       ├── InvoicesPage.tsx
-│   │   │       ├── InvoiceCreatePage.tsx
-│   │   │       └── InvoiceDetailPage.tsx
-│   │   └── dashboard/
-│   │       └── pages/
-│   │           └── DashboardPage.tsx
-│   ├── hooks/                # Custom hooks globales
-│   │   ├── useLocalStorage.ts
-│   │   ├── useDebounce.ts
-│   │   └── useMediaQuery.ts
-│   ├── lib/                  # Utilidades y helpers
-│   │   ├── utils.ts          # Funciones auxiliares
-│   │   ├── constants.ts      # Constantes globales
-│   │   └── calculations.ts   # Cálculos de IVA y totales
-│   ├── routes/               # Configuración de rutas
-│   │   ├── index.tsx         # Router principal
+│   │   ├── common/
+│   │   │   ├── LoadingSpinner.tsx
+│   │   │   └── ConfirmDialog.tsx
+│   │   ├── AppLayout.tsx     # Layout raíz (sidebar + outlet)
+│   │   ├── AppSidebar.tsx    # Navegación lateral + logout
 │   │   ├── ProtectedRoute.tsx
-│   │   └── PublicRoute.tsx
-│   ├── schemas/              # Schemas Zod para validación
+│   │   ├── PublicRoute.tsx
+│   │   └── StatusBadge.tsx   # Badge de estado de documentos (borrador/enviada)
+│   ├── hooks/                # Hooks de TanStack Query por dominio
+│   │   ├── useClients.ts
+│   │   ├── useServices.ts
+│   │   ├── useQuotes.ts
+│   │   └── useInvoices.ts
+│   ├── lib/
+│   │   ├── utils.ts          # cn() y utilidades CSS
+│   │   ├── constants.ts      # IVA_DEFAULT, QUERY_KEYS, API_ERROR_CODES, estados
+│   │   └── calculations.ts   # Cálculos de subtotal, IVA y total; formatCurrency
+│   ├── pages/                # Una página por ruta
+│   │   ├── Index.tsx         # Dashboard con métricas reales
+│   │   ├── Login.tsx
+│   │   ├── Register.tsx
+│   │   ├── Clients.tsx
+│   │   ├── Services.tsx
+│   │   ├── Quotes.tsx
+│   │   ├── QuoteCreate.tsx
+│   │   ├── QuoteDetail.tsx
+│   │   ├── Invoices.tsx
+│   │   ├── InvoiceCreate.tsx
+│   │   ├── InvoiceDetail.tsx
+│   │   ├── Settings.tsx
+│   │   └── NotFound.tsx
+│   ├── schemas/              # Schemas Zod para validación de formularios
 │   │   ├── auth.schema.ts
 │   │   ├── client.schema.ts
 │   │   ├── service.schema.ts
 │   │   ├── invoice.schema.ts
 │   │   └── quote.schema.ts
-│   ├── store/                # Zustand stores
-│   │   ├── authStore.ts      # Estado auth (user, tokens)
-│   │   ├── themeStore.ts     # Tema oscuro/claro
-│   │   └── localeStore.ts    # Idioma (es/en)
-│   ├── types/                # Tipos TypeScript globales
-│   │   ├── entities.ts       # User, Client, Service, Invoice, Quote
-│   │   └── enums.ts          # InvoiceStatus, QuoteStatus
-│   ├── App.tsx               # Componente raíz
-│   ├── main.tsx              # Entry point
-│   ├── i18n.ts               # Configuración i18next
-│   └── index.css             # Estilos globales + Tailwind
-├── tests/
-│   ├── unit/                 # Tests unitarios (80% cobertura)
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   └── lib/
-│   ├── integration/          # Tests integración (30% cobertura)
-│   │   └── features/
-│   ├── e2e/                  # Tests E2E Playwright (10% cobertura)
-│   │   ├── auth.spec.ts
-│   │   ├── invoices.spec.ts
-│   │   └── quotes.spec.ts
-│   ├── mocks/                # MSW handlers
-│   │   ├── handlers.ts
-│   │   └── server.ts
-│   └── setup.ts              # Configuración tests
+│   ├── store/
+│   │   └── authStore.ts      # Zustand + persist: user, isAuthenticated
+│   ├── types/
+│   │   ├── entities.ts       # User, Client, Service, Invoice, Quote, *Line
+│   │   ├── api.ts            # ApiResponse<T>, ApiError, PaginatedResponse<T>
+│   │   └── enums.ts          # EstadoInvoice, EstadoQuote, EstadoDocument
+│   ├── App.tsx               # Router + QueryClient + rutas protegidas/públicas
+│   ├── main.tsx
+│   └── index.css
+├── test/                     # Tests unitarios básicos (pendiente expansión)
 ├── .env.example
-├── .env.development
-├── .env.production
+├── .env.development          # VITE_API_URL="" (usa proxy Vite → localhost:3000)
+├── .env.production           # VITE_API_URL="https://tu-backend.onrender.com"
 ├── tailwind.config.js
 ├── tsconfig.json
-├── vite.config.ts
-├── vitest.config.ts
-├── playwright.config.ts
+├── vite.config.ts            # Proxy /api → localhost:3000 en desarrollo
 ├── package.json
 └── README.md
 ```

@@ -7,7 +7,7 @@ Aplicación web para gestión de facturación destinada a autónomos en España.
 ```
 APP-FACTURACION/
 ├── backend/        # API Node.js + Express + PostgreSQL + Prisma
-├── frontend/       # React + TypeScript + Vite (próximamente)
+├── frontend/       # React 18 + TypeScript + Vite + shadcn/ui (integrado con backend)
 └── docs/           # Documentación técnica
 ```
 
@@ -21,6 +21,17 @@ npm install
 cp .env.example .env   # Configurar variables de entorno
 npm run dev
 ```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.development   # VITE_API_URL vacío usa el proxy de Vite
+npm run dev
+```
+
+El frontend arranca en `http://localhost:8080` y hace proxy de las peticiones `/api` al backend en `localhost:3000`.
 
 ### Popular la base de datos (datos de prueba)
 
@@ -63,9 +74,16 @@ npm run dev            # Arranca backend y frontend en paralelo
 
 ## Documentación
 
-- [`docs/API.md`](docs/API.md) — Referencia de endpoints REST
-- [`docs/DATABASE.md`](docs/DATABASE.md) — Esquema de base de datos
-- [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) — Variables de entorno
+- [`docs/CONTEXT/API.md`](docs/CONTEXT/API.md) — Referencia de endpoints REST
+- [`docs/CONTEXT/DATABASE.md`](docs/CONTEXT/DATABASE.md) — Esquema de base de datos
+- [`docs/CONTEXT/ENVIRONMENT.md`](docs/CONTEXT/ENVIRONMENT.md) — Variables de entorno
 - [`docs/decisions.md`](docs/decisions.md) — Decisiones de arquitectura
 - [`docs/domain.md`](docs/domain.md) — Modelo de dominio
 - [`docs/product.md`](docs/product.md) — Especificación de producto
+- [`siguientes-pasos.md`](siguientes-pasos.md) — Próximos pasos: i18n, tests, refactor, despliegue
+
+### Design Docs
+
+- [`docs/designs/001-pdf-generation-design-doc.md`](docs/designs/001-pdf-generation-design-doc.md) — Generación de PDFs con Puppeteer
+- [`docs/designs/002-httpOnly-Cookies-design-doc.md`](docs/designs/002-httpOnly-Cookies-design-doc.md) — Autenticación con cookies httpOnly
+- [`docs/designs/003-frontend-backend-integration-design-doc.md`](docs/designs/003-frontend-backend-integration-design-doc.md) — Integración frontend-backend

@@ -1,37 +1,81 @@
-import { Plus, FileText, Receipt, Users, ArrowRight, Search } from "lucide-react";
+import { FileText, Receipt, Users, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-
-const recentItems = [
-  { id: 1, type: "quote" as const, number: "Q-001", client: "Acme Corp", amount: 2500, status: "sent" as const, date: "2026-03-05" },
-  { id: 2, type: "invoice" as const, number: "INV-001", client: "TechStart Ltd", amount: 4200, status: "paid" as const, date: "2026-03-04" },
-  { id: 3, type: "quote" as const, number: "Q-002", client: "Design Studio", amount: 1800, status: "draft" as const, date: "2026-03-03" },
-  { id: 4, type: "invoice" as const, number: "INV-002", client: "Acme Corp", amount: 3100, status: "overdue" as const, date: "2026-02-28" },
-  { id: 5, type: "quote" as const, number: "Q-003", client: "CloudNine Inc", amount: 6700, status: "accepted" as const, date: "2026-02-25" },
-  { id: 6, type: "invoice" as const, number: "INV-003", client: "Design Studio", amount: 1800, status: "issued" as const, date: "2026-02-22" },
-];
+import { useInvoices } from "@/hooks/useInvoices";
+import { useQuotes } from "@/hooks/useQuotes";
+import { useClients } from "@/hooks/useClients";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { formatCurrency } from "@/lib/calculations";
+import { ESTADO_BORRADOR, ESTADO_ENVIADA, ESTADO_ENVIADO } from "@/lib/constants";
+import type { EstadoDocument } from "@/types/enums";
 
 const actions = [
-  { label: "New Quote", icon: FileText, path: "/quotes/new", description: "Create a price proposal" },
-  { label: "New Invoice", icon: Receipt, path: "/invoices/new", description: "Generate an invoice" },
-  { label: "Add Client", icon: Users, path: "/clients/new", description: "Register a new client" },
+  { label: "Nuevo presupuesto", icon: FileText, path: "/quotes/new", description: "Crear propuesta de precio" },
+  { label: "Nueva factura", icon: Receipt, path: "/invoices/new", description: "Generar una factura" },
+  { label: "Nuevo cliente", icon: Users, path: "/clients", description: "Registrar un nuevo cliente" },
 ];
 
 type FilterType = "all" | "quote" | "invoice";
+
+interface RecentItem {
+  id: string;
+  type: "quote" | "invoice";
+  number: string;
+  clientName: string;
+  total: number;
+  status: EstadoDocument;
+  date: string;
+}
 
 const Index = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
 
+  const { data: invoices, isLoading: loadingInvoices } = useInvoices();
+  const { data: quotes, isLoading: loadingQuotes } = useQuotes();
+  const { data: clients } = useClients();
+
+  if (loadingInvoices || loadingQuotes) return <LoadingSpinner />;
+
+  const totalInvoices = invoices?.length ?? 0;
+  const totalQuotes = quotes?.length ?? 0;
+  const totalClients = clients?.length ?? 0;
+  const invoicesDraft = invoices?.filter((i) => i.estado === ESTADO_BORRADOR).length ?? 0;
+  const invoicesSent = invoices?.filter((i) => i.estado === ESTADO_ENVIADA).length ?? 0;
+  const totalRevenue = invoices?.filter((i) => i.estado === ESTADO_ENVIADA).reduce((acc, i) => acc + i.total, 0) ?? 0;
+
+  const recentItems: RecentItem[] = [
+    ...(invoices ?? []).map((inv) => ({
+      id: inv.id,
+      type: 'invoice' as const,
+      number: inv.numero ?? '(borrador)',
+      clientName: inv.client.nombre,
+      total: inv.total,
+      status: inv.estado as EstadoDocument,
+      date: inv.fechaEmision,
+    })),
+    ...(quotes ?? []).map((q) => ({
+      id: q.id,
+      type: 'quote' as const,
+      number: q.numero ?? '(borrador)',
+      clientName: q.client.nombre,
+      total: q.total,
+      status: q.estado as EstadoDocument,
+      date: q.fecha,
+    })),
+  ]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 10);
+
   const filtered = recentItems.filter((item) => {
     const matchesType = filter === "all" || item.type === filter;
     const matchesSearch =
       item.number.toLowerCase().includes(search.toLowerCase()) ||
-      item.client.toLowerCase().includes(search.toLowerCase());
+      item.clientName.toLowerCase().includes(search.toLowerCase());
     return matchesType && matchesSearch;
   });
 
@@ -39,10 +83,29 @@ const Index = () => {
     <div className="page-container">
       <div className="page-header">
         <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Quick actions and recent activity</p>
+        <p className="page-subtitle">Resumen y acciones rápidas</p>
       </div>
 
-      {/* Quick Actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="stat-card">
+          <p className="text-sm text-muted-foreground">Facturas</p>
+          <p className="text-2xl font-bold">{totalInvoices}</p>
+          <p className="text-xs text-muted-foreground">{invoicesDraft} borrador · {invoicesSent} enviadas</p>
+        </div>
+        <div className="stat-card">
+          <p className="text-sm text-muted-foreground">Presupuestos</p>
+          <p className="text-2xl font-bold">{totalQuotes}</p>
+        </div>
+        <div className="stat-card">
+          <p className="text-sm text-muted-foreground">Clientes</p>
+          <p className="text-2xl font-bold">{totalClients}</p>
+        </div>
+        <div className="stat-card">
+          <p className="text-sm text-muted-foreground">Facturado</p>
+          <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
         {actions.map((action) => (
           <button
@@ -59,34 +122,37 @@ const Index = () => {
         ))}
       </div>
 
-      {/* Recent Activity */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Recent Activity</h2>
+          <h2 className="text-xl font-bold">Actividad reciente</h2>
         </div>
 
         <div className="filter-bar">
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by number or client..."
+              placeholder="Buscar por número o cliente..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
             />
           </div>
           <div className="flex gap-1 bg-muted rounded-lg p-1">
-            {(["all", "quote", "invoice"] as FilterType[]).map((f) => (
+            {([
+              { value: "all" as FilterType, label: "Todos" },
+              { value: "quote" as FilterType, label: "Presupuestos" },
+              { value: "invoice" as FilterType, label: "Facturas" },
+            ]).map((f) => (
               <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium capitalize transition-colors ${
-                  filter === f
+                key={f.value}
+                onClick={() => setFilter(f.value)}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  filter === f.value
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {f === "all" ? "All" : f === "quote" ? "Quotes" : "Invoices"}
+                {f.label}
               </button>
             ))}
           </div>
@@ -96,32 +162,33 @@ const Index = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Number</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Client</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Type</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Status</th>
-                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Amount</th>
-                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Date</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Número</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Cliente</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Tipo</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Estado</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Total</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">Fecha</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((item) => (
                 <tr
-                  key={item.id}
+                  key={`${item.type}-${item.id}`}
+                  onClick={() => navigate(`/${item.type === 'invoice' ? 'invoices' : 'quotes'}/${item.id}`)}
                   className="border-b border-border last:border-0 hover:bg-accent/40 cursor-pointer transition-colors"
                 >
                   <td className="px-5 py-4 font-mono text-sm font-medium">{item.number}</td>
-                  <td className="px-5 py-4 text-sm">{item.client}</td>
-                  <td className="px-5 py-4 text-sm capitalize text-muted-foreground">{item.type}</td>
+                  <td className="px-5 py-4 text-sm">{item.clientName}</td>
+                  <td className="px-5 py-4 text-sm text-muted-foreground">{item.type === 'invoice' ? 'Factura' : 'Presupuesto'}</td>
                   <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
-                  <td className="px-5 py-4 text-sm text-right font-mono font-medium">${item.amount.toLocaleString()}</td>
+                  <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(item.total)}</td>
                   <td className="px-5 py-4 text-sm text-right text-muted-foreground">{item.date}</td>
                 </tr>
               ))}
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">
-                    No results found
+                    No hay actividad reciente
                   </td>
                 </tr>
               )}

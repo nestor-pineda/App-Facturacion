@@ -5,9 +5,10 @@ import {
   FileText,
   Receipt,
   Settings,
+  LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +21,9 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useAuthStore } from "@/store/authStore";
+import { logoutUser } from "@/api/endpoints/auth";
+import { toast } from "sonner";
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -32,7 +36,20 @@ const mainItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch {
+      // Even if the API call fails, we still logout locally
+    }
+    logout();
+    toast.success("Sesión cerrada");
+    navigate("/login");
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -75,6 +92,11 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        {!collapsed && user && (
+          <div className="px-4 py-2 text-xs text-muted-foreground truncate">
+            {user.nombreComercial}
+          </div>
+        )}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
@@ -86,6 +108,12 @@ export function AppSidebar() {
                 <Settings className="mr-2 h-4 w-4" />
                 {!collapsed && <span>Settings</span>}
               </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} className="hover:bg-accent/80 cursor-pointer">
+              <LogOut className="mr-2 h-4 w-4" />
+              {!collapsed && <span>Cerrar sesión</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

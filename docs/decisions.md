@@ -227,6 +227,26 @@ Decidir cómo manejar estado en el futuro frontend React.
 
 ---
 
+## [2026-03-09] Zustand adoptado para estado de autenticación — Revisión de decisión anterior
+
+### Decisión
+Usar **Zustand** con middleware `persist` exclusivamente para el estado de autenticación (`user`, `isAuthenticated`).
+
+### Contexto
+Al implementar la integración frontend-backend, la sesión del usuario (datos del perfil) necesita persistirse entre recargas de página. React Context no persiste automáticamente; requería solución manual (localStorage + re-hidratación).
+
+### Razones
+- Los tokens JWT viajan en httpOnly cookies (el frontend no los gestiona), pero el objeto `User` (nombre, email) sí necesita persistencia en cliente para mostrar datos en la UI sin un round-trip al servidor en cada carga.
+- Zustand con `persist` resuelve esto en ~20 líneas sin boilerplate de Redux.
+- El alcance es mínimo: **solo** `authStore.ts`. El resto del estado sigue en TanStack Query.
+
+### Consecuencias
+✅ Sesión persiste entre recargas sin llamada adicional al servidor  
+✅ Alcance acotado — no se usa Zustand para datos de dominio  
+✅ Coherente con la decisión original de evitar gestores de estado globales para server state
+
+---
+
 ## [2026-02-26] Solo IVA 21% en MVP
 
 ### Decisión
