@@ -40,7 +40,7 @@ export const list = async (userId: string, filters: QuoteFilters = {}) => {
           }
         : {}),
     },
-    include: { lines: true },
+    include: { lines: true, client: true },
     orderBy: { created_at: 'desc' },
   });
 };

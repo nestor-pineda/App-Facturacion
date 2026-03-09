@@ -67,7 +67,7 @@ export const list = async (userId: string, filters: InvoiceFilters = {}) => {
           }
         : {}),
     },
-    include: { lines: true },
+    include: { lines: true, client: true },
     orderBy: { created_at: 'desc' },
   });
 };
