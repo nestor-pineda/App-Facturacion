@@ -1,36 +1,47 @@
-# macOS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V8
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Node.js
+# Dependencias
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+backend/node_modules/
+frontend/node_modules/
 
-# TypeScript
-dist/
-build/
-*.tsbuildinfo
+# Builds
+backend/dist/
+frontend/dist/
 
-# Environment
+# Environment variables
 .env
 .env.local
 .env.*.local
-
-# Testing
-coverage/
+backend/.env
+frontend/.env
 
 # Logs
-logs/
 *.log
+npm-debug.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
 
 # IDE
 .vscode/
+.idea/
 *.swp
 *.swo
+
+# Testing
+coverage/
+.nyc_output/
+backend/coverage/
+frontend/coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Prisma
+backend/src/prisma/migrations/*_migration/
+
+# Temporal
+*.tmp
+.cache/
