@@ -242,6 +242,14 @@ Para **features complejas** (ej: generación de PDF, envío de emails, reportes)
 
 **Nunca tomes decisiones arquitectónicas importantes sin respaldo documental.**
 
+### 📂 Design Docs activos
+
+| Feature | Documento principal | Referencia técnica | Estado |
+| :--- | :--- | :--- | :--- |
+| Agente IA de lenguaje natural | `CONTEXT/designs/ai-agent/DESIGN_DOC_Agente_IA.md` | `CONTEXT/designs/ai-agent/GENKIT_Reference.md` | 🟡 Pendiente implementación |
+
+**Regla adicional para el módulo `src/agent/`:** Cualquier trabajo dentro de esta carpeta requiere leer previamente **ambos** documentos del agente IA. El Design Doc define la arquitectura y contratos; la referencia técnica de Genkit define los imports, formatos y errores comunes. No empezar a escribir código sin haberlos leído.
+
 ---
 
 ## 📝 Actualización de Documentación

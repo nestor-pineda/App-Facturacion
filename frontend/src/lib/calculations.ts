@@ -24,8 +24,12 @@ export const calculateTotals = (lines: CalculableLine[]) => {
   };
 };
 
-export const formatCurrency = (amount: number): string =>
-  new Intl.NumberFormat('es-ES', {
+export const formatCurrency = (amount: number): string => {
+  // #region agent log
+  fetch('http://127.0.0.1:7761/ingest/0f3d2f1b-d598-4961-b4fd-f4b04b3a51fe',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b3ab0'},body:JSON.stringify({sessionId:'3b3ab0',location:'calculations.ts:formatCurrency',message:'formatCurrency input',data:{amount,type:typeof amount,isNaN:Number.isNaN(Number(amount))},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+  // #endregion
+  return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
   }).format(amount);
+};

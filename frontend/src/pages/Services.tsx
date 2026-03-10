@@ -72,7 +72,14 @@ const Services = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((service) => (
+              {filtered.map((service, idx) => {
+                // #region agent log
+                if (idx === 0) {
+                  const s = service as Record<string, unknown>;
+                  fetch('http://127.0.0.1:7761/ingest/0f3d2f1b-d598-4961-b4fd-f4b04b3a51fe',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b3ab0'},body:JSON.stringify({sessionId:'3b3ab0',location:'Services.tsx:table',message:'Service row values',data:{precioBase:s.precioBase,precio_base:s.precio_base,ivaPorcentaje:s.ivaPorcentaje,iva_porcentaje:s.iva_porcentaje},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+                }
+                // #endregion
+                return (
                 <tr key={service.id} className="border-b border-border last:border-0 hover:bg-accent/40 transition-colors">
                   <td className="px-5 py-4 font-medium text-sm">{service.nombre}</td>
                   <td className="px-5 py-4 text-sm text-muted-foreground">{service.descripcion || '—'}</td>
@@ -84,7 +91,8 @@ const Services = () => {
                     </Button>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>
