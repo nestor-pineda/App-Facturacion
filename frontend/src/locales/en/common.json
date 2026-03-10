@@ -38,6 +38,7 @@
   "common": {
     "back": "Back",
     "delete": "Delete",
+    "edit": "Edit",
     "send": "Send",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -135,6 +136,9 @@
       "title": "New quote",
       "subtitle": "Create a quote for a client"
     },
+    "edit": {
+      "title": "Edit quote"
+    },
     "detail": {
       "title": "Quote {{number}}",
       "notFound": "Quote not found",
@@ -191,6 +195,9 @@
     "create": {
       "title": "New invoice",
       "subtitle": "Create an invoice for a client"
+    },
+    "edit": {
+      "title": "Edit invoice"
     },
     "detail": {
       "title": "Invoice {{number}}",
@@ -251,6 +258,7 @@
     "createService": "Create service",
     "createQuote": "Create quote",
     "createInvoice": "Create invoice",
+    "saveChanges": "Save changes",
     "notesPlaceholder": "Additional notes...",
     "descriptionPlaceholder": "Service description",
     "clientPlaceholder": "Client name"

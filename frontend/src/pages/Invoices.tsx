@@ -1,6 +1,12 @@
 import { Plus, Search, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -101,9 +107,25 @@ const Invoices = () => {
                 <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(inv.total)}</td>
                 <td className="px-5 py-4 text-sm text-right text-muted-foreground">{inv.fechaEmision}</td>
                 <td className="px-3 py-4">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      {inv.estado === ESTADO_BORRADOR && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/invoices/${inv.id}/edit`);
+                          }}
+                        >
+                          {t('common.edit')}
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}

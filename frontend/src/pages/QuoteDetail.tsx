@@ -6,7 +6,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/calculations';
 import { ESTADO_BORRADOR } from '@/lib/constants';
-import { ArrowLeft, Send, Trash2, Download, ArrowRightLeft } from 'lucide-react';
+import { ArrowLeft, Pencil, Send, Trash2, Download, ArrowRightLeft } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -112,6 +112,9 @@ export default function QuoteDetail() {
           </Button>
           {isDraft && (
             <>
+              <Button variant="outline" onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
+                <Pencil className="h-4 w-4 mr-1" /> {t('common.edit')}
+              </Button>
               <Button onClick={() => setConfirmSend(true)} disabled={sendMutation.isPending}>
                 <Send className="h-4 w-4 mr-1" /> {t('common.send')}
               </Button>

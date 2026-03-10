@@ -25,11 +25,11 @@ const toApiPayload = (data: CreateInvoiceInput) => ({
   fecha_emision: data.fechaEmision,
   notas: data.notas,
   lines: data.lines.map((l) => ({
-    service_id: l.serviceId,
+    ...(l.serviceId != null && l.serviceId !== '' && { service_id: l.serviceId }),
     descripcion: l.descripcion,
-    cantidad: l.cantidad,
-    precio_unitario: l.precioUnitario,
-    iva_porcentaje: l.ivaPorcentaje,
+    cantidad: Number(l.cantidad),
+    precio_unitario: Number(l.precioUnitario),
+    iva_porcentaje: Number(l.ivaPorcentaje),
   })),
 });
 

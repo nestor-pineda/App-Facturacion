@@ -13,12 +13,19 @@ import { IVA_DEFAULT } from '@/lib/constants';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+const DEFAULT_INVOICE_VALUES: CreateInvoiceInput = {
+  fechaEmision: new Date().toISOString().split('T')[0],
+  lines: [{ serviceId: null, descripcion: '', cantidad: 1, precioUnitario: 0, ivaPorcentaje: IVA_DEFAULT }],
+};
+
 interface InvoiceFormProps {
   onSubmit: (data: CreateInvoiceInput) => void;
   isLoading?: boolean;
+  defaultValues?: CreateInvoiceInput;
+  isEdit?: boolean;
 }
 
-export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
+export function InvoiceForm({ onSubmit, isLoading, defaultValues, isEdit }: InvoiceFormProps) {
   const { t } = useTranslation();
   const { data: clients } = useClients();
   const { data: services } = useServices();
@@ -32,10 +39,7 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
     formState: { errors },
   } = useForm<CreateInvoiceInput>({
     resolver: zodResolver(createInvoiceSchema()),
-    defaultValues: {
-      fechaEmision: new Date().toISOString().split('T')[0],
-      lines: [{ serviceId: null, descripcion: '', cantidad: 1, precioUnitario: 0, ivaPorcentaje: IVA_DEFAULT }],
-    },
+    defaultValues: defaultValues ?? DEFAULT_INVOICE_VALUES,
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'lines' });
@@ -64,7 +68,7 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>{t('forms.client')}</Label>
-          <Select onValueChange={(v) => setValue('clientId', v)}>
+          <Select value={watch('clientId') ?? ''} onValueChange={(v) => setValue('clientId', v)}>
             <SelectTrigger>
               <SelectValue placeholder={t('forms.selectClient')} />
             </SelectTrigger>
@@ -110,7 +114,7 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
               <span className="text-sm font-medium">{t('forms.lineN', { n: index + 1 })}</span>
               <div className="flex items-center gap-2">
                 {services && services.length > 0 && (
-                  <Select onValueChange={(v) => handleServiceSelect(index, v)}>
+                  <Select value={watch(`lines.${index}.serviceId`) ?? ''} onValueChange={(v) => handleServiceSelect(index, v)}>
                     <SelectTrigger className="w-48">
                       <SelectValue placeholder={t('forms.fromCatalog')} />
                     </SelectTrigger>
@@ -156,7 +160,7 @@ export function InvoiceForm({ onSubmit, isLoading }: InvoiceFormProps) {
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? t('forms.saving') : t('forms.createInvoice')}
+        {isLoading ? t('forms.saving') : isEdit ? t('forms.saveChanges') : t('forms.createInvoice')}
       </Button>
     </form>
   );

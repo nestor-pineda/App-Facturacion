@@ -15,8 +15,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import QuoteCreate from "./pages/QuoteCreate";
 import QuoteDetail from "./pages/QuoteDetail";
+import QuoteEdit from "./pages/QuoteEdit";
 import InvoiceCreate from "./pages/InvoiceCreate";
 import InvoiceDetail from "./pages/InvoiceDetail";
+import InvoiceEdit from "./pages/InvoiceEdit";
 import NotFound from "./pages/NotFound";
 import { useThemeStore } from "@/store/themeStore";
 import { useLayoutEffect } from "react";
@@ -61,9 +63,11 @@ const App = () => (
               <Route path="/quotes" element={<Quotes />} />
               <Route path="/quotes/new" element={<QuoteCreate />} />
               <Route path="/quotes/:id" element={<QuoteDetail />} />
+              <Route path="/quotes/:id/edit" element={<QuoteEdit />} />
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/invoices/new" element={<InvoiceCreate />} />
               <Route path="/invoices/:id" element={<InvoiceDetail />} />
+              <Route path="/invoices/:id/edit" element={<InvoiceEdit />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>

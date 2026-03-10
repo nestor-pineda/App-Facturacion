@@ -38,6 +38,7 @@
   "common": {
     "back": "Volver",
     "delete": "Eliminar",
+    "edit": "Editar",
     "send": "Enviar",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
@@ -135,6 +136,9 @@
       "title": "Nuevo presupuesto",
       "subtitle": "Crea un presupuesto para un cliente"
     },
+    "edit": {
+      "title": "Editar presupuesto"
+    },
     "detail": {
       "title": "Presupuesto {{number}}",
       "notFound": "Presupuesto no encontrado",
@@ -191,6 +195,9 @@
     "create": {
       "title": "Nueva factura",
       "subtitle": "Crea una factura para un cliente"
+    },
+    "edit": {
+      "title": "Editar factura"
     },
     "detail": {
       "title": "Factura {{number}}",
@@ -251,6 +258,7 @@
     "createService": "Crear servicio",
     "createQuote": "Crear presupuesto",
     "createInvoice": "Crear factura",
+    "saveChanges": "Guardar cambios",
     "notesPlaceholder": "Notas adicionales...",
     "descriptionPlaceholder": "Descripción del servicio",
     "clientPlaceholder": "Nombre del cliente"
