@@ -1,4 +1,3 @@
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -20,7 +19,7 @@ import InvoiceCreate from "./pages/InvoiceCreate";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import NotFound from "./pages/NotFound";
 import { useThemeStore } from "@/store/themeStore";
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,13 +34,8 @@ const queryClient = new QueryClient({
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useThemeStore((s) => s.theme);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
   return <>{children}</>;
@@ -51,7 +45,6 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
     <TooltipProvider>
-      <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>

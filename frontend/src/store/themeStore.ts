@@ -21,6 +21,11 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: 'theme-storage',
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          document.documentElement.classList.toggle('dark', state.theme === 'dark');
+        }
+      },
     },
   ),
 );

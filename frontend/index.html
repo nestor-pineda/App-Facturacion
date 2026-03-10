@@ -20,6 +20,21 @@
   </head>
 
   <body>
+    <!-- Blocking script: applies persisted theme before React mounts to prevent flash -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme-storage');
+          var isDark =
+            stored &&
+            JSON.parse(stored).state &&
+            JSON.parse(stored).state.theme === 'dark';
+          document.documentElement.classList.toggle('dark', !!isDark);
+        } catch (e) {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
