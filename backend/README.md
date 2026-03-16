@@ -733,6 +733,8 @@ npm run test:integration  # Solo tests de integración
 
 Los tests usan una base de datos real. Asegúrate de que el contenedor Docker está corriendo antes de ejecutarlos.
 
+Hay un test en `tests/integration/clients.test.ts` que comprueba el 409 al crear un cliente con email duplicado para el mismo usuario; está con `it.skip` hasta que exista el constraint `@@unique([user_id, email])` en el modelo Client. Ver [TESTING.md](../docs/CONTEXT/TESTING.md) para más detalle.
+
 ---
 
 ## 8. Comandos de desarrollo

@@ -1,6 +1,6 @@
 # Siguientes Pasos — App Facturación
 
-> Estado actual: Fases 0-6 implementadas. TypeScript sin errores. Build de producción funcional.
+> Estado actual: Fases 0-6 implementadas. TypeScript sin errores. Build de producción funcional. **Punto 2 (Testing unitarios e integración) implementado** — ver [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md).
 
 ---
 
@@ -26,7 +26,9 @@ npm install react-i18next i18next i18next-browser-languagedetector
 
 ---
 
-## 2. Testing — Unitarios e Integración
+## 2. Testing — Unitarios e Integración *(implementado)*
+
+> Documentación: [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md)
 
 **Dependencias a instalar:**
 ```bash

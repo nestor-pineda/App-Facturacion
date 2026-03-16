@@ -37,7 +37,27 @@ export const create = async (req: Request, res: Response) => {
   try {
     const client = await clientService.create(req.user!.id, parsed.data);
     return res.status(201).json({ success: true, data: client });
-  } catch {
+  } catch (error) {
+    const err = error as { code?: string; meta?: { target?: string[] }; message?: string };
+    if (err.code === 'P2002') {
+      return res.status(409).json({
+        success: false,
+        error: {
+          message: 'Ya existe un cliente con ese email para tu cuenta.',
+          code: 'EMAIL_ALREADY_EXISTS',
+        },
+      });
+    }
+    if (err.code === 'P2003') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Error de referencia (usuario o datos inválidos). Vuelve a iniciar sesión.',
+          code: 'FOREIGN_KEY_ERROR',
+        },
+      });
+    }
+    console.error('[client.controller] create error:', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },

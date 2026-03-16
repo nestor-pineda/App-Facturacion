@@ -83,16 +83,19 @@ npm run dev            # Arranca backend y frontend en paralelo
 | `npm run test` | Ejecuta tests de todos los paquetes |
 | `npm run install:all` | Instala dependencias de todos los paquetes |
 
+Para ejecutar solo los tests del frontend: `cd frontend && npm run test`. Para solo el backend: `cd backend && npm test`. Ver [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md).
+
 ## Documentación
 
 - [`docs/CONTEXT/API.md`](docs/CONTEXT/API.md) — Referencia de endpoints REST
+- [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md) — Setup de tests (unitarios, componentes, integración; frontend y backend)
 - [`docs/CONTEXT/NAMING-CONVENTIONS.md`](docs/CONTEXT/NAMING-CONVENTIONS.md) — Convención snake_case (API/backend) vs camelCase (frontend); evita fallos de mapeo
 - [`docs/CONTEXT/DATABASE.md`](docs/CONTEXT/DATABASE.md) — Esquema de base de datos
 - [`docs/CONTEXT/ENVIRONMENT.md`](docs/CONTEXT/ENVIRONMENT.md) — Variables de entorno
 - [`docs/decisions.md`](docs/decisions.md) — Decisiones de arquitectura
 - [`docs/domain.md`](docs/domain.md) — Modelo de dominio
 - [`docs/product.md`](docs/product.md) — Especificación de producto
-- [`siguientes-pasos.md`](siguientes-pasos.md) — Próximos pasos: i18n, tests, refactor, despliegue
+- [`siguientes-pasos.md`](siguientes-pasos.md) — Próximos pasos: i18n, tests (p.2 implementado), refactor, despliegue
 
 ### Design Docs
 

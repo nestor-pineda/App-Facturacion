@@ -50,6 +50,18 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
+## Testing
+
+Tests con Vitest, React Testing Library, user-event y MSW (mock de API). Comandos:
+
+```sh
+cd frontend
+npm run test          # Una ejecución
+npm run test:watch    # Modo watch
+```
+
+Documentación detallada: [docs/CONTEXT/TESTING.md](../docs/CONTEXT/TESTING.md) (estructura de tests, test-utils, handlers MSW, integración).
+
 ## What technologies are used for this project?
 
 This project is built with:

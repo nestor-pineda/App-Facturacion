@@ -100,6 +100,28 @@ describe('POST /api/v1/clients', () => {
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
   });
+
+  it.skip('should return 409 when creating client with duplicate email for same user (requires @@unique([user_id, email]) on Client)', async () => {
+    const cookies = await createUserAndGetCookies();
+    const duplicateEmail = 'duplicado@empresa.com';
+    const clientPayload = { ...validClient, email: duplicateEmail };
+
+    await request(app)
+      .post(CLIENTS_URL)
+      .set('Cookie', cookies)
+      .send(clientPayload)
+      .expect(201);
+
+    const response = await request(app)
+      .post(CLIENTS_URL)
+      .set('Cookie', cookies)
+      .send(clientPayload);
+
+    expect(response.status).toBe(409);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe('EMAIL_ALREADY_EXISTS');
+    expect(response.body.error.message).toMatch(/email|ya existe/i);
+  });
 });
 
 describe('PUT /api/v1/clients/:id', () => {
