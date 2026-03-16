@@ -8,24 +8,30 @@ import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ESTADO_BORRADOR } from '@/lib/constants';
 import type { CreateInvoiceInput } from '@/schemas/invoice.schema';
-import type { Invoice } from '@/types/entities';
+import type { Invoice, InvoiceLine } from '@/types/entities';
 
+/** API may return snake_case; normalize to form input (camelCase). */
 function invoiceToFormInput(invoice: Invoice): CreateInvoiceInput {
+  const raw = invoice as Invoice & { fecha_emision?: string };
+  const fechaValue = raw.fecha_emision ?? invoice.fechaEmision;
   const fechaEmision =
-    typeof invoice.fechaEmision === 'string' && invoice.fechaEmision.includes('T')
-      ? invoice.fechaEmision.split('T')[0]
-      : invoice.fechaEmision;
+    typeof fechaValue === 'string' && fechaValue.includes('T')
+      ? fechaValue.split('T')[0]
+      : (fechaValue ?? '');
   return {
     clientId: invoice.client.id,
-    fechaEmision,
+    fechaEmision: fechaEmision || new Date().toISOString().split('T')[0],
     notas: invoice.notas ?? '',
-    lines: invoice.lines.map((l) => ({
-      serviceId: l.serviceId,
-      descripcion: l.descripcion,
-      cantidad: Number(l.cantidad) || 0,
-      precioUnitario: Number(l.precioUnitario) || 0,
-      ivaPorcentaje: Number(l.ivaPorcentaje) ?? 21,
-    })),
+    lines: invoice.lines.map((l) => {
+      const line = l as InvoiceLine & { precio_unitario?: number; service_id?: string | null; iva_porcentaje?: number };
+      return {
+        serviceId: line.service_id ?? line.serviceId ?? null,
+        descripcion: l.descripcion,
+        cantidad: Number(l.cantidad) || 0,
+        precioUnitario: Number(line.precio_unitario ?? l.precioUnitario) || 0,
+        ivaPorcentaje: Number(line.iva_porcentaje ?? l.ivaPorcentaje) ?? 21,
+      };
+    }),
   };
 }
 

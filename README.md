@@ -53,6 +53,17 @@ Esto crea un usuario de prueba con clientes, servicios, presupuestos y facturas 
 
 > El script es idempotente: si lo ejecutas varias veces, limpia los datos del usuario de prueba y los vuelve a insertar desde cero.
 
+### Prisma Studio
+
+Para inspeccionar y editar la base de datos con la interfaz gráfica de Prisma, ejecuta Prisma Studio **desde la carpeta del backend** (donde está el schema y el `.env` con `DATABASE_URL`):
+
+```bash
+cd backend
+npx prisma studio
+```
+
+Se abrirá en el navegador (por defecto `http://localhost:5555`). Asegúrate de tener configurado `DATABASE_URL` en `backend/.env` (por ejemplo copiando `backend/.env.example` a `backend/.env` y ajustando usuario, contraseña y nombre de la base de datos).
+
 ### Monorepo (ambos a la vez)
 
 ```bash

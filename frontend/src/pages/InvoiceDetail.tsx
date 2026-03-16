@@ -23,6 +23,9 @@ export default function InvoiceDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const invoice = invoices?.find((inv) => inv.id === id);
+  const rawInvoice = invoice as typeof invoice & { fecha_emision?: string; total_iva?: number };
+  const displayDate = rawInvoice?.fecha_emision ?? invoice?.fechaEmision ?? '';
+  const displayTotalIva = rawInvoice?.total_iva ?? invoice?.totalIva ?? 0;
 
   if (isLoading) return <LoadingSpinner />;
   if (!invoice) {
@@ -58,7 +61,7 @@ export default function InvoiceDetail() {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-muted-foreground">{t('invoices.detail.issueDate')}</span>
-            <span className="ml-2">{invoice.fechaEmision}</span>
+            <span className="ml-2">{displayDate}</span>
           </div>
           <div>
             <span className="text-muted-foreground">{t('invoices.detail.client')}</span>
@@ -106,7 +109,7 @@ export default function InvoiceDetail() {
 
         <div className="border-t pt-4 space-y-1 text-right">
           <p className="text-sm text-muted-foreground">{t('invoices.detail.totals.subtotal')} {formatCurrency(invoice.subtotal)}</p>
-          <p className="text-sm text-muted-foreground">{t('invoices.detail.totals.vat')} {formatCurrency(invoice.totalIva)}</p>
+          <p className="text-sm text-muted-foreground">{t('invoices.detail.totals.vat')} {formatCurrency(displayTotalIva)}</p>
           <p className="text-lg font-bold">{t('invoices.detail.totals.total')} {formatCurrency(invoice.total)}</p>
         </div>
 

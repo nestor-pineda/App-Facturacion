@@ -8,24 +8,30 @@ import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ESTADO_BORRADOR } from '@/lib/constants';
 import type { CreateQuoteInput } from '@/schemas/quote.schema';
-import type { Quote } from '@/types/entities';
+import type { Quote, QuoteLine } from '@/types/entities';
 
+/** API may return snake_case for lines; normalize to form input (camelCase). */
 function quoteToFormInput(quote: Quote): CreateQuoteInput {
+  const raw = quote as Quote & { fecha?: string };
+  const fechaValue = raw.fecha ?? quote.fecha;
   const fecha =
-    typeof quote.fecha === 'string' && quote.fecha.includes('T')
-      ? quote.fecha.split('T')[0]
-      : quote.fecha;
+    typeof fechaValue === 'string' && fechaValue.includes('T')
+      ? fechaValue.split('T')[0]
+      : (fechaValue ?? '');
   return {
     clientId: quote.client.id,
-    fecha,
+    fecha: fecha || new Date().toISOString().split('T')[0],
     notas: quote.notas ?? '',
-    lines: quote.lines.map((l) => ({
-      serviceId: l.serviceId,
-      descripcion: l.descripcion,
-      cantidad: Number(l.cantidad) || 0,
-      precioUnitario: Number(l.precioUnitario) || 0,
-      ivaPorcentaje: Number(l.ivaPorcentaje) ?? 21,
-    })),
+    lines: quote.lines.map((l) => {
+      const line = l as QuoteLine & { precio_unitario?: number; service_id?: string | null; iva_porcentaje?: number };
+      return {
+        serviceId: line.service_id ?? line.serviceId ?? null,
+        descripcion: l.descripcion,
+        cantidad: Number(l.cantidad) || 0,
+        precioUnitario: Number(line.precio_unitario ?? l.precioUnitario) || 0,
+        ivaPorcentaje: Number(line.iva_porcentaje ?? l.ivaPorcentaje) ?? 21,
+      };
+    }),
   };
 }
 
