@@ -9,6 +9,8 @@ Copia el siguiente bloque de código para crear tu archivo:
 **Auth:** httpOnly Cookie (`accessToken`) enviada automáticamente por el browser. No se usa `Authorization` header.  
 **Formato de Respuesta:** Siempre `{ success: boolean, data?: any, error?: { message, code, details } }`
 
+**Convención de nombres (obligatoria):** Todos los cuerpos de petición (request body) y de respuesta (response body) usan **snake_case** (ej: `fecha_emision`, `total_iva`, `client_id`, `precio_unitario`). El frontend debe mapear a camelCase al enviar y al leer. Ver `docs/CONTEXT/NAMING-CONVENTIONS.md`.
+
 ---
 
 ## 🔐 Autenticación

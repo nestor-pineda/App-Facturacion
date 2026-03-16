@@ -14,6 +14,7 @@ Este documento contiene las convenciones y reglas que se aplican a **todo el pro
 
 - **`backend.md`** → Arquitectura de capas, flujo de datos, estructura de carpetas
 - **`API.md`** → Contratos de endpoints, request/response, errores
+- **`NAMING-CONVENTIONS.md`** → snake_case (API/backend) vs camelCase (frontend), mapeo en el límite
 - **`DATABASE.md`** → Esquema de base de datos, tipos, restricciones
 - **`ENVIRONMENT.md`** → Variables de entorno requeridas
 - **`CONTEXT/product.md`** → Definición del producto, alcance del MVP
@@ -63,13 +64,22 @@ Este documento contiene las convenciones y reglas que se aplican a **todo el pro
 
 ## 📝 Convenciones de Naming
 
+**Documento de referencia:** `docs/CONTEXT/NAMING-CONVENTIONS.md` — define el sistema completo para evitar fallos entre snake_case y camelCase.
+
+### Regla crítica: API vs frontend
+
+- **Backend y API (cuerpos de petición y respuesta, Prisma, DB):** siempre **snake_case** (`fecha_emision`, `total_iva`, `client_id`, `precio_unitario`).
+- **Frontend (tipos, estado, formularios):** siempre **camelCase** (`fechaEmision`, `totalIva`, `clientId`, `precioUnitario`).
+- **Conversión en el límite:** al llamar a la API, el frontend convierte camelCase → snake_case (ej: `toApiPayload`). Al leer respuestas, debe leer snake_case (o ambos) en mappers y vistas (ej: `*ToFormInput`, vista de detalle) para no obtener `undefined` o NaN.
+
 ### Base de datos (snake_case)
 ```sql
 user_id, nombre_comercial, created_at, total_iva, fecha_emision
 ```
 
-### TypeScript/JavaScript (camelCase)
+### TypeScript/JavaScript en backend y en frontend (camelCase en código; API usa snake_case)
 ```typescript
+// En código frontend y tipos:
 userId, nombreComercial, createdAt, totalIva, fechaEmision
 ```
 

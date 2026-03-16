@@ -86,6 +86,7 @@ npm run dev            # Arranca backend y frontend en paralelo
 ## Documentación
 
 - [`docs/CONTEXT/API.md`](docs/CONTEXT/API.md) — Referencia de endpoints REST
+- [`docs/CONTEXT/NAMING-CONVENTIONS.md`](docs/CONTEXT/NAMING-CONVENTIONS.md) — Convención snake_case (API/backend) vs camelCase (frontend); evita fallos de mapeo
 - [`docs/CONTEXT/DATABASE.md`](docs/CONTEXT/DATABASE.md) — Esquema de base de datos
 - [`docs/CONTEXT/ENVIRONMENT.md`](docs/CONTEXT/ENVIRONMENT.md) — Variables de entorno
 - [`docs/decisions.md`](docs/decisions.md) — Decisiones de arquitectura

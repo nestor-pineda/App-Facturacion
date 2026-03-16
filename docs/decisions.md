@@ -428,6 +428,36 @@ Decidir entre VPS (DigitalOcean, Linode), PaaS (Railway, Render) o serverless (V
 
 ---
 
+## [2026-03-10] snake_case en API/backend, camelCase en frontend (mapeo en el límite)
+
+### Decisión
+- **Backend, base de datos, Prisma y cuerpos de petición/respuesta de la API:** nomenclatura **snake_case** (ej: `fecha_emision`, `total_iva`, `client_id`, `precio_unitario`).
+- **Frontend (TypeScript, React, tipos, estado, formularios):** nomenclatura **camelCase** (ej: `fechaEmision`, `totalIva`, `clientId`, `precioUnitario`).
+- **Conversión en el límite:** el frontend convierte camelCase → snake_case al enviar datos a la API (ej: `toApiPayload` en `api/endpoints/*.ts`) y debe leer snake_case (o ambos) al consumir respuestas en mappers y vistas (ej: `*ToFormInput`, vistas de detalle) para evitar `undefined` y valores NaN.
+
+### Contexto
+Se detectaron fallos en edición de facturas/presupuestos: formularios sin rellenar y guardado que no redirigía. La causa era que la API devuelve snake_case y el frontend asumía camelCase; campos como `fecha_emision` y `total_iva` llegaban como `undefined`, provocando validaciones fallidas o visualización incorrecta.
+
+### Razones
+- La base de datos y Prisma usan snake_case por convención en PostgreSQL y en el schema.
+- Mantener la API en snake_case evita transformar todas las respuestas en el backend y mantiene coherencia con la DB.
+- El ecosistema JavaScript/TypeScript y React usan camelCase por convención; el frontend es más legible y consistente con librerías en camelCase.
+- Un único punto de conversión (mapeo al enviar y al leer en el frontend) evita inconsistencias y bugs como los detectados.
+
+### Alternativa descartada
+- **API en camelCase:** obligaría a transformar todas las respuestas del backend y desalinearía la API con Prisma/DB.
+- **Frontend en snake_case:** iría contra la convención de React/TypeScript y empeoraría la DX.
+
+### Consecuencias
+✅ Un solo criterio claro: API/backend = snake_case, frontend = camelCase.  
+✅ Documentación explícita en `docs/CONTEXT/NAMING-CONVENTIONS.md` y referencia en `API.md` y reglas del agente.  
+⚠️ Cualquier nuevo endpoint o campo debe respetar la convención; el frontend debe seguir mapeando en el límite.
+
+### Revisión
+Si en el futuro se introduce un middleware o capa que normalice automáticamente (ej: transformador global de respuestas), se podría revisar; hasta entonces, el mapeo explícito en el frontend es obligatorio.
+
+---
+
 ## Plantilla para Nuevas Decisiones
 
 ```markdown
