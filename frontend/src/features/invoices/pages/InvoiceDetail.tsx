@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useInvoices, useSendInvoice, useDeleteInvoice, useDownloadInvoicePDF } from '@/hooks/useInvoices';
+import { useInvoices, useSendInvoice, useDeleteInvoice, useDownloadInvoicePDF } from '@/features/invoices/hooks/useInvoices';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { StatusBadge } from '@/components/StatusBadge';

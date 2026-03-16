@@ -4,8 +4,8 @@ import { http, HttpResponse } from 'msw';
 import { server } from '@/test/mocks/server';
 import { API_BASE_PATH } from '@/lib/constants';
 import { Routes, Route } from 'react-router-dom';
-import Quotes from '@/pages/Quotes';
-import QuoteDetail from '@/pages/QuoteDetail';
+import Quotes from '@/features/quotes/pages/Quotes';
+import QuoteDetail from '@/features/quotes/pages/QuoteDetail';
 import { useAuthStore } from '@/store/authStore';
 import type { User } from '@/types/entities';
 

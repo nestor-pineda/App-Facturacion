@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuotes, useSendQuote, useDeleteQuote, useConvertQuoteToInvoice, useDownloadQuotePDF } from '@/hooks/useQuotes';
+import { useQuotes, useSendQuote, useDeleteQuote, useConvertQuoteToInvoice, useDownloadQuotePDF } from '@/features/quotes/hooks/useQuotes';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { StatusBadge } from '@/components/StatusBadge';

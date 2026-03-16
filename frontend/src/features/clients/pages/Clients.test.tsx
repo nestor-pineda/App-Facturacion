@@ -24,8 +24,7 @@ describe('Clients', () => {
   it('shows empty state when list is empty', async () => {
     server.use(
       http.get(`${API_BASE_PATH}/clients`, () =>
-        HttpResponse.json({ success: true, data: [], meta: { total: 0 } }, { status: 200 }),
-      ),
+        HttpResponse.json({ success: true, data: [], meta: { total: 0 } }, { status: 200 }))
     );
 
     render(<Clients />);
@@ -40,8 +39,7 @@ describe('Clients', () => {
   it('shows error state when request fails', async () => {
     server.use(
       http.get(`${API_BASE_PATH}/clients`, () =>
-        HttpResponse.json({ success: false, error: { message: 'Error', code: 'ERROR' } }, { status: 500 }),
-      ),
+        HttpResponse.json({ success: false, error: { message: 'Error', code: 'ERROR' } }, { status: 500 }))
     );
 
     render(<Clients />);

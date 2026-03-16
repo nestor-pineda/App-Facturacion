@@ -10,7 +10,7 @@ import {
 import { StatusBadge } from "@/components/StatusBadge";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useInvoices } from "@/hooks/useInvoices";
+import { useInvoices } from "@/features/invoices/hooks/useInvoices";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { formatCurrency } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADA } from "@/lib/constants";

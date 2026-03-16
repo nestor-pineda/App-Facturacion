@@ -3,9 +3,9 @@ import { render, screen, userEvent, waitFor } from '@/test/test-utils';
 import { server } from '@/test/mocks/server';
 import { API_BASE_PATH } from '@/lib/constants';
 import { Routes, Route } from 'react-router-dom';
-import Login from '@/pages/Login';
-import Invoices from '@/pages/Invoices';
-import InvoiceCreate from '@/pages/InvoiceCreate';
+import Login from '@/features/auth/pages/Login';
+import Invoices from '@/features/invoices/pages/Invoices';
+import InvoiceCreate from '@/features/invoices/pages/InvoiceCreate';
 import { useAuthStore } from '@/store/authStore';
 import type { User } from '@/types/entities';
 

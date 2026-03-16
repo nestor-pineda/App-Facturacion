@@ -23,8 +23,7 @@ describe('Quotes', () => {
   it('shows empty state when list is empty', async () => {
     server.use(
       http.get(`${API_BASE_PATH}/quotes`, () =>
-        HttpResponse.json({ success: true, data: [] }, { status: 200 }),
-      ),
+        HttpResponse.json({ success: true, data: [] }, { status: 200 }))
     );
 
     render(<Quotes />);

@@ -10,7 +10,7 @@ import {
 import { StatusBadge } from "@/components/StatusBadge";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuotes } from "@/hooks/useQuotes";
+import { useQuotes } from "@/features/quotes/hooks/useQuotes";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { formatCurrency } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADO } from "@/lib/constants";

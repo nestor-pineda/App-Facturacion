@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useInvoices, useUpdateInvoice } from '@/hooks/useInvoices';
-import { InvoiceForm } from '@/components/forms/InvoiceForm';
+import { useInvoices, useUpdateInvoice } from '@/features/invoices/hooks/useInvoices';
+import { InvoiceForm } from '@/features/invoices/components/InvoiceForm';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';

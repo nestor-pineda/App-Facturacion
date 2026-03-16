@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuotes, useUpdateQuote } from '@/hooks/useQuotes';
-import { QuoteForm } from '@/components/forms/QuoteForm';
+import { useQuotes, useUpdateQuote } from '@/features/quotes/hooks/useQuotes';
+import { QuoteForm } from '@/features/quotes/components/QuoteForm';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
