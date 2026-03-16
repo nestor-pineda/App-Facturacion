@@ -1,5 +1,6 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FORM_VALIDATION_MODE } from '@/lib/constants';
 import { createQuoteSchema, type CreateQuoteInput } from '@/schemas/quote.schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,7 @@ export function QuoteForm({ onSubmit, isLoading, defaultValues, isEdit }: QuoteF
     watch,
     formState: { errors },
   } = useForm<CreateQuoteInput>({
+    mode: FORM_VALIDATION_MODE,
     resolver: zodResolver(createQuoteSchema()),
     defaultValues: defaultValues ?? DEFAULT_QUOTE_VALUES,
   });

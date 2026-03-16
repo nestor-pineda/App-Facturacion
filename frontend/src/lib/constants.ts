@@ -23,3 +23,6 @@ export const QUERY_KEYS = {
   INVOICES: 'invoices',
   DASHBOARD: 'dashboard',
 } as const;
+
+/** React Hook Form: validación tras blur y luego en cada cambio (inline) */
+export const FORM_VALIDATION_MODE = 'onTouched' as const;

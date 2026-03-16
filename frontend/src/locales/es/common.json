@@ -62,6 +62,10 @@
     "revenue": "Facturado",
     "recentActivity": "Actividad reciente",
     "noActivity": "No hay actividad reciente",
+    "emptyState": {
+      "title": "No hay actividad reciente",
+      "description": "Las facturas y presupuestos que crees aparecerán aquí."
+    },
     "searchPlaceholder": "Buscar por número o cliente...",
     "filterAll": "Todos",
     "filterQuotes": "Presupuestos",
@@ -96,6 +100,11 @@
     "searchPlaceholder": "Buscar clientes...",
     "empty": "Aún no tienes clientes. Crea el primero.",
     "notFound": "No se encontraron clientes",
+    "emptyState": {
+      "title": "No hay clientes",
+      "description": "Añade tu primer cliente para poder emitir presupuestos y facturas.",
+      "tryOtherTerms": "Prueba con otros términos de búsqueda."
+    },
     "edit": "Editar",
     "dialogNew": "Nuevo cliente",
     "dialogEdit": "Editar cliente"
@@ -107,6 +116,11 @@
     "searchPlaceholder": "Buscar servicios...",
     "empty": "Aún no tienes servicios. Crea el primero.",
     "notFound": "No se encontraron servicios",
+    "emptyState": {
+      "title": "No hay servicios",
+      "description": "Crea servicios o productos para añadirlos a presupuestos y facturas.",
+      "tryOtherTerms": "Prueba con otros términos de búsqueda."
+    },
     "dialogNew": "Nuevo servicio",
     "table": {
       "service": "Servicio",
@@ -121,6 +135,11 @@
     "newButton": "Nuevo presupuesto",
     "searchPlaceholder": "Buscar presupuestos...",
     "notFound": "No se encontraron presupuestos",
+    "emptyState": {
+      "title": "No hay presupuestos",
+      "description": "Crea tu primer presupuesto para enviar propuestas a tus clientes.",
+      "tryOtherTerms": "Prueba con otros filtros o términos de búsqueda."
+    },
     "filterAll": "Todos",
     "filterDraft": "Borrador",
     "filterSent": "Enviado",
@@ -182,6 +201,11 @@
     "newButton": "Nueva factura",
     "searchPlaceholder": "Buscar facturas...",
     "notFound": "No se encontraron facturas",
+    "emptyState": {
+      "title": "No hay facturas",
+      "description": "Crea una factura desde cero o convirtiendo un presupuesto enviado.",
+      "tryOtherTerms": "Prueba con otros filtros o términos de búsqueda."
+    },
     "filterAll": "Todas",
     "filterDraft": "Borrador",
     "filterSent": "Enviada",

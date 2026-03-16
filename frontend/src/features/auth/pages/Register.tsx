@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FORM_VALIDATION_MODE } from '@/lib/constants';
 import { createRegisterSchema, type RegisterInput } from '@/schemas/auth.schema';
 import { registerUser } from '@/api/endpoints/auth';
 import { useNavigate, Link } from 'react-router-dom';
@@ -23,6 +24,7 @@ export default function Register() {
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterInput>({
+    mode: FORM_VALIDATION_MODE,
     resolver: zodResolver(createRegisterSchema()),
   });
 

@@ -1,5 +1,6 @@
-import { FileText, Receipt, Users, Search } from "lucide-react";
+import { FileText, Receipt, Users, Search, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useNavigate } from "react-router-dom";
@@ -167,45 +168,46 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="data-table-wrapper">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.number')}</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.client')}</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.type')}</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.status')}</th>
-                    <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.total')}</th>
-                    <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.date')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((item) => (
-                    <tr
-                      key={`${item.type}-${item.id}`}
-                      onClick={() => navigate(`/${item.type === 'invoice' ? 'invoices' : 'quotes'}/${item.id}`)}
-                      className="border-b border-border last:border-0 hover:bg-accent/40 cursor-pointer transition-colors"
-                    >
-                      <td className="px-5 py-4 font-mono text-sm font-medium">{item.number}</td>
-                      <td className="px-5 py-4 text-sm">{item.clientName}</td>
-                      <td className="px-5 py-4 text-sm text-muted-foreground">
-                        {item.type === 'invoice' ? t('dashboard.typeLabel.invoice') : t('dashboard.typeLabel.quote')}
-                      </td>
-                      <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
-                      <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(item.total)}</td>
-                      <td className="px-5 py-4 text-sm text-right text-muted-foreground">{item.date}</td>
+            {filtered.length === 0 ? (
+              <EmptyState
+                icon={Activity}
+                title={t('dashboard.emptyState.title')}
+                description={t('dashboard.emptyState.description')}
+              />
+            ) : (
+              <div className="data-table-wrapper">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.number')}</th>
+                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.client')}</th>
+                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.type')}</th>
+                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.status')}</th>
+                      <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.total')}</th>
+                      <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.date')}</th>
                     </tr>
-                  ))}
-                  {filtered.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">
-                        {t('dashboard.noActivity')}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filtered.map((item) => (
+                      <tr
+                        key={`${item.type}-${item.id}`}
+                        onClick={() => navigate(`/${item.type === 'invoice' ? 'invoices' : 'quotes'}/${item.id}`)}
+                        className="border-b border-border last:border-0 hover:bg-accent/40 cursor-pointer transition-colors"
+                      >
+                        <td className="px-5 py-4 font-mono text-sm font-medium">{item.number}</td>
+                        <td className="px-5 py-4 text-sm">{item.clientName}</td>
+                        <td className="px-5 py-4 text-sm text-muted-foreground">
+                          {item.type === 'invoice' ? t('dashboard.typeLabel.invoice') : t('dashboard.typeLabel.quote')}
+                        </td>
+                        <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
+                        <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(item.total)}</td>
+                        <td className="px-5 py-4 text-sm text-right text-muted-foreground">{item.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </>
       )}

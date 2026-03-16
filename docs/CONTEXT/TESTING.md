@@ -36,7 +36,7 @@ npm run test:watch    # Modo watch (re-ejecuta al guardar)
 |------|-----------|-------------|
 | Unitarios | Junto al módulo (`.test.ts` / `.test.tsx`) | `lib/calculations.test.ts`, `schemas/client.schema.test.ts`, `store/authStore.test.ts`, `components/StatusBadge.test.tsx` |
 | Componentes | Dentro de cada feature, junto al componente | `features/auth/components/ProtectedRoute.test.tsx`, `features/clients/components/ClientForm.test.tsx`, `features/services/components/ServiceForm.test.tsx`, `features/invoices/components/InvoiceForm.test.tsx`, `features/quotes/components/QuoteForm.test.tsx` |
-| Páginas (listados) | Dentro de cada feature, en `pages/` | `features/clients/pages/Clients.test.tsx`, `features/services/pages/Services.test.tsx`, `features/invoices/pages/Invoices.test.tsx`, `features/quotes/pages/Quotes.test.tsx` — estados loading, empty, error con MSW |
+| Páginas (listados) | Dentro de cada feature, en `pages/` | `features/clients/pages/Clients.test.tsx`, `features/services/pages/Services.test.tsx`, `features/invoices/pages/Invoices.test.tsx`, `features/quotes/pages/Quotes.test.tsx` — estados loading (skeletons), empty (componente EmptyState con título/descripción), error con MSW; los tests esperan al contenido de la lista (p. ej. `waitFor(getByText('Cliente Test'))`) o al texto del empty state (p. ej. «No hay clientes» o «0 clientes») |
 | Integración | `src/test/integration/*.test.tsx` | `invoice-flow.test.tsx` (login → listado → crear factura), `quote-to-invoice-flow.test.tsx` (presupuesto → convertir a factura). Importan páginas desde `@/features/...`. |
 
 ### Uso en tests

@@ -1,5 +1,6 @@
-import { Plus, Search, MoreHorizontal } from "lucide-react";
+import { Plus, Search, MoreHorizontal, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -82,6 +83,24 @@ const Quotes = () => {
 
       {isLoading ? (
         <TableSkeleton columns={7} />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title={(quotes?.length ?? 0) === 0 ? t('quotes.emptyState.title') : t('quotes.notFound')}
+          description={
+            (quotes?.length ?? 0) === 0
+              ? t('quotes.emptyState.description')
+              : t('quotes.emptyState.tryOtherTerms')
+          }
+          action={
+            (quotes?.length ?? 0) === 0 ? (
+              <Button onClick={() => navigate('/quotes/new')}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t('quotes.newButton')}
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="data-table-wrapper">
           <table className="w-full">
@@ -132,9 +151,6 @@ const Quotes = () => {
                 </td>
               </tr>
             ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan={7} className="px-5 py-12 text-center text-muted-foreground">{t('quotes.notFound')}</td></tr>
-              )}
             </tbody>
           </table>
         </div>

@@ -1,5 +1,6 @@
-import { Plus, Search, MoreHorizontal } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
@@ -56,9 +57,19 @@ const Services = () => {
       {isLoading ? (
         <TableSkeleton columns={5} />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          {search ? t('services.notFound') : t('services.empty')}
-        </div>
+        <EmptyState
+          icon={Package}
+          title={search ? t('services.notFound') : t('services.emptyState.title')}
+          description={search ? t('services.emptyState.tryOtherTerms') : t('services.emptyState.description')}
+          action={
+            !search ? (
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t('services.newButton')}
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="data-table-wrapper">
           <table className="w-full">

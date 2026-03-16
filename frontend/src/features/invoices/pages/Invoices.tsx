@@ -1,5 +1,6 @@
-import { Plus, Search, MoreHorizontal } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -82,6 +83,24 @@ const Invoices = () => {
 
       {isLoading ? (
         <TableSkeleton columns={6} />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={Receipt}
+          title={(invoices?.length ?? 0) === 0 ? t('invoices.emptyState.title') : t('invoices.notFound')}
+          description={
+            (invoices?.length ?? 0) === 0
+              ? t('invoices.emptyState.description')
+              : t('invoices.emptyState.tryOtherTerms')
+          }
+          action={
+            (invoices?.length ?? 0) === 0 ? (
+              <Button onClick={() => navigate('/invoices/new')}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t('invoices.newButton')}
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="data-table-wrapper">
           <table className="w-full">
@@ -130,9 +149,6 @@ const Invoices = () => {
                 </td>
               </tr>
             ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">{t('invoices.notFound')}</td></tr>
-              )}
             </tbody>
           </table>
         </div>

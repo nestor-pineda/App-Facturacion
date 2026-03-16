@@ -1,5 +1,6 @@
-import { Plus, Search, MoreHorizontal, Mail, Phone, MapPin, FileText } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Mail, Phone, MapPin, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -73,9 +74,19 @@ const Clients = () => {
       {isLoading ? (
         <CardGridSkeleton />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          {search ? t('clients.notFound') : t('clients.empty')}
-        </div>
+        <EmptyState
+          icon={Users}
+          title={search ? t('clients.notFound') : t('clients.emptyState.title')}
+          description={search ? t('clients.emptyState.tryOtherTerms') : t('clients.emptyState.description')}
+          action={
+            !search ? (
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t('clients.newButton')}
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filtered.map((client) => (

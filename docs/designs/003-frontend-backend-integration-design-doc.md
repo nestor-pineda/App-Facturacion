@@ -864,10 +864,10 @@ Rutas protegidas (envueltas en ProtectedRoute + AppLayout):
 
 5. **Polish de UI:**
 
-- Loading skeletons en todas las tablas/listados
-- Empty states con ilustración/mensaje
+- Loading skeletons en todas las tablas/listados *(implementado: TableSkeleton, CardGridSkeleton, DashboardSkeleton en `src/components/common/`)*
+- Empty states con ilustración/mensaje *(implementado: EmptyState en `src/components/common/`; icono, título, descripción y acción opcional; claves i18n emptyState por sección)*
 - Confirmación en acciones destructivas (eliminar, enviar)
-- Validación inline en formularios (errores debajo de cada campo)
+- Validación inline en formularios *(implementado: `mode: FORM_VALIDATION_MODE` — onTouched — en todos los formularios; constante en `lib/constants.ts`; errores debajo de cada campo)*
 - Mobile responsive en todas las páginas nuevas
 
 6. **Preparar para producción:**
@@ -1022,7 +1022,11 @@ ALLOWED_ORIGINS=http://localhost:8080,http://localhost:5173
 | `src/components/forms/ServiceForm.tsx` | 3 | Formulario de servicio |
 | `src/components/forms/InvoiceForm.tsx` | 5 | Formulario de factura |
 | `src/components/forms/QuoteForm.tsx` | 4 | Formulario de presupuesto |
-| `src/components/common/LoadingSpinner.tsx` | 2 | Spinner de carga |
+| `src/components/common/LoadingSpinner.tsx` | 2 | Spinner de carga (acciones, botones) |
+| `src/components/common/TableSkeleton.tsx` | 0 | Skeleton de tabla para listados (Services, Invoices, Quotes) |
+| `src/components/common/CardGridSkeleton.tsx` | 0 | Skeleton de grid de cards (Clients) |
+| `src/components/common/DashboardSkeleton.tsx` | 0 | Skeleton del dashboard (stats + actions + tabla reciente) |
+| `src/components/common/EmptyState.tsx` | 0 | Estado vacío: icono, título, descripción, acción opcional (listados y dashboard) |
 | `src/components/common/ConfirmDialog.tsx` | 4 | Diálogo de confirmación |
 | `src/pages/Login.tsx` | 2 | Página de login |
 | `src/pages/Register.tsx` | 2 | Página de registro |

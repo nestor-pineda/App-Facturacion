@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FORM_VALIDATION_MODE } from '@/lib/constants';
 import { createServiceSchema, type ServiceInput } from '@/schemas/service.schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ export function ServiceForm({ onSubmit, isLoading }: ServiceFormProps) {
     handleSubmit,
     formState: { errors },
   } = useForm<ServiceInput>({
+    mode: FORM_VALIDATION_MODE,
     resolver: zodResolver(createServiceSchema()),
   });
 

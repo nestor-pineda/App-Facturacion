@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FORM_VALIDATION_MODE } from '@/lib/constants';
 import { createClientSchema, type ClientInput } from '@/schemas/client.schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ export function ClientForm({ defaultValues, onSubmit, isLoading }: ClientFormPro
     handleSubmit,
     formState: { errors },
   } = useForm<ClientInput>({
+    mode: FORM_VALIDATION_MODE,
     resolver: zodResolver(createClientSchema()),
     defaultValues: defaultValues
       ? {

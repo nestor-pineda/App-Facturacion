@@ -1,5 +1,6 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FORM_VALIDATION_MODE } from '@/lib/constants';
 import { createInvoiceSchema, type CreateInvoiceInput } from '@/schemas/invoice.schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,7 @@ export function InvoiceForm({ onSubmit, isLoading, defaultValues, isEdit }: Invo
     watch,
     formState: { errors },
   } = useForm<CreateInvoiceInput>({
+    mode: FORM_VALIDATION_MODE,
     resolver: zodResolver(createInvoiceSchema()),
     defaultValues: defaultValues ?? DEFAULT_INVOICE_VALUES,
   });

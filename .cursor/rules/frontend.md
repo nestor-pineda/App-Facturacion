@@ -73,7 +73,11 @@ frontend/
 │   ├── components/           # Compartidos entre features
 │   │   ├── ui/               # shadcn/ui components
 │   │   ├── common/
-│   │   │   ├── LoadingSpinner.tsx
+│   │   │   ├── LoadingSpinner.tsx   # Spinner genérico (p. ej. botones, acciones)
+│   │   │   ├── TableSkeleton.tsx    # Skeleton de tabla (rows/columns) para listados
+│   │   │   ├── CardGridSkeleton.tsx # Skeleton de grid de cards (p. ej. Clients)
+│   │   │   ├── DashboardSkeleton.tsx# Skeleton del dashboard (stats + actions + tabla)
+│   │   │   ├── EmptyState.tsx       # Estado vacío: icono, título, descripción, acción opcional
 │   │   │   └── ConfirmDialog.tsx
 │   │   ├── AppLayout.tsx     # Layout raíz (sidebar + outlet)
 │   │   ├── AppSidebar.tsx    # Navegación lateral + logout
@@ -116,6 +120,14 @@ frontend/
 ├── package.json
 └── README.md
 ```
+
+### Loading en listados y tablas
+
+En listados (Clients, Services, Invoices, Quotes) y en el dashboard **no** se usa early return con spinner: se mantiene siempre el layout (page-container, page-header, filter-bar) y la zona de contenido muestra un **skeleton** mientras `isLoading`. Componentes: `TableSkeleton` (tablas con N columnas), `CardGridSkeleton` (grid de cards), `DashboardSkeleton` (stats + actions + tabla). El primitivo `Skeleton` está en `components/ui/skeleton.tsx` (shadcn).
+
+### Empty states
+
+Cuando no hay datos o los filtros no devuelven resultados, se usa el componente **EmptyState** (icono, título, descripción opcional, acción opcional). Claves i18n por sección: `clients.emptyState`, `services.emptyState`, `quotes.emptyState`, `invoices.emptyState`, `dashboard.emptyState` (title, description, tryOtherTerms donde aplica). En listas vacías se muestra botón de acción (p. ej. "Nuevo cliente"); en "no resultados por búsqueda/filtro" solo título + tryOtherTerms.
 
 ---
 
@@ -571,11 +583,16 @@ export type CreateInvoiceInput = z.infer<ReturnType<typeof createInvoiceSchema>>
 
 > **Nunca** exportes un schema estático (`export const createInvoiceSchema = z.object(...)`) si contiene mensajes de error. Usa siempre `() => z.object(...)`.
 
+### Validación inline
+
+Todos los formularios usan `mode: FORM_VALIDATION_MODE` (`onTouched`), definido en `lib/constants.ts`: los errores se muestran tras el primer blur del campo y se actualizan en cada cambio. Así se ven los mensajes en tiempo real sin mostrar "obligatorio" antes de que el usuario haya interactuado con el campo.
+
 ### Uso en formulario
 
 ```typescript
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FORM_VALIDATION_MODE } from '@/lib/constants';
 import { createInvoiceSchema, type CreateInvoiceInput } from '@/schemas/invoice.schema';
 
 export const InvoiceForm = ({ onSubmit }: { onSubmit: (data: CreateInvoiceInput) => void }) => {
@@ -585,6 +602,7 @@ export const InvoiceForm = ({ onSubmit }: { onSubmit: (data: CreateInvoiceInput)
     control,
     formState: { errors },
   } = useForm<CreateInvoiceInput>({
+    mode: FORM_VALIDATION_MODE, // ← validación tras blur y luego en cada cambio (inline)
     resolver: zodResolver(createInvoiceSchema()), // ← llamar la factory en cada render
     defaultValues: {
       lines: [

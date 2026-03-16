@@ -62,6 +62,10 @@
     "revenue": "Revenue",
     "recentActivity": "Recent activity",
     "noActivity": "No recent activity",
+    "emptyState": {
+      "title": "No recent activity",
+      "description": "Invoices and quotes you create will appear here."
+    },
     "searchPlaceholder": "Search by number or client...",
     "filterAll": "All",
     "filterQuotes": "Quotes",
@@ -96,6 +100,11 @@
     "searchPlaceholder": "Search clients...",
     "empty": "No clients yet. Create your first one.",
     "notFound": "No clients found",
+    "emptyState": {
+      "title": "No clients",
+      "description": "Add your first client to create quotes and invoices.",
+      "tryOtherTerms": "Try different search terms."
+    },
     "edit": "Edit",
     "dialogNew": "New client",
     "dialogEdit": "Edit client"
@@ -107,6 +116,11 @@
     "searchPlaceholder": "Search services...",
     "empty": "No services yet. Create your first one.",
     "notFound": "No services found",
+    "emptyState": {
+      "title": "No services",
+      "description": "Create services or products to add to quotes and invoices.",
+      "tryOtherTerms": "Try different search terms."
+    },
     "dialogNew": "New service",
     "table": {
       "service": "Service",
@@ -121,6 +135,11 @@
     "newButton": "New quote",
     "searchPlaceholder": "Search quotes...",
     "notFound": "No quotes found",
+    "emptyState": {
+      "title": "No quotes",
+      "description": "Create your first quote to send proposals to your clients.",
+      "tryOtherTerms": "Try different filters or search terms."
+    },
     "filterAll": "All",
     "filterDraft": "Draft",
     "filterSent": "Sent",
@@ -182,6 +201,11 @@
     "newButton": "New invoice",
     "searchPlaceholder": "Search invoices...",
     "notFound": "No invoices found",
+    "emptyState": {
+      "title": "No invoices",
+      "description": "Create an invoice from scratch or by converting a sent quote.",
+      "tryOtherTerms": "Try different filters or search terms."
+    },
     "filterAll": "All",
     "filterDraft": "Draft",
     "filterSent": "Sent",

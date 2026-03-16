@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FORM_VALIDATION_MODE } from '@/lib/constants';
 import { createLoginSchema, type LoginInput } from '@/schemas/auth.schema';
 import { loginUser } from '@/api/endpoints/auth';
 import { useAuthStore } from '@/store/authStore';
@@ -25,6 +26,7 @@ export default function Login() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginInput>({
+    mode: FORM_VALIDATION_MODE,
     resolver: zodResolver(createLoginSchema()),
   });
 
