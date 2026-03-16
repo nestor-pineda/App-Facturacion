@@ -52,7 +52,7 @@ npm run dev
 
 ## Testing
 
-Tests con Vitest, React Testing Library, user-event y MSW (mock de API). Comandos:
+Tests con Vitest, React Testing Library, user-event y MSW (mock de API). El código está organizado por **features** (`src/features/auth`, `clients`, `services`, `quotes`, `invoices`, `dashboard`); los tests de componentes y páginas viven junto a su módulo dentro de cada feature.
 
 ```sh
 cd frontend
@@ -60,7 +60,7 @@ npm run test          # Una ejecución
 npm run test:watch    # Modo watch
 ```
 
-Documentación detallada: [docs/CONTEXT/TESTING.md](../docs/CONTEXT/TESTING.md) (estructura de tests, test-utils, handlers MSW, integración).
+Documentación detallada: [docs/CONTEXT/TESTING.md](../docs/CONTEXT/TESTING.md) (estructura de tests, test-utils, handlers MSW, integración, E2E).
 
 ## What technologies are used for this project?
 

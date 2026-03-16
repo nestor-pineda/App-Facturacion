@@ -45,7 +45,7 @@
 
 ## 📁 Estructura de Carpetas
 
-> La estructura actual implementada usa un enfoque flat por tipo (`pages/`, `hooks/`, `components/`) en lugar de `features/`. La migración a `features/` está planificada en `siguientes-pasos.md`.
+> La estructura usa **features/** por dominio. Páginas globales (Settings, NotFound) permanecen en `src/pages/`. Detalle del refactor en `siguientes-pasos.md` (punto 4).
 
 ```
 frontend/
@@ -63,42 +63,29 @@ frontend/
 │   │       ├── services.ts
 │   │       ├── quotes.ts
 │   │       └── invoices.ts
-│   ├── components/           # Componentes reutilizables
+│   ├── features/             # Código por dominio (components, hooks, pages)
+│   │   ├── auth/             # ProtectedRoute, PublicRoute, Login, Register
+│   │   ├── clients/          # ClientForm, useClients, Clients
+│   │   ├── services/         # ServiceForm, useServices, Services
+│   │   ├── quotes/           # QuoteForm, useQuotes, Quotes, QuoteCreate, QuoteDetail, QuoteEdit
+│   │   ├── invoices/         # InvoiceForm, useInvoices, Invoices, InvoiceCreate, InvoiceDetail, InvoiceEdit
+│   │   └── dashboard/        # Index (dashboard)
+│   ├── components/           # Compartidos entre features
 │   │   ├── ui/               # shadcn/ui components
-│   │   ├── forms/
-│   │   │   ├── ClientForm.tsx
-│   │   │   ├── ServiceForm.tsx
-│   │   │   ├── InvoiceForm.tsx
-│   │   │   └── QuoteForm.tsx
 │   │   ├── common/
 │   │   │   ├── LoadingSpinner.tsx
 │   │   │   └── ConfirmDialog.tsx
 │   │   ├── AppLayout.tsx     # Layout raíz (sidebar + outlet)
 │   │   ├── AppSidebar.tsx    # Navegación lateral + logout
-│   │   ├── ProtectedRoute.tsx
-│   │   ├── PublicRoute.tsx
+│   │   ├── NavLink.tsx
 │   │   └── StatusBadge.tsx   # Badge de estado de documentos (borrador/enviada)
-│   ├── hooks/                # Hooks de TanStack Query por dominio
-│   │   ├── useClients.ts
-│   │   ├── useServices.ts
-│   │   ├── useQuotes.ts
-│   │   └── useInvoices.ts
+│   ├── hooks/
+│   │   └── use-mobile.tsx    # Hook genérico (sidebar)
 │   ├── lib/
 │   │   ├── utils.ts          # cn() y utilidades CSS
 │   │   ├── constants.ts      # IVA_DEFAULT, QUERY_KEYS, API_ERROR_CODES, estados
 │   │   └── calculations.ts   # Cálculos de subtotal, IVA y total; formatCurrency
-│   ├── pages/                # Una página por ruta
-│   │   ├── Index.tsx         # Dashboard con métricas reales
-│   │   ├── Login.tsx
-│   │   ├── Register.tsx
-│   │   ├── Clients.tsx
-│   │   ├── Services.tsx
-│   │   ├── Quotes.tsx
-│   │   ├── QuoteCreate.tsx
-│   │   ├── QuoteDetail.tsx
-│   │   ├── Invoices.tsx
-│   │   ├── InvoiceCreate.tsx
-│   │   ├── InvoiceDetail.tsx
+│   ├── pages/                # Páginas globales (sin feature propia)
 │   │   ├── Settings.tsx
 │   │   └── NotFound.tsx
 │   ├── schemas/              # Schemas Zod para validación de formularios

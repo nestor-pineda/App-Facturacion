@@ -35,9 +35,9 @@ npm run test:watch    # Modo watch (re-ejecuta al guardar)
 | Tipo | Ubicación | Descripción |
 |------|-----------|-------------|
 | Unitarios | Junto al módulo (`.test.ts` / `.test.tsx`) | `lib/calculations.test.ts`, `schemas/client.schema.test.ts`, `store/authStore.test.ts`, `components/StatusBadge.test.tsx` |
-| Componentes | Mismo directorio que el componente | `ProtectedRoute.test.tsx`, `forms/ClientForm.test.tsx`, `forms/ServiceForm.test.tsx`, `forms/InvoiceForm.test.tsx`, `forms/QuoteForm.test.tsx` |
-| Páginas (listados) | `src/pages/*.test.tsx` | `Clients.test.tsx`, `Services.test.tsx`, `Invoices.test.tsx`, `Quotes.test.tsx` — estados loading, empty, error con MSW |
-| Integración | `src/test/integration/*.test.tsx` | `invoice-flow.test.tsx` (login → listado → crear factura), `quote-to-invoice-flow.test.tsx` (presupuesto → convertir a factura) |
+| Componentes | Dentro de cada feature, junto al componente | `features/auth/components/ProtectedRoute.test.tsx`, `features/clients/components/ClientForm.test.tsx`, `features/services/components/ServiceForm.test.tsx`, `features/invoices/components/InvoiceForm.test.tsx`, `features/quotes/components/QuoteForm.test.tsx` |
+| Páginas (listados) | Dentro de cada feature, en `pages/` | `features/clients/pages/Clients.test.tsx`, `features/services/pages/Services.test.tsx`, `features/invoices/pages/Invoices.test.tsx`, `features/quotes/pages/Quotes.test.tsx` — estados loading, empty, error con MSW |
+| Integración | `src/test/integration/*.test.tsx` | `invoice-flow.test.tsx` (login → listado → crear factura), `quote-to-invoice-flow.test.tsx` (presupuesto → convertir a factura). Importan páginas desde `@/features/...`. |
 
 ### Uso en tests
 
@@ -110,5 +110,5 @@ Los selectores usan roles y regex es/en para ser independientes del idioma de la
 
 ## Referencia en el plan
 
-- Plan detallado: sección **2. Testing — Unitarios e Integración** y **3. E2E Testing (Playwright)** en [`siguientes-pasos.md`](../../siguientes-pasos.md).
-- Estado: punto 2 y punto 3 implementados; documentación en este archivo.
+- Plan detallado: sección **2. Testing — Unitarios e Integración**, **3. E2E Testing (Playwright)** y **4. Refactorización a estructura features/** en [`siguientes-pasos.md`](../../siguientes-pasos.md).
+- Estado: puntos 2, 3 y 4 implementados. Los tests de componentes y páginas viven dentro de cada feature (`src/features/*/components/*.test.tsx`, `src/features/*/pages/*.test.tsx`).

@@ -79,21 +79,21 @@ npx playwright install
 
 ---
 
-## 4. Refactorización a estructura `features/`
+## 4. Refactorización a estructura `features/` *(implementado)*
 
-Una vez el MVP funcione end-to-end y esté cubierto por tests, migrar a la arquitectura de carpetas definida en `.cursor/rules/frontend.md`:
+Migración a la arquitectura de carpetas por dominio. La estructura actual está documentada en [`.cursor/rules/frontend.md`](.cursor/rules/frontend.md) y la ubicación de los tests en [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md).
 
 ```
 src/features/
-├── auth/       (components, hooks, pages)
-├── clients/    (components, hooks, pages)
-├── services/   (components, hooks, pages)
-├── quotes/     (components, hooks, pages)
-├── invoices/   (components, hooks, pages)
-└── dashboard/  (pages)
+├── auth/       (components: ProtectedRoute, PublicRoute; pages: Login, Register)
+├── clients/    (components: ClientForm; hooks: useClients; pages: Clients)
+├── services/   (components: ServiceForm; hooks: useServices; pages: Services)
+├── quotes/     (components: QuoteForm; hooks: useQuotes; pages: Quotes, QuoteCreate, QuoteDetail, QuoteEdit)
+├── invoices/   (components: InvoiceForm; hooks: useInvoices; pages: Invoices, InvoiceCreate, InvoiceDetail, InvoiceEdit)
+└── dashboard/  (pages: Index)
 ```
 
-**Beneficio:** Mejor organización para escalar. Los tests que ya existen protegerán de regresiones durante el refactor.
+Settings y NotFound permanecen en `src/pages/`. Componentes compartidos (AppLayout, AppSidebar, NavLink, StatusBadge) en `src/components/`.
 
 ---
 
