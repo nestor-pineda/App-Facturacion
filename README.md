@@ -85,6 +85,19 @@ npm run dev            # Arranca backend y frontend en paralelo
 
 Para ejecutar solo los tests del frontend: `cd frontend && npm run test`. Para solo el backend: `cd backend && npm test`. Ver [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md).
 
+### Tests E2E (Playwright)
+
+Los tests E2E usan un navegador real contra el frontend y el backend. **Requisitos:** backend en marcha (puerto 3000), base de datos disponible y `ALLOWED_ORIGINS` con `http://localhost:8080`.
+
+```bash
+cd frontend
+npm run test:e2e          # Ejecutar todos los tests E2E
+npm run test:e2e:ui       # Modo UI (depuración)
+npm run test:e2e:headed   # Con navegador visible
+```
+
+Si el puerto 8080 ya está en uso (frontend abierto en otro terminal), ejecuta: `PLAYWRIGHT_NO_WEB_SERVER=1 npm run test:e2e`. Detalle en [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md#e2e-playwright).
+
 ## Documentación
 
 - [`docs/CONTEXT/API.md`](docs/CONTEXT/API.md) — Referencia de endpoints REST

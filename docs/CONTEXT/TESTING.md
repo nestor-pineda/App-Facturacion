@@ -74,7 +74,41 @@ En **`backend/tests/integration/clients.test.ts`** existe un test que comprueba 
 
 ---
 
+## E2E (Playwright)
+
+Los tests E2E ejecutan un navegador real contra el frontend (puerto 8080) y el backend (puerto 3000 vía proxy de Vite). Requieren que el **backend esté en marcha** (y la base de datos disponible); el frontend puede arrancarse manualmente o con el `webServer` de Playwright.
+
+### Comandos
+
+```bash
+cd frontend
+npm run test:e2e          # Ejecutar todos los tests E2E
+npm run test:e2e:ui       # Modo UI (depuración)
+npm run test:e2e:headed   # Con navegador visible
+```
+
+### Requisitos
+
+- Backend corriendo en **3000** (p. ej. `cd backend && npm run dev`).
+- Base de datos disponible (contenedor Docker o PostgreSQL local).
+- `ALLOWED_ORIGINS` en el backend debe incluir `http://localhost:8080`.
+- Si el puerto 8080 ya está en uso (frontend abierto en otro terminal), ejecuta con `PLAYWRIGHT_NO_WEB_SERVER=1 npm run test:e2e` para no arrancar un segundo servidor.
+
+### Estructura
+
+| Archivo | Descripción |
+|---------|-------------|
+| `frontend/playwright.config.ts` | Configuración (baseURL 8080, timeouts, webServer opcional, proyecto chromium). |
+| `frontend/tests/e2e/auth.spec.ts` | Register, login, logout, redirect si no autenticado. |
+| `frontend/tests/e2e/invoices.spec.ts` | Flujo: crear cliente/servicio/factura → enviar → número correlativo → descargar PDF → inmutabilidad. |
+| `frontend/tests/e2e/quotes.spec.ts` | Flujo: crear cliente/servicio/presupuesto → enviar → convertir a factura. |
+| `frontend/tests/e2e/helpers/auth.ts` | Helper: `registerNewUser`, `loginAsUser`, `registerAndLogin` (usuario único por ejecución). |
+
+Los selectores usan roles y regex es/en para ser independientes del idioma de la app.
+
+---
+
 ## Referencia en el plan
 
-- Plan detallado: sección **2. Testing — Unitarios e Integración** en [`siguientes-pasos.md`](../../siguientes-pasos.md).
-- Estado: punto 2 implementado; documentación en este archivo.
+- Plan detallado: sección **2. Testing — Unitarios e Integración** y **3. E2E Testing (Playwright)** en [`siguientes-pasos.md`](../../siguientes-pasos.md).
+- Estado: punto 2 y punto 3 implementados; documentación en este archivo.

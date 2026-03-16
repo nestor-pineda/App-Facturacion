@@ -1,6 +1,6 @@
 # Siguientes Pasos — App Facturación
 
-> Estado actual: Fases 0-6 implementadas. TypeScript sin errores. Build de producción funcional. **Punto 2 (Testing unitarios e integración) implementado** — ver [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md).
+> Estado actual: Fases 0-6 implementadas. TypeScript sin errores. Build de producción funcional. **Puntos 2 y 3 (Testing unitarios, integración y E2E con Playwright) implementados** — ver [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md).
 
 ---
 
@@ -57,7 +57,9 @@ npm install -D msw @testing-library/user-event
 
 ---
 
-## 3. E2E Testing (Playwright)
+## 3. E2E Testing (Playwright) *(implementado)*
+
+> Documentación: sección **E2E (Playwright)** en [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md).
 
 **Instalación:**
 ```bash
@@ -66,12 +68,14 @@ npm install -D @playwright/test
 npx playwright install
 ```
 
-**Crear archivo `playwright.config.ts`** en la raíz del frontend.
+**Configuración:** `frontend/playwright.config.ts` (baseURL 8080, webServer opcional).
 
-**Tests de flujos principales a cubrir:**
+**Specs implementados:**
 - `tests/e2e/auth.spec.ts` — register, login, logout, redirect si no autenticado
-- `tests/e2e/invoices.spec.ts` — crear, enviar, verificar número correlativo, descargar PDF, verificar inmutabilidad
+- `tests/e2e/invoices.spec.ts` — crear, enviar, verificar número correlativo, descargar PDF, inmutabilidad
 - `tests/e2e/quotes.spec.ts` — crear, enviar, convertir a factura
+
+**Helper:** `tests/e2e/helpers/auth.ts` — registro y login con usuario único.
 
 ---
 
