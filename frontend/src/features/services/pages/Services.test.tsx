@@ -14,10 +14,10 @@ describe('Services', () => {
     render(<Services />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /servicios/i })).toBeInTheDocument();
+      expect(screen.getByText('Servicio Test')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Servicio Test')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /servicios/i })).toBeInTheDocument();
   });
 
   it('shows empty state when list is empty', async () => {

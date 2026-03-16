@@ -14,10 +14,10 @@ describe('Clients', () => {
     render(<Clients />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /clientes/i })).toBeInTheDocument();
+      expect(screen.getByText('Cliente Test')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Cliente Test')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /clientes/i })).toBeInTheDocument();
     expect(screen.getByText('client@example.com')).toBeInTheDocument();
   });
 

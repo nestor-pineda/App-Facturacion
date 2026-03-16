@@ -56,9 +56,9 @@ describe('Invoice flow integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /facturas/i })).toBeInTheDocument();
+      expect(screen.getByText('Cliente Test')).toBeInTheDocument();
     });
-    expect(screen.getByText('Cliente Test')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /facturas/i })).toBeInTheDocument();
 
     unmount();
 

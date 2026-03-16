@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useState } from "react";
 import { useClients, useCreateClient, useUpdateClient } from "@/features/clients/hooks/useClients";
 import { ClientForm } from "@/features/clients/components/ClientForm";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
 import type { Client } from "@/types/entities";
 import type { ClientInput } from "@/schemas/client.schema";
 import { useTranslation } from "react-i18next";
@@ -45,8 +45,6 @@ const Clients = () => {
     setEditingClient(client);
   };
 
-  if (isLoading) return <LoadingSpinner />;
-
   return (
     <div className="page-container">
       <div className="flex items-center justify-between page-header">
@@ -72,7 +70,9 @@ const Clients = () => {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <CardGridSkeleton />
+      ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           {search ? t('clients.notFound') : t('clients.empty')}
         </div>

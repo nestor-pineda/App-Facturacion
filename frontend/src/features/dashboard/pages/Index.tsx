@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useInvoices } from "@/features/invoices/hooks/useInvoices";
 import { useQuotes } from "@/features/quotes/hooks/useQuotes";
 import { useClients } from "@/features/clients/hooks/useClients";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { DashboardSkeleton } from "@/components/common/DashboardSkeleton";
 import { formatCurrency } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADA, ESTADO_ENVIADO } from "@/lib/constants";
 import type { EstadoDocument } from "@/types/enums";
@@ -35,8 +35,7 @@ const Index = () => {
   const { data: quotes, isLoading: loadingQuotes } = useQuotes();
   const { data: clients } = useClients();
 
-  if (loadingInvoices || loadingQuotes) return <LoadingSpinner />;
-
+  const isLoading = loadingInvoices || loadingQuotes;
   const totalInvoices = invoices?.length ?? 0;
   const totalQuotes = quotes?.length ?? 0;
   const totalClients = clients?.length ?? 0;
@@ -94,116 +93,122 @@ const Index = () => {
         <p className="page-subtitle">{t('dashboard.subtitle')}</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <div className="stat-card">
-          <p className="text-sm text-muted-foreground">{t('dashboard.invoices')}</p>
-          <p className="text-2xl font-bold">{totalInvoices}</p>
-          <p className="text-xs text-muted-foreground">
-            {t('dashboard.draftCount', { count: invoicesDraft })} · {t('dashboard.sentCount', { count: invoicesSent })}
-          </p>
-        </div>
-        <div className="stat-card">
-          <p className="text-sm text-muted-foreground">{t('dashboard.quotes')}</p>
-          <p className="text-2xl font-bold">{totalQuotes}</p>
-        </div>
-        <div className="stat-card">
-          <p className="text-sm text-muted-foreground">{t('dashboard.clients')}</p>
-          <p className="text-2xl font-bold">{totalClients}</p>
-        </div>
-        <div className="stat-card">
-          <p className="text-sm text-muted-foreground">{t('dashboard.revenue')}</p>
-          <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-        {actions.map((action) => (
-          <button
-            key={action.label}
-            onClick={() => navigate(action.path)}
-            className="action-card text-left"
-          >
-            <div className="h-12 w-12 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-              <action.icon className="h-6 w-6 text-foreground" />
+      {isLoading ? (
+        <DashboardSkeleton />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            <div className="stat-card">
+              <p className="text-sm text-muted-foreground">{t('dashboard.invoices')}</p>
+              <p className="text-2xl font-bold">{totalInvoices}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('dashboard.draftCount', { count: invoicesDraft })} · {t('dashboard.sentCount', { count: invoicesSent })}
+              </p>
             </div>
-            <span className="font-bold text-base">{action.label}</span>
-            <span className="text-sm text-muted-foreground">{action.description}</span>
-          </button>
-        ))}
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">{t('dashboard.recentActivity')}</h2>
-        </div>
-
-        <div className="filter-bar">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('dashboard.searchPlaceholder')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
+            <div className="stat-card">
+              <p className="text-sm text-muted-foreground">{t('dashboard.quotes')}</p>
+              <p className="text-2xl font-bold">{totalQuotes}</p>
+            </div>
+            <div className="stat-card">
+              <p className="text-sm text-muted-foreground">{t('dashboard.clients')}</p>
+              <p className="text-2xl font-bold">{totalClients}</p>
+            </div>
+            <div className="stat-card">
+              <p className="text-sm text-muted-foreground">{t('dashboard.revenue')}</p>
+              <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
+            </div>
           </div>
-          <div className="flex gap-1 bg-muted rounded-lg p-1">
-            {filterOptions.map((f) => (
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+            {actions.map((action) => (
               <button
-                key={f.value}
-                onClick={() => setFilter(f.value)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  filter === f.value
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                key={action.label}
+                onClick={() => navigate(action.path)}
+                className="action-card text-left"
               >
-                {f.label}
+                <div className="h-12 w-12 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <action.icon className="h-6 w-6 text-foreground" />
+                </div>
+                <span className="font-bold text-base">{action.label}</span>
+                <span className="text-sm text-muted-foreground">{action.description}</span>
               </button>
             ))}
           </div>
-        </div>
 
-        <div className="data-table-wrapper">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.number')}</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.client')}</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.type')}</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.status')}</th>
-                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.total')}</th>
-                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.date')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((item) => (
-                <tr
-                  key={`${item.type}-${item.id}`}
-                  onClick={() => navigate(`/${item.type === 'invoice' ? 'invoices' : 'quotes'}/${item.id}`)}
-                  className="border-b border-border last:border-0 hover:bg-accent/40 cursor-pointer transition-colors"
-                >
-                  <td className="px-5 py-4 font-mono text-sm font-medium">{item.number}</td>
-                  <td className="px-5 py-4 text-sm">{item.clientName}</td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">
-                    {item.type === 'invoice' ? t('dashboard.typeLabel.invoice') : t('dashboard.typeLabel.quote')}
-                  </td>
-                  <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
-                  <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(item.total)}</td>
-                  <td className="px-5 py-4 text-sm text-right text-muted-foreground">{item.date}</td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">
-                    {t('dashboard.noActivity')}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">{t('dashboard.recentActivity')}</h2>
+            </div>
+
+            <div className="filter-bar">
+              <div className="relative flex-1 max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t('dashboard.searchPlaceholder')}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <div className="flex gap-1 bg-muted rounded-lg p-1">
+                {filterOptions.map((f) => (
+                  <button
+                    key={f.value}
+                    onClick={() => setFilter(f.value)}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      filter === f.value
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="data-table-wrapper">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.number')}</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.client')}</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.type')}</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.status')}</th>
+                    <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.total')}</th>
+                    <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('dashboard.table.date')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((item) => (
+                    <tr
+                      key={`${item.type}-${item.id}`}
+                      onClick={() => navigate(`/${item.type === 'invoice' ? 'invoices' : 'quotes'}/${item.id}`)}
+                      className="border-b border-border last:border-0 hover:bg-accent/40 cursor-pointer transition-colors"
+                    >
+                      <td className="px-5 py-4 font-mono text-sm font-medium">{item.number}</td>
+                      <td className="px-5 py-4 text-sm">{item.clientName}</td>
+                      <td className="px-5 py-4 text-sm text-muted-foreground">
+                        {item.type === 'invoice' ? t('dashboard.typeLabel.invoice') : t('dashboard.typeLabel.quote')}
+                      </td>
+                      <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
+                      <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(item.total)}</td>
+                      <td className="px-5 py-4 text-sm text-right text-muted-foreground">{item.date}</td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">
+                        {t('dashboard.noActivity')}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

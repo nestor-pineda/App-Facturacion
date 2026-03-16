@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useInvoices } from "@/features/invoices/hooks/useInvoices";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { TableSkeleton } from "@/components/common/TableSkeleton";
 import { formatCurrency } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADA } from "@/lib/constants";
 import type { EstadoInvoice } from "@/types/enums";
@@ -35,8 +35,6 @@ const Invoices = () => {
     const matchesStatus = statusFilter === STATUS_FILTER_ALL || inv.estado === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
-  if (isLoading) return <LoadingSpinner />;
 
   const filterOptions: { value: StatusFilter; label: string }[] = [
     { value: STATUS_FILTER_ALL, label: t('invoices.filterAll') },
@@ -82,20 +80,23 @@ const Invoices = () => {
         </div>
       </div>
 
-      <div className="data-table-wrapper">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('invoices.table.number')}</th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('invoices.table.client')}</th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('invoices.table.status')}</th>
-              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('invoices.table.total')}</th>
-              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('invoices.table.date')}</th>
-              <th className="w-12"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((inv) => (
+      {isLoading ? (
+        <TableSkeleton columns={6} />
+      ) : (
+        <div className="data-table-wrapper">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('invoices.table.number')}</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('invoices.table.client')}</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('invoices.table.status')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('invoices.table.total')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('invoices.table.date')}</th>
+                <th className="w-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((inv) => (
               <tr
                 key={inv.id}
                 onClick={() => navigate(`/invoices/${inv.id}`)}
@@ -129,12 +130,13 @@ const Invoices = () => {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">{t('invoices.notFound')}</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              {filtered.length === 0 && (
+                <tr><td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">{t('invoices.notFound')}</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

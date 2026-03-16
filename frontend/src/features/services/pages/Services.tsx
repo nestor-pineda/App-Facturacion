@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useState } from "react";
 import { useServices, useCreateService } from "@/features/services/hooks/useServices";
 import { ServiceForm } from "@/features/services/components/ServiceForm";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { TableSkeleton } from "@/components/common/TableSkeleton";
 import { formatCurrency } from "@/lib/calculations";
 import type { ServiceInput } from "@/schemas/service.schema";
 import { useTranslation } from "react-i18next";
@@ -27,8 +27,6 @@ const Services = () => {
       onSuccess: () => setDialogOpen(false),
     });
   };
-
-  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="page-container">
@@ -55,7 +53,9 @@ const Services = () => {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <TableSkeleton columns={5} />
+      ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           {search ? t('services.notFound') : t('services.empty')}
         </div>

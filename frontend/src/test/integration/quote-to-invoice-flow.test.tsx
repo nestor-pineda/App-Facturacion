@@ -36,9 +36,9 @@ describe('Quote to invoice flow integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /presupuestos/i })).toBeInTheDocument();
+      expect(screen.getByText('Cliente Test')).toBeInTheDocument();
     });
-    expect(screen.getByText('Cliente Test')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /presupuestos/i })).toBeInTheDocument();
   });
 
   it('convert quote to invoice calls POST convert endpoint', async () => {

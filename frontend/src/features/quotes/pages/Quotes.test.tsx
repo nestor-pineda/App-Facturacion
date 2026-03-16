@@ -14,10 +14,10 @@ describe('Quotes', () => {
     render(<Quotes />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /presupuestos/i })).toBeInTheDocument();
+      expect(screen.getByText('Cliente Test')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Cliente Test')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /presupuestos/i })).toBeInTheDocument();
   });
 
   it('shows empty state when list is empty', async () => {

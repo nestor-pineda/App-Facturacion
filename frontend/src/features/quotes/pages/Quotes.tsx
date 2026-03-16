@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuotes } from "@/features/quotes/hooks/useQuotes";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { TableSkeleton } from "@/components/common/TableSkeleton";
 import { formatCurrency } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADO } from "@/lib/constants";
 import type { EstadoQuote } from "@/types/enums";
@@ -35,8 +35,6 @@ const Quotes = () => {
     const matchesStatus = statusFilter === STATUS_FILTER_ALL || q.estado === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
-  if (isLoading) return <LoadingSpinner />;
 
   const filterOptions: { value: StatusFilter; label: string }[] = [
     { value: STATUS_FILTER_ALL, label: t('quotes.filterAll') },
@@ -82,21 +80,24 @@ const Quotes = () => {
         </div>
       </div>
 
-      <div className="data-table-wrapper">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.number')}</th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.client')}</th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.status')}</th>
-              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.lines')}</th>
-              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.total')}</th>
-              <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.date')}</th>
-              <th className="w-12"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((quote) => (
+      {isLoading ? (
+        <TableSkeleton columns={7} />
+      ) : (
+        <div className="data-table-wrapper">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.number')}</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.client')}</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.status')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.lines')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.total')}</th>
+                <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('quotes.table.date')}</th>
+                <th className="w-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((quote) => (
               <tr
                 key={quote.id}
                 onClick={() => navigate(`/quotes/${quote.id}`)}
@@ -131,12 +132,13 @@ const Quotes = () => {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-5 py-12 text-center text-muted-foreground">{t('quotes.notFound')}</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              {filtered.length === 0 && (
+                <tr><td colSpan={7} className="px-5 py-12 text-center text-muted-foreground">{t('quotes.notFound')}</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
