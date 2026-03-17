@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 export default function Register() {
   const { t } = useTranslation();
@@ -34,9 +35,8 @@ export default function Register() {
       await registerUser(data);
       toast.success(i18next.t('toast.accountCreated'));
       navigate('/login');
-    } catch (err: any) {
-      const message = err.response?.data?.error?.message || i18next.t('toast.registerError');
-      toast.error(message);
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, i18next.t('toast.registerError')));
     } finally {
       setIsLoading(false);
     }

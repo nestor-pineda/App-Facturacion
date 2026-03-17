@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -36,9 +37,8 @@ export default function Login() {
       const res = await loginUser(data);
       login(res.data.data.user);
       navigate('/');
-    } catch (err: any) {
-      const message = err.response?.data?.error?.message || i18next.t('toast.loginError');
-      toast.error(message);
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, i18next.t('toast.loginError')));
     } finally {
       setIsLoading(false);
     }

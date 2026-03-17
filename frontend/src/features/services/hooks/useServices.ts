@@ -3,6 +3,7 @@ import { getServices, createService, updateService } from '@/api/endpoints/servi
 import { QUERY_KEYS } from '@/lib/constants';
 import { toast } from 'sonner';
 import i18next from 'i18next';
+import { getApiErrorMessage } from '@/lib/api-error';
 import type { ServiceInput } from '@/schemas/service.schema';
 
 export const useServices = () =>
@@ -20,8 +21,8 @@ export const useCreateService = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SERVICES] });
       toast.success(i18next.t('toast.serviceCreated'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.serviceCreateError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.serviceCreateError')));
     },
   });
 };
@@ -34,8 +35,8 @@ export const useUpdateService = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SERVICES] });
       toast.success(i18next.t('toast.serviceUpdated'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.serviceUpdateError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.serviceUpdateError')));
     },
   });
 };

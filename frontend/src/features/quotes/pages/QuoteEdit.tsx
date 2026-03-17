@@ -29,7 +29,7 @@ function quoteToFormInput(quote: Quote): CreateQuoteInput {
         descripcion: l.descripcion,
         cantidad: Number(l.cantidad) || 0,
         precioUnitario: Number(line.precio_unitario ?? l.precioUnitario) || 0,
-        ivaPorcentaje: Number(line.iva_porcentaje ?? l.ivaPorcentaje) ?? 21,
+        ivaPorcentaje: Number(line.iva_porcentaje ?? l.ivaPorcentaje) || 21,
       };
     }),
   };

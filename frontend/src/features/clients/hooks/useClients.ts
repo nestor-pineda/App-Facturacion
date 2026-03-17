@@ -4,6 +4,7 @@ import { QUERY_KEYS } from '@/lib/constants';
 import { toast } from 'sonner';
 import type { ClientInput } from '@/schemas/client.schema';
 import i18next from 'i18next';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 export const useClients = () =>
   useQuery({
@@ -20,8 +21,8 @@ export const useCreateClient = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CLIENTS] });
       toast.success(i18next.t('toast.clientCreated'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.clientCreateError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.clientCreateError')));
     },
   });
 };
@@ -34,8 +35,8 @@ export const useUpdateClient = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CLIENTS] });
       toast.success(i18next.t('toast.clientUpdated'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.clientUpdateError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.clientUpdateError')));
     },
   });
 };

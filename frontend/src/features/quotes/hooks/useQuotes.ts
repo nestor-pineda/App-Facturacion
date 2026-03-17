@@ -12,6 +12,7 @@ import { QUERY_KEYS } from '@/lib/constants';
 import { toast } from 'sonner';
 import type { EstadoQuote } from '@/types/enums';
 import i18next from 'i18next';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 interface QuoteFilters {
   estado?: EstadoQuote;
@@ -33,8 +34,8 @@ export const useCreateQuote = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.QUOTES] });
       toast.success(i18next.t('toast.quoteCreated'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.quoteCreateError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.quoteCreateError')));
     },
   });
 };
@@ -48,8 +49,8 @@ export const useUpdateQuote = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.QUOTES] });
       toast.success(i18next.t('toast.quoteUpdated'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.quoteUpdateError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.quoteUpdateError')));
     },
   });
 };
@@ -62,8 +63,8 @@ export const useDeleteQuote = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.QUOTES] });
       toast.success(i18next.t('toast.quoteDeleted'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.quoteDeleteError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.quoteDeleteError')));
     },
   });
 };
@@ -76,8 +77,8 @@ export const useSendQuote = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.QUOTES] });
       toast.success(i18next.t('toast.quoteSent'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.quoteSendError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.quoteSendError')));
     },
   });
 };
@@ -92,8 +93,8 @@ export const useConvertQuoteToInvoice = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
       toast.success(i18next.t('toast.quoteConverted'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.quoteConvertError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.quoteConvertError')));
     },
   });
 };

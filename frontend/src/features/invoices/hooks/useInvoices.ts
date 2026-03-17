@@ -11,6 +11,7 @@ import { QUERY_KEYS } from '@/lib/constants';
 import { toast } from 'sonner';
 import type { EstadoInvoice } from '@/types/enums';
 import i18next from 'i18next';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 interface InvoiceFilters {
   estado?: EstadoInvoice;
@@ -32,8 +33,8 @@ export const useCreateInvoice = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
       toast.success(i18next.t('toast.invoiceCreated'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.invoiceCreateError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.invoiceCreateError')));
     },
   });
 };
@@ -47,8 +48,8 @@ export const useUpdateInvoice = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
       toast.success(i18next.t('toast.invoiceUpdated'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.invoiceUpdateError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.invoiceUpdateError')));
     },
   });
 };
@@ -61,8 +62,8 @@ export const useDeleteInvoice = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
       toast.success(i18next.t('toast.invoiceDeleted'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.invoiceDeleteError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.invoiceDeleteError')));
     },
   });
 };
@@ -75,8 +76,8 @@ export const useSendInvoice = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
       toast.success(i18next.t('toast.invoiceSent'));
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error?.message || i18next.t('toast.invoiceSendError'));
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.invoiceSendError')));
     },
   });
 };
