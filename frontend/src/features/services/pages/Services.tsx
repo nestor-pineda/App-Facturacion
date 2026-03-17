@@ -3,21 +3,25 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import { useServices, useCreateService } from "@/features/services/hooks/useServices";
+import { useServices, useCreateService, useUpdateService } from "@/features/services/hooks/useServices";
 import { ServiceForm } from "@/features/services/components/ServiceForm";
 import { TableSkeleton } from "@/components/common/TableSkeleton";
 import { formatCurrency } from "@/lib/calculations";
 import type { ServiceInput } from "@/schemas/service.schema";
+import type { Service } from "@/types/entities";
 import { useTranslation } from "react-i18next";
 
 const Services = () => {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
 
   const { data: services, isLoading } = useServices();
   const createMutation = useCreateService();
+  const updateMutation = useUpdateService();
 
   const filtered = (services ?? []).filter((s) =>
     s.nombre.toLowerCase().includes(search.toLowerCase())
@@ -27,6 +31,18 @@ const Services = () => {
     createMutation.mutate(data, {
       onSuccess: () => setDialogOpen(false),
     });
+  };
+
+  const handleUpdate = (data: ServiceInput) => {
+    if (!editingService) return;
+    updateMutation.mutate(
+      { id: editingService.id, data },
+      { onSuccess: () => setEditingService(null) },
+    );
+  };
+
+  const handleEdit = (service: Service) => {
+    setEditingService(service);
   };
 
   return (
@@ -90,9 +106,16 @@ const Services = () => {
                   <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(service.precioBase)}</td>
                   <td className="px-5 py-4 text-sm text-right text-muted-foreground">{service.ivaPorcentaje}%</td>
                   <td className="px-3 py-4">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(service)}>{t('services.edit')}</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
               ))}
@@ -107,6 +130,21 @@ const Services = () => {
             <DialogTitle>{t('services.dialogNew')}</DialogTitle>
           </DialogHeader>
           <ServiceForm onSubmit={handleCreate} isLoading={createMutation.isPending} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingService} onOpenChange={(open) => !open && setEditingService(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('services.dialogEdit')}</DialogTitle>
+          </DialogHeader>
+          {editingService && (
+            <ServiceForm
+              defaultValues={editingService}
+              onSubmit={handleUpdate}
+              isLoading={updateMutation.isPending}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

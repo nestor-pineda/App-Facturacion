@@ -7,4 +7,7 @@ export const createServiceSchema = z.object({
   iva_porcentaje: z.number().min(0).max(100).optional(),
 });
 
+export const updateServiceSchema = createServiceSchema.partial();
+
 export type CreateServiceInput = z.infer<typeof createServiceSchema>;
+export type UpdateServiceInput = z.infer<typeof updateServiceSchema>;

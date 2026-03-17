@@ -122,6 +122,8 @@
       "tryOtherTerms": "Try different search terms."
     },
     "dialogNew": "New service",
+    "edit": "Edit",
+    "dialogEdit": "Edit service",
     "table": {
       "service": "Service",
       "description": "Description",
@@ -280,6 +282,7 @@
     "createClient": "Create client",
     "updateClient": "Update client",
     "createService": "Create service",
+    "updateService": "Update service",
     "createQuote": "Create quote",
     "createInvoice": "Create invoice",
     "saveChanges": "Save changes",
@@ -322,6 +325,8 @@
     "clientUpdateError": "Error updating client",
     "serviceCreated": "Service created successfully",
     "serviceCreateError": "Error creating service",
+    "serviceUpdated": "Service updated successfully",
+    "serviceUpdateError": "Error updating service",
     "quoteCreated": "Quote created successfully",
     "quoteCreateError": "Error creating quote",
     "quoteUpdated": "Quote updated",

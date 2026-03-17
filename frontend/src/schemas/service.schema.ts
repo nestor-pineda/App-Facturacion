@@ -6,6 +6,7 @@ export const createServiceSchema = () =>
     nombre: z.string().min(1, i18next.t('validation.nameRequired')),
     descripcion: z.string().optional(),
     precioBase: z.coerce.number().min(0, i18next.t('validation.negativePriceNotAllowed')),
+    ivaPorcentaje: z.coerce.number().min(0).max(100).optional(),
   });
 
 export type ServiceInput = z.infer<ReturnType<typeof createServiceSchema>>;

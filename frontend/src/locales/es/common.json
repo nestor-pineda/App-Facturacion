@@ -122,6 +122,8 @@
       "tryOtherTerms": "Prueba con otros términos de búsqueda."
     },
     "dialogNew": "Nuevo servicio",
+    "edit": "Editar",
+    "dialogEdit": "Editar servicio",
     "table": {
       "service": "Servicio",
       "description": "Descripción",
@@ -280,6 +282,7 @@
     "createClient": "Crear cliente",
     "updateClient": "Actualizar cliente",
     "createService": "Crear servicio",
+    "updateService": "Actualizar servicio",
     "createQuote": "Crear presupuesto",
     "createInvoice": "Crear factura",
     "saveChanges": "Guardar cambios",
@@ -322,6 +325,8 @@
     "clientUpdateError": "Error al actualizar cliente",
     "serviceCreated": "Servicio creado correctamente",
     "serviceCreateError": "Error al crear servicio",
+    "serviceUpdated": "Servicio actualizado correctamente",
+    "serviceUpdateError": "Error al actualizar servicio",
     "quoteCreated": "Presupuesto creado correctamente",
     "quoteCreateError": "Error al crear presupuesto",
     "quoteUpdated": "Presupuesto actualizado",

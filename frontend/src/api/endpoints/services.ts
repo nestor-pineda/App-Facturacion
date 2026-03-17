@@ -40,6 +40,23 @@ export const createService = (data: ServiceInput) =>
       nombre: data.nombre,
       descripcion: data.descripcion,
       precio_base: data.precioBase,
+      ...(data.ivaPorcentaje !== undefined && { iva_porcentaje: data.ivaPorcentaje }),
+    })
+    .then((r) => {
+      const payload = r.data;
+      if (payload?.data && typeof payload.data === 'object' && !Array.isArray(payload.data)) {
+        return { ...payload, data: mapServiceFromApi(payload.data as Record<string, unknown>) };
+      }
+      return payload;
+    });
+
+export const updateService = (id: string, data: ServiceInput) =>
+  apiClient
+    .put<ApiResponse<Service>>(`${API_BASE_PATH}/services/${id}`, {
+      nombre: data.nombre,
+      descripcion: data.descripcion,
+      precio_base: data.precioBase,
+      ...(data.ivaPorcentaje !== undefined && { iva_porcentaje: data.ivaPorcentaje }),
     })
     .then((r) => {
       const payload = r.data;
