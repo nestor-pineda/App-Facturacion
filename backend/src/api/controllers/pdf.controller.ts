@@ -12,8 +12,11 @@ const PDF_ERROR_CODES = {
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;
 
+type InvoiceWithLines = Awaited<ReturnType<typeof invoiceService.getById>>;
+type InvoiceLine = InvoiceWithLines['lines'][number];
+
 const mapInvoiceToTemplateData = (
-  invoice: Awaited<ReturnType<typeof invoiceService.getById>>,
+  invoice: InvoiceWithLines,
 ): InvoiceTemplateData => ({
   tipo: 'factura',
   numero: invoice.numero!,
@@ -30,7 +33,7 @@ const mapInvoiceToTemplateData = (
     direccion: invoice.client.direccion,
     email: invoice.client.email,
   },
-  lineas: invoice.lines.map((line) => ({
+  lineas: invoice.lines.map((line: InvoiceLine) => ({
     descripcion: line.descripcion,
     cantidad: Number(line.cantidad),
     precioUnitario: Number(line.precio_unitario),
@@ -45,8 +48,11 @@ const mapInvoiceToTemplateData = (
   notas: invoice.notas ?? undefined,
 });
 
+type QuoteWithLines = Awaited<ReturnType<typeof quoteService.getById>>;
+type QuoteLine = QuoteWithLines['lines'][number];
+
 const mapQuoteToTemplateData = (
-  quote: Awaited<ReturnType<typeof quoteService.getById>>,
+  quote: QuoteWithLines,
 ): QuoteTemplateData => ({
   tipo: 'presupuesto',
   numero: quote.numero ?? undefined,
@@ -63,7 +69,7 @@ const mapQuoteToTemplateData = (
     direccion: quote.client.direccion,
     email: quote.client.email,
   },
-  lineas: quote.lines.map((line) => ({
+  lineas: quote.lines.map((line: QuoteLine) => ({
     descripcion: line.descripcion,
     cantidad: Number(line.cantidad),
     precioUnitario: Number(line.precio_unitario),

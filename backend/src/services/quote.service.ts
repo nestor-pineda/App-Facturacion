@@ -103,7 +103,7 @@ export const create = async (userId: string, data: CreateQuoteInput) => {
 export const update = async (userId: string, id: string, data: UpdateQuoteInput) => {
   const totals = calculateDocumentTotals(data.lines);
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: typeof prisma) => {
     const quote = await tx.quote.findFirst({ where: { id, user_id: userId } });
 
     if (!quote) {
@@ -177,7 +177,7 @@ export const convertToInvoice = async (userId: string, quoteId: string, fechaEmi
       total_iva: quote.total_iva,
       total: quote.total,
       lines: {
-        create: quote.lines.map((line) => ({
+        create: quote.lines.map((line: (typeof quote.lines)[number]) => ({
           service_id: line.service_id,
           descripcion: line.descripcion,
           cantidad: line.cantidad,
@@ -221,7 +221,7 @@ export const send = async (userId: string, id: string) => {
         subtotal: Number(sent.subtotal),
         total_iva: Number(sent.total_iva),
         total: Number(sent.total),
-        lines: sent.lines.map((l) => ({
+        lines: sent.lines.map((l: (typeof sent.lines)[number]) => ({
           descripcion: l.descripcion,
           cantidad: Number(l.cantidad),
           precio_unitario: Number(l.precio_unitario),

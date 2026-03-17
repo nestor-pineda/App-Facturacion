@@ -100,6 +100,91 @@ npm run test:e2e:headed   # Con navegador visible
 
 Si el puerto 8080 ya está en uso (frontend abierto en otro terminal), ejecuta: `PLAYWRIGHT_NO_WEB_SERVER=1 npm run test:e2e`. Detalle en [`docs/CONTEXT/TESTING.md`](docs/CONTEXT/TESTING.md#e2e-playwright).
 
+## Preparación para producción
+
+Sigue estos pasos antes de desplegar (por ejemplo Frontend en [Vercel](https://vercel.com), Backend en [Render](https://render.com), base de datos en [Neon](https://neon.tech)).
+
+### 1. Backend — comprobaciones y build
+
+Desde la raíz del repo:
+
+```bash
+cd backend
+npm ci
+npm run typecheck    # TypeScript sin errores
+npm run lint        # ESLint sin errores (o npm run lint:fix)
+npm run build       # Genera dist/ (necesario para npm start)
+```
+
+En producción el servidor arranca con `node dist/index.js`; si no ejecutas `build`, no existirá `dist/` y el proceso fallará.
+
+### 2. Backend — Prisma en el servidor
+
+En el entorno de producción (o en el comando de build del despliegue) hay que generar el cliente Prisma y aplicar migraciones:
+
+```bash
+cd backend
+npx prisma generate
+npx prisma migrate deploy
+```
+
+`prisma migrate deploy` usa la variable `DATABASE_URL` del entorno (la URL de tu base de datos de producción).
+
+### 3. Frontend — comprobaciones y build
+
+```bash
+cd frontend
+npm ci
+npx tsc --noEmit    # TypeScript sin errores
+npm run lint        # ESLint sin errores
+npm run build       # Genera la carpeta dist/ para servir estáticos
+```
+
+El build de Vite deja el resultado en `frontend/dist/`. En Vercel (o similar) el *Build Command* será `npm run build` y el *Output Directory* `dist`.
+
+### 4. Variables de entorno en producción
+
+**Backend** (Render u otro host):
+
+| Variable | Descripción |
+|----------|-------------|
+| `DATABASE_URL` | URL de PostgreSQL (ej. Neon) |
+| `JWT_SECRET` | Secreto de al menos 32 caracteres |
+| `JWT_REFRESH_SECRET` | Otro secreto de al menos 32 caracteres |
+| `ALLOWED_ORIGINS` | URL del frontend en producción (ej. `https://tu-app.vercel.app`) |
+| `PORT` | Lo suele asignar el host (ej. Render) |
+| `NODE_ENV` | `production` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Opcional; para envío real de correos al cliente |
+
+**Frontend** (Vercel u otro):
+
+| Variable | Descripción |
+|----------|-------------|
+| `VITE_API_URL` | URL pública del backend (ej. `https://tu-api.onrender.com`) |
+
+Si no defines `VITE_API_URL`, el frontend asumirá peticiones relativas a `/api` (válido si usas proxy en el mismo dominio).
+
+### 5. Comandos de despliegue típicos
+
+**Backend (ej. Render):**
+
+- **Build Command:** `npm install && npm run build && npx prisma generate`
+- **Start Command:** `npx prisma migrate deploy && npm start`
+
+(O incluir `prisma migrate deploy` en un script de start si prefieres ejecutarlo en cada arranque.)
+
+**Frontend (ej. Vercel):**
+
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Root Directory:** `frontend` (si el repo es monorepo en la raíz)
+
+### 6. Recomendaciones adicionales
+
+- Revisar y eliminar `console.log` de código que no sea de depuración.
+- En producción, usar un servicio SMTP real (no Mailtrap sandbox) si quieres que los correos lleguen al cliente.
+- Consultar [`docs/CONTEXT/ENVIRONMENT.md`](docs/CONTEXT/ENVIRONMENT.md) para el listado completo de variables.
+
 ## Documentación
 
 - [`docs/CONTEXT/API.md`](docs/CONTEXT/API.md) — Referencia de endpoints REST
