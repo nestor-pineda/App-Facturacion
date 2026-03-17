@@ -168,7 +168,9 @@ Si no defines `VITE_API_URL`, el frontend asumirá peticiones relativas a `/api`
 
 **Backend (ej. Render):**
 
-- **Build Command:** `npm install && npm run build && npx prisma generate`
+- **Root Directory:** `backend` (si el repo es monorepo en la raíz).
+- **Build Command:** `npm install --include=dev && npm run build && npx prisma generate`  
+  En Render, `npm install` suele omitir `devDependencies` (`NODE_ENV=production`). Sin ellas falla el build: faltan `typescript`, `@types/express`, etc. **`--include=dev`** fuerza instalar lo necesario para compilar.
 - **Start Command:** `npx prisma migrate deploy && npm start`
 
 (O incluir `prisma migrate deploy` en un script de start si prefieres ejecutarlo en cada arranque.)
