@@ -11,7 +11,7 @@ import {
 import { StatusBadge } from "@/components/StatusBadge";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuotes } from "@/features/quotes/hooks/useQuotes";
+import { useQuotes, useDownloadQuotePDF } from "@/features/quotes/hooks/useQuotes";
 import { TableSkeleton } from "@/components/common/TableSkeleton";
 import { formatCurrency } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADO } from "@/lib/constants";
@@ -28,6 +28,7 @@ const Quotes = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(STATUS_FILTER_ALL);
 
   const { data: quotes, isLoading } = useQuotes();
+  const downloadPdfMutation = useDownloadQuotePDF();
 
   const filtered = (quotes ?? []).filter((q) => {
     const matchesSearch =
@@ -144,6 +145,17 @@ const Quotes = () => {
                           }}
                         >
                           {t('common.edit')}
+                        </DropdownMenuItem>
+                      )}
+                      {quote.estado === ESTADO_ENVIADO && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            downloadPdfMutation.mutate(quote.id);
+                          }}
+                          disabled={downloadPdfMutation.isPending}
+                        >
+                          {downloadPdfMutation.isPending ? t('common.downloading') : t('common.download')}
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

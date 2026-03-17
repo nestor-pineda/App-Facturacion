@@ -22,6 +22,8 @@ cp .env.example .env   # Configurar variables de entorno
 npm run dev
 ```
 
+Para que al pulsar **Enviar** en un presupuesto o factura se envíe un correo real al cliente, descomenta y rellena las variables SMTP en `backend/.env` (en `.env.example` tienes un bloque de ejemplo con [Mailtrap](https://mailtrap.io) para desarrollo).
+
 ### Frontend
 
 ```bash
