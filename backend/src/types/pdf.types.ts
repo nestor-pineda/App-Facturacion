@@ -22,7 +22,7 @@ export interface DocumentTotals {
 
 export interface InvoiceTemplateData {
   tipo: 'factura';
-  numero: string;
+  numero?: string;
   fecha: Date;
   emisor: DocumentParty;
   cliente: Omit<DocumentParty, 'telefono'> & { email: string };

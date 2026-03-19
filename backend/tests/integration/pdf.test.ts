@@ -86,7 +86,7 @@ describe('PDF endpoints', () => {
       expect(response.status).toBe(401);
     });
 
-    it('should return 422 INVOICE_DRAFT for a borrador invoice', async () => {
+    it('should return 200 with PDF for a borrador invoice', async () => {
       const createRes = await request(app)
         .post(INVOICES_URL)
         .set('Cookie', cookies)
@@ -97,9 +97,9 @@ describe('PDF endpoints', () => {
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
         .set('Cookie', cookies);
 
-      expect(response.status).toBe(422);
-      expect(response.body.success).toBe(false);
-      expect(response.body.error.code).toBe('INVOICE_DRAFT');
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toMatch(/application\/pdf/);
+      expect(Buffer.isBuffer(response.body)).toBe(true);
     });
 
     it('should return 404 for an invoice belonging to another user', async () => {

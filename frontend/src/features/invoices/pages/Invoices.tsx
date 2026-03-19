@@ -1,4 +1,4 @@
-import { Plus, Search, MoreHorizontal, Receipt } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Receipt, Download, Send, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useInvoices } from "@/features/invoices/hooks/useInvoices";
+import { useInvoices, useSendInvoice, useDownloadInvoicePDF, useResendInvoice, useCopyInvoice } from "@/features/invoices/hooks/useInvoices";
 import { TableSkeleton } from "@/components/common/TableSkeleton";
-import { formatCurrency } from "@/lib/calculations";
+import { formatCurrency, formatDateDDMMYYYY } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADA } from "@/lib/constants";
 import type { EstadoInvoice } from "@/types/enums";
+import type { Invoice } from "@/types/entities";
 import { useTranslation } from "react-i18next";
 
 const STATUS_FILTER_ALL = 'all' as const;
@@ -28,6 +30,11 @@ const Invoices = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(STATUS_FILTER_ALL);
 
   const { data: invoices, isLoading } = useInvoices();
+  const sendMutation = useSendInvoice();
+  const downloadPdfMutation = useDownloadInvoicePDF();
+  const resendMutation = useResendInvoice();
+  const copyMutation = useCopyInvoice();
+  const [invoiceToSend, setInvoiceToSend] = useState<Invoice | null>(null);
 
   const filtered = (invoices ?? []).filter((inv) => {
     const matchesSearch =
@@ -125,7 +132,7 @@ const Invoices = () => {
                 <td className="px-5 py-4 text-sm">{inv.client.nombre}</td>
                 <td className="px-5 py-4"><StatusBadge status={inv.estado} /></td>
                 <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(inv.total)}</td>
-                <td className="px-5 py-4 text-sm text-right text-muted-foreground">{inv.fechaEmision}</td>
+                <td className="px-5 py-4 text-sm text-right text-muted-foreground">{formatDateDDMMYYYY(inv.fechaEmision)}</td>
                 <td className="px-3 py-4">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -135,14 +142,75 @@ const Invoices = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                       {inv.estado === ESTADO_BORRADOR && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/invoices/${inv.id}/edit`);
-                          }}
-                        >
-                          {t('common.edit')}
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/invoices/${inv.id}/edit`);
+                            }}
+                          >
+                            {t('common.edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInvoiceToSend(inv);
+                            }}
+                            disabled={sendMutation.isPending}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            {sendMutation.isPending ? t('common.saving') : t('common.send')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downloadPdfMutation.mutate(inv.id);
+                            }}
+                            disabled={downloadPdfMutation.isPending}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            {downloadPdfMutation.isPending ? t('common.downloading') : t('common.download')}
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {inv.estado === ESTADO_ENVIADA && (
+                        <>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downloadPdfMutation.mutate(inv.id);
+                            }}
+                            disabled={downloadPdfMutation.isPending}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            {downloadPdfMutation.isPending ? t('common.downloading') : t('common.download')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              resendMutation.mutate(inv.id);
+                            }}
+                            disabled={resendMutation.isPending}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            {resendMutation.isPending ? t('common.saving') : t('common.resend')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyMutation.mutate(inv.id, {
+                                onSuccess: (res) => {
+                                  const newId = (res?.data as { id?: string })?.id;
+                                  if (newId) navigate(`/invoices/${newId}`);
+                                },
+                              });
+                            }}
+                            disabled={copyMutation.isPending}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            {copyMutation.isPending ? t('common.saving') : t('invoices.detail.copyInvoice')}
+                          </DropdownMenuItem>
+                        </>
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -153,6 +221,19 @@ const Invoices = () => {
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!invoiceToSend}
+        onOpenChange={(open) => !open && setInvoiceToSend(null)}
+        title={t('invoices.detail.confirmSend.title')}
+        description={t('invoices.detail.confirmSend.description')}
+        confirmLabel={t('invoices.detail.confirmSend.confirm')}
+        onConfirm={() => {
+          if (invoiceToSend) {
+            sendMutation.mutate(invoiceToSend.id, { onSuccess: () => setInvoiceToSend(null) });
+          }
+        }}
+      />
     </div>
   );
 };

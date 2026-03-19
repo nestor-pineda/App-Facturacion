@@ -8,7 +8,6 @@ import type { InvoiceTemplateData, QuoteTemplateData } from '@/types/pdf.types';
 
 const PDF_ERROR_CODES = {
   NOT_FOUND: 'NOT_FOUND',
-  INVOICE_DRAFT: 'INVOICE_DRAFT',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;
 
@@ -19,7 +18,7 @@ const mapInvoiceToTemplateData = (
   invoice: InvoiceWithLines,
 ): InvoiceTemplateData => ({
   tipo: 'factura',
-  numero: invoice.numero!,
+  numero: invoice.numero ?? undefined,
   fecha: invoice.fecha_emision,
   emisor: {
     nombre: invoice.user.nombre_comercial,
@@ -85,8 +84,8 @@ const mapQuoteToTemplateData = (
 });
 
 /**
- * Generates and streams a PDF for a sent invoice.
- * Returns 422 if the invoice is still in draft state.
+ * Generates and streams a PDF for an invoice.
+ * Allowed for both borrador and enviada states (same as quotes).
  */
 export const generateInvoicePDF = async (req: Request, res: Response) => {
   const userId = req.user!.id;
@@ -95,21 +94,13 @@ export const generateInvoicePDF = async (req: Request, res: Response) => {
   try {
     const invoice = await invoiceService.getById(userId, invoiceId);
 
-    if (invoice.estado === 'borrador') {
-      return res.status(422).json({
-        success: false,
-        error: {
-          message: 'No se puede descargar una factura en estado borrador. Envía la factura primero.',
-          code: PDF_ERROR_CODES.INVOICE_DRAFT,
-        },
-      });
-    }
-
     const templateData = mapInvoiceToTemplateData(invoice);
     const html = renderInvoiceTemplate(templateData);
     const pdfBuffer = await pdfService.generatePDF(html);
 
-    const filename = `factura-${invoice.numero!.replace('/', '-')}.pdf`;
+    const filename = invoice.numero
+      ? `factura-${invoice.numero.replace('/', '-')}.pdf`
+      : `factura-${invoiceId.slice(0, 8)}.pdf`;
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

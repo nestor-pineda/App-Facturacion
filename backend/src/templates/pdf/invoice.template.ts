@@ -46,7 +46,7 @@ export const renderInvoiceTemplate = (data: InvoiceTemplateData): string => {
     <div class="header">
       <div class="document-title">
         <h1>FACTURA</h1>
-        <p class="document-number">${escapeHtml(data.numero)}</p>
+        ${data.numero ? `<p class="document-number">${escapeHtml(data.numero)}</p>` : ''}
       </div>
       <div class="document-date">
         <p>Fecha: ${formatDate(data.fecha)}</p>

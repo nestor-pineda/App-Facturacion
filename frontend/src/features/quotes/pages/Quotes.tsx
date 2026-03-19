@@ -1,4 +1,4 @@
-import { Plus, Search, MoreHorizontal, FileText, Send, Download } from "lucide-react";
+import { Plus, Search, MoreHorizontal, FileText, Send, Download, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuotes, useDownloadQuotePDF, useSendQuote } from "@/features/quotes/hooks/useQuotes";
+import { useQuotes, useDownloadQuotePDF, useSendQuote, useResendQuote, useCopyQuote } from "@/features/quotes/hooks/useQuotes";
 import { TableSkeleton } from "@/components/common/TableSkeleton";
 import { formatCurrency, formatDateDDMMYYYY } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADO } from "@/lib/constants";
@@ -32,6 +32,8 @@ const Quotes = () => {
   const { data: quotes, isLoading } = useQuotes();
   const downloadPdfMutation = useDownloadQuotePDF();
   const sendMutation = useSendQuote();
+  const resendMutation = useResendQuote();
+  const copyMutation = useCopyQuote();
   const [quoteToSend, setQuoteToSend] = useState<Quote | null>(null);
 
   const filtered = (quotes ?? []).filter((q) => {
@@ -174,16 +176,42 @@ const Quotes = () => {
                         </>
                       )}
                       {quote.estado === ESTADO_ENVIADO && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            downloadPdfMutation.mutate(quote.id);
-                          }}
-                          disabled={downloadPdfMutation.isPending}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          {downloadPdfMutation.isPending ? t('common.downloading') : t('common.download')}
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downloadPdfMutation.mutate(quote.id);
+                            }}
+                            disabled={downloadPdfMutation.isPending}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            {downloadPdfMutation.isPending ? t('common.downloading') : t('common.download')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              resendMutation.mutate(quote.id);
+                            }}
+                            disabled={resendMutation.isPending}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            {resendMutation.isPending ? t('common.saving') : t('common.resend')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyMutation.mutate(quote.id, {
+                                onSuccess: (res) => {
+                                  if (res?.data?.id) navigate(`/quotes/${res.data.id}`);
+                                },
+                              });
+                            }}
+                            disabled={copyMutation.isPending}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            {copyMutation.isPending ? t('common.saving') : t('quotes.detail.copyQuote')}
+                          </DropdownMenuItem>
+                        </>
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>

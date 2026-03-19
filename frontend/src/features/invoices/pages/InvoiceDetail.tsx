@@ -116,6 +116,23 @@ export default function InvoiceDetail() {
         </div>
 
         <div className="flex flex-wrap gap-2 pt-4">
+          <Button variant="outline" onClick={() => downloadMutation.mutate(invoice.id)} disabled={downloadMutation.isPending}>
+            <Download className="h-4 w-4 mr-1" />
+            {downloadMutation.isPending ? t('common.downloading') : t('common.download')}
+          </Button>
+          {isDraft && (
+            <>
+              <Button variant="outline" onClick={() => navigate(`/invoices/${invoice.id}/edit`)}>
+                <Pencil className="h-4 w-4 mr-1" /> {t('common.edit')}
+              </Button>
+              <Button onClick={() => setConfirmSend(true)} disabled={sendMutation.isPending}>
+                <Send className="h-4 w-4 mr-1" /> {t('invoices.detail.sendInvoice')}
+              </Button>
+              <Button variant="destructive" onClick={() => setConfirmDelete(true)} disabled={deleteMutation.isPending}>
+                <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')}
+              </Button>
+            </>
+          )}
           {isSent && (
             <>
               <Button
@@ -141,23 +158,6 @@ export default function InvoiceDetail() {
               >
                 <Copy className="h-4 w-4 mr-1" />
                 {copyMutation.isPending ? t('common.saving') : t('invoices.detail.copyInvoice')}
-              </Button>
-              <Button variant="outline" onClick={() => downloadMutation.mutate(invoice.id)} disabled={downloadMutation.isPending}>
-                <Download className="h-4 w-4 mr-1" />
-                {downloadMutation.isPending ? t('common.downloading') : t('common.download')}
-              </Button>
-            </>
-          )}
-          {isDraft && (
-            <>
-              <Button variant="outline" onClick={() => navigate(`/invoices/${invoice.id}/edit`)}>
-                <Pencil className="h-4 w-4 mr-1" /> {t('common.edit')}
-              </Button>
-              <Button onClick={() => setConfirmSend(true)} disabled={sendMutation.isPending}>
-                <Send className="h-4 w-4 mr-1" /> {t('invoices.detail.sendInvoice')}
-              </Button>
-              <Button variant="destructive" onClick={() => setConfirmDelete(true)} disabled={deleteMutation.isPending}>
-                <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')}
               </Button>
             </>
           )}
