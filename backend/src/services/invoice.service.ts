@@ -6,6 +6,7 @@ import { sendInvoiceEmail } from '@/services/email.service';
 export const INVOICE_NOT_FOUND = 'INVOICE_NOT_FOUND';
 export const ALREADY_SENT = 'ALREADY_SENT';
 export const INVOICE_DRAFT = 'INVOICE_DRAFT';
+export const INVOICE_NOT_SENT = 'INVOICE_NOT_SENT';
 
 const roundTwo = (n: number) => Math.round(n * 100) / 100;
 
@@ -206,4 +207,39 @@ export const send = async (userId: string, id: string) => {
   }
 
   return sent;
+};
+
+/**
+ * Creates a new invoice in borrador with the same content as an existing sent invoice.
+ * Only allowed when the source invoice is in estado 'enviada'.
+ */
+export const copyInvoice = async (userId: string, id: string) => {
+  const invoice = await prisma.invoice.findFirst({
+    where: { id, user_id: userId },
+    include: { lines: true },
+  });
+
+  if (!invoice) {
+    throw new Error(INVOICE_NOT_FOUND);
+  }
+
+  if (invoice.estado !== 'enviada') {
+    throw new Error(INVOICE_NOT_SENT);
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const data: CreateInvoiceInput = {
+    client_id: invoice.client_id,
+    fecha_emision: today,
+    notas: invoice.notas ?? undefined,
+    lines: invoice.lines.map((line: (typeof invoice.lines)[number]) => ({
+      service_id: line.service_id ?? undefined,
+      descripcion: line.descripcion,
+      cantidad: Number(line.cantidad),
+      precio_unitario: Number(line.precio_unitario),
+      iva_porcentaje: Number(line.iva_porcentaje),
+    })),
+  };
+
+  return create(userId, data);
 };

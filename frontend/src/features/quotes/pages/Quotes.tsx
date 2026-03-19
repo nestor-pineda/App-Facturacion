@@ -1,4 +1,4 @@
-import { Plus, Search, MoreHorizontal, FileText } from "lucide-react";
+import { Plus, Search, MoreHorizontal, FileText, Send, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuotes, useDownloadQuotePDF } from "@/features/quotes/hooks/useQuotes";
+import { useQuotes, useDownloadQuotePDF, useSendQuote } from "@/features/quotes/hooks/useQuotes";
 import { TableSkeleton } from "@/components/common/TableSkeleton";
-import { formatCurrency } from "@/lib/calculations";
+import { formatCurrency, formatDateDDMMYYYY } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADO } from "@/lib/constants";
 import type { EstadoQuote } from "@/types/enums";
+import type { Quote } from "@/types/entities";
 import { useTranslation } from "react-i18next";
 
 const STATUS_FILTER_ALL = 'all' as const;
@@ -29,6 +31,8 @@ const Quotes = () => {
 
   const { data: quotes, isLoading } = useQuotes();
   const downloadPdfMutation = useDownloadQuotePDF();
+  const sendMutation = useSendQuote();
+  const [quoteToSend, setQuoteToSend] = useState<Quote | null>(null);
 
   const filtered = (quotes ?? []).filter((q) => {
     const matchesSearch =
@@ -128,7 +132,7 @@ const Quotes = () => {
                 <td className="px-5 py-4"><StatusBadge status={quote.estado} /></td>
                 <td className="px-5 py-4 text-sm text-right text-muted-foreground">{quote.lines.length}</td>
                 <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(quote.total)}</td>
-                <td className="px-5 py-4 text-sm text-right text-muted-foreground">{quote.fecha}</td>
+                <td className="px-5 py-4 text-sm text-right text-muted-foreground">{formatDateDDMMYYYY(quote.fecha)}</td>
                 <td className="px-3 py-4">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -138,14 +142,36 @@ const Quotes = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                       {quote.estado === ESTADO_BORRADOR && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/quotes/${quote.id}/edit`);
-                          }}
-                        >
-                          {t('common.edit')}
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/quotes/${quote.id}/edit`);
+                            }}
+                          >
+                            {t('common.edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setQuoteToSend(quote);
+                            }}
+                            disabled={sendMutation.isPending}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            {sendMutation.isPending ? t('common.saving') : t('common.send')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downloadPdfMutation.mutate(quote.id);
+                            }}
+                            disabled={downloadPdfMutation.isPending}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            {downloadPdfMutation.isPending ? t('common.downloading') : t('common.download')}
+                          </DropdownMenuItem>
+                        </>
                       )}
                       {quote.estado === ESTADO_ENVIADO && (
                         <DropdownMenuItem
@@ -155,6 +181,7 @@ const Quotes = () => {
                           }}
                           disabled={downloadPdfMutation.isPending}
                         >
+                          <Download className="h-4 w-4 mr-2" />
                           {downloadPdfMutation.isPending ? t('common.downloading') : t('common.download')}
                         </DropdownMenuItem>
                       )}
@@ -167,6 +194,19 @@ const Quotes = () => {
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!quoteToSend}
+        onOpenChange={(open) => !open && setQuoteToSend(null)}
+        title={t('quotes.detail.confirmSend.title')}
+        description={t('quotes.detail.confirmSend.description')}
+        confirmLabel={t('quotes.detail.confirmSend.confirm')}
+        onConfirm={() => {
+          if (quoteToSend) {
+            sendMutation.mutate(quoteToSend.id, { onSuccess: () => setQuoteToSend(null) });
+          }
+        }}
+      />
     </div>
   );
 };

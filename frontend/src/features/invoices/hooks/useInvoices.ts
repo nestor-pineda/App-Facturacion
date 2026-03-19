@@ -5,6 +5,7 @@ import {
   updateInvoice,
   deleteInvoice,
   sendInvoice,
+  copyInvoice,
   downloadInvoicePDF,
 } from '@/api/endpoints/invoices';
 import { QUERY_KEYS } from '@/lib/constants';
@@ -78,6 +79,20 @@ export const useSendInvoice = () => {
     },
     onError: (error: unknown) => {
       toast.error(getApiErrorMessage(error, i18next.t('toast.invoiceSendError')));
+    },
+  });
+};
+
+export const useCopyInvoice = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: copyInvoice,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVOICES] });
+      toast.success(i18next.t('toast.invoiceCopied'));
+    },
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.invoiceCopyError')));
     },
   });
 };

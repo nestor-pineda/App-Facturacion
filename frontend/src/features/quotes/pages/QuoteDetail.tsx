@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuotes, useSendQuote, useDeleteQuote, useConvertQuoteToInvoice, useDownloadQuotePDF } from '@/features/quotes/hooks/useQuotes';
+import { useQuotes, useSendQuote, useResendQuote, useCopyQuote, useDeleteQuote, useConvertQuoteToInvoice, useDownloadQuotePDF } from '@/features/quotes/hooks/useQuotes';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/lib/calculations';
+import { formatCurrency, formatDateDDMMYYYY } from '@/lib/calculations';
 import { ESTADO_BORRADOR } from '@/lib/constants';
-import { ArrowLeft, Pencil, Send, Trash2, Download, ArrowRightLeft } from 'lucide-react';
+import { ArrowLeft, Pencil, Send, Trash2, Download, ArrowRightLeft, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,8 +16,10 @@ export default function QuoteDetail() {
   const navigate = useNavigate();
   const { data: quotes, isLoading } = useQuotes();
   const sendMutation = useSendQuote();
+  const resendMutation = useResendQuote();
   const deleteMutation = useDeleteQuote();
   const convertMutation = useConvertQuoteToInvoice();
+  const copyMutation = useCopyQuote();
   const downloadMutation = useDownloadQuotePDF();
 
   const [confirmSend, setConfirmSend] = useState(false);
@@ -47,7 +49,7 @@ export default function QuoteDetail() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="page-title">
-              {t('quotes.detail.title', { number: quote.numero ?? t('common.noNumber') })}
+              {quote.numero ? t('quotes.detail.title', { number: quote.numero }) : t('quotes.detail.titleOnly')}
             </h1>
             <p className="page-subtitle">{quote.client.nombre}</p>
           </div>
@@ -59,7 +61,7 @@ export default function QuoteDetail() {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-muted-foreground">{t('quotes.detail.date')}</span>
-            <span className="ml-2">{quote.fecha}</span>
+            <span className="ml-2">{formatDateDDMMYYYY(quote.fecha)}</span>
           </div>
           <div>
             <span className="text-muted-foreground">{t('quotes.detail.client')}</span>
@@ -124,9 +126,39 @@ export default function QuoteDetail() {
             </>
           )}
           {!isDraft && (
-            <Button variant="outline" onClick={() => setConfirmConvert(true)} disabled={convertMutation.isPending}>
-              <ArrowRightLeft className="h-4 w-4 mr-1" /> {t('quotes.detail.convertToInvoice')}
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                className="bg-gray-200 text-gray-800 border-gray-300 hover:bg-gray-300 hover:text-gray-900"
+                onClick={() =>
+                  copyMutation.mutate(quote.id, {
+                    onSuccess: (res) => {
+                      if (res?.data?.id) navigate(`/quotes/${res.data.id}`);
+                    },
+                  })
+                }
+                disabled={copyMutation.isPending}
+              >
+                <Copy className="h-4 w-4 mr-1" />
+                {copyMutation.isPending ? t('common.saving') : t('quotes.detail.copyQuote')}
+              </Button>
+              <Button
+                className="bg-black text-white hover:bg-black/90"
+                onClick={() => resendMutation.mutate(quote.id)}
+                disabled={resendMutation.isPending}
+              >
+                <Send className="h-4 w-4 mr-1" />
+                {resendMutation.isPending ? t('common.saving') : t('common.resend')}
+              </Button>
+              <Button
+                variant="outline"
+                className="bg-green-600 text-white border-green-600 hover:bg-green-700 hover:text-white"
+                onClick={() => setConfirmConvert(true)}
+                disabled={convertMutation.isPending}
+              >
+                <ArrowRightLeft className="h-4 w-4 mr-1" /> {t('quotes.detail.convertToInvoice')}
+              </Button>
+            </>
           )}
         </div>
       </div>

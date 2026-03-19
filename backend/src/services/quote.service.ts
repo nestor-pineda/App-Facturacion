@@ -4,6 +4,7 @@ import { sendQuoteEmail } from '@/services/email.service';
 
 export const QUOTE_NOT_FOUND = 'QUOTE_NOT_FOUND';
 export const QUOTE_ALREADY_SENT = 'QUOTE_ALREADY_SENT';
+export const QUOTE_NOT_SENT = 'QUOTE_NOT_SENT';
 
 export const getById = async (userId: string, id: string) => {
   const quote = await prisma.quote.findFirst({
@@ -235,4 +236,79 @@ export const send = async (userId: string, id: string) => {
   }
 
   return sent;
+};
+
+/**
+ * Re-sends the quote email without changing its state.
+ * Used for already-sent quotes to send the email again.
+ */
+export const resendQuoteEmail = async (userId: string, id: string) => {
+  const quote = await prisma.quote.findFirst({
+    where: { id, user_id: userId },
+    include: { client: true, user: true, lines: true },
+  });
+
+  if (!quote) {
+    throw new Error(QUOTE_NOT_FOUND);
+  }
+
+  try {
+    await sendQuoteEmail({
+      client: { nombre: quote.client.nombre, email: quote.client.email },
+      user: { nombre_comercial: quote.user.nombre_comercial ?? '', nif: quote.user.nif ?? '' },
+      quote: {
+        fecha: quote.fecha,
+        notas: quote.notas,
+        subtotal: Number(quote.subtotal),
+        total_iva: Number(quote.total_iva),
+        total: Number(quote.total),
+        lines: quote.lines.map((l: (typeof quote.lines)[number]) => ({
+          descripcion: l.descripcion,
+          cantidad: Number(l.cantidad),
+          precio_unitario: Number(l.precio_unitario),
+          iva_porcentaje: Number(l.iva_porcentaje),
+          subtotal: Number(l.subtotal),
+        })),
+      },
+    });
+  } catch (err) {
+    console.error('[email] Failed to resend quote email:', err);
+    throw err;
+  }
+
+  return quote;
+};
+
+/**
+ * Creates a new quote in borrador with the same content as an existing sent quote.
+ * Only allowed when the source quote is in estado 'enviado'.
+ */
+export const copyQuote = async (userId: string, id: string) => {
+  const quote = await prisma.quote.findFirst({
+    where: { id, user_id: userId },
+    include: { lines: true },
+  });
+
+  if (!quote) {
+    throw new Error(QUOTE_NOT_FOUND);
+  }
+
+  if (quote.estado !== 'enviado') {
+    throw new Error(QUOTE_NOT_SENT);
+  }
+
+  const data: CreateQuoteInput = {
+    client_id: quote.client_id,
+    fecha: quote.fecha.toISOString().slice(0, 10),
+    notas: quote.notas ?? undefined,
+    lines: quote.lines.map((line: (typeof quote.lines)[number]) => ({
+      service_id: line.service_id ?? undefined,
+      descripcion: line.descripcion,
+      cantidad: Number(line.cantidad),
+      precio_unitario: Number(line.precio_unitario),
+      iva_porcentaje: Number(line.iva_porcentaje),
+    })),
+  };
+
+  return create(userId, data);
 };

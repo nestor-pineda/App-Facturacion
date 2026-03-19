@@ -27,7 +27,7 @@ function quoteToFormInput(quote: Quote): CreateQuoteInput {
       return {
         serviceId: line.service_id ?? line.serviceId ?? null,
         descripcion: l.descripcion,
-        cantidad: 1,
+        cantidad: Number(l.cantidad) || 1,
         precioUnitario: Number(line.precio_unitario ?? l.precioUnitario) || 0,
         ivaPorcentaje: Number(line.iva_porcentaje ?? l.ivaPorcentaje) || 21,
       };

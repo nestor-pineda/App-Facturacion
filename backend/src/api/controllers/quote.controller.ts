@@ -185,3 +185,47 @@ export const send = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const resend = async (req: Request, res: Response) => {
+  try {
+    const quote = await quoteService.resendQuoteEmail(req.user!.id, req.params.id as string);
+    return res.status(200).json({ success: true, data: quote });
+  } catch (error) {
+    if (error instanceof Error && error.message === quoteService.QUOTE_NOT_FOUND) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
+    });
+  }
+};
+
+export const copy = async (req: Request, res: Response) => {
+  try {
+    const quote = await quoteService.copyQuote(req.user!.id, req.params.id as string);
+    return res.status(201).json({ success: true, data: quote });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === quoteService.QUOTE_NOT_FOUND) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
+        });
+      }
+      if (error.message === quoteService.QUOTE_NOT_SENT) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Solo se puede copiar un presupuesto enviado', code: ERROR_CODES.INTERNAL_ERROR },
+        });
+      }
+    }
+    return res.status(500).json({
+      success: false,
+      error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
+    });
+  }
+};

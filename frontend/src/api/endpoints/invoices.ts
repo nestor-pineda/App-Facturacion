@@ -51,6 +51,11 @@ export const sendInvoice = (id: string) =>
     .patch<ApiResponse<Invoice>>(`${API_BASE_PATH}/invoices/${id}/send`)
     .then((r) => r.data);
 
+export const copyInvoice = (id: string) =>
+  apiClient
+    .post<ApiResponse<Invoice>>(`${API_BASE_PATH}/invoices/${id}/copy`)
+    .then((r) => r.data);
+
 export const downloadInvoicePDF = (id: string) =>
   apiClient
     .get(`${API_BASE_PATH}/invoices/${id}/pdf`, { responseType: 'blob' })

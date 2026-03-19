@@ -5,6 +5,8 @@ import {
   updateQuote,
   deleteQuote,
   sendQuote,
+  resendQuote,
+  copyQuote,
   convertQuoteToInvoice,
   downloadQuotePDF,
 } from '@/api/endpoints/quotes';
@@ -79,6 +81,32 @@ export const useSendQuote = () => {
     },
     onError: (error: unknown) => {
       toast.error(getApiErrorMessage(error, i18next.t('toast.quoteSendError')));
+    },
+  });
+};
+
+export const useResendQuote = () => {
+  return useMutation({
+    mutationFn: resendQuote,
+    onSuccess: () => {
+      toast.success(i18next.t('toast.quoteResent'));
+    },
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.quoteResendError')));
+    },
+  });
+};
+
+export const useCopyQuote = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: copyQuote,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.QUOTES] });
+      toast.success(i18next.t('toast.quoteCopied'));
+    },
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.quoteCopyError')));
     },
   });
 };

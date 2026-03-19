@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useInvoices, useSendInvoice, useDeleteInvoice, useDownloadInvoicePDF } from '@/features/invoices/hooks/useInvoices';
+import { useInvoices, useSendInvoice, useCopyInvoice, useDeleteInvoice, useDownloadInvoicePDF } from '@/features/invoices/hooks/useInvoices';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/calculations';
 import { ESTADO_BORRADOR, ESTADO_ENVIADA } from '@/lib/constants';
-import { ArrowLeft, Pencil, Send, Trash2, Download } from 'lucide-react';
+import { ArrowLeft, Pencil, Send, Trash2, Download, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +16,7 @@ export default function InvoiceDetail() {
   const navigate = useNavigate();
   const { data: invoices, isLoading } = useInvoices();
   const sendMutation = useSendInvoice();
+  const copyMutation = useCopyInvoice();
   const deleteMutation = useDeleteInvoice();
   const downloadMutation = useDownloadInvoicePDF();
 
@@ -115,10 +116,28 @@ export default function InvoiceDetail() {
 
         <div className="flex flex-wrap gap-2 pt-4">
           {isSent && (
-            <Button variant="outline" onClick={() => downloadMutation.mutate(invoice.id)} disabled={downloadMutation.isPending}>
-              <Download className="h-4 w-4 mr-1" />
-              {downloadMutation.isPending ? t('common.downloading') : t('common.download')}
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                className="bg-gray-200 text-gray-800 border-gray-300 hover:bg-gray-300 hover:text-gray-900"
+                onClick={() =>
+                  copyMutation.mutate(invoice.id, {
+                    onSuccess: (res) => {
+                      const newId = (res?.data as { id?: string })?.id;
+                      if (newId) navigate(`/invoices/${newId}`);
+                    },
+                  })
+                }
+                disabled={copyMutation.isPending}
+              >
+                <Copy className="h-4 w-4 mr-1" />
+                {copyMutation.isPending ? t('common.saving') : t('invoices.detail.copyInvoice')}
+              </Button>
+              <Button variant="outline" onClick={() => downloadMutation.mutate(invoice.id)} disabled={downloadMutation.isPending}>
+                <Download className="h-4 w-4 mr-1" />
+                {downloadMutation.isPending ? t('common.downloading') : t('common.download')}
+              </Button>
+            </>
           )}
           {isDraft && (
             <>

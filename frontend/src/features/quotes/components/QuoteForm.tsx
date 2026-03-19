@@ -49,7 +49,7 @@ export function QuoteForm({ onSubmit, isLoading, defaultValues, isEdit }: QuoteF
 
   const totals = calculateTotals(
     (watchedLines ?? []).map((l) => ({
-      cantidad: 1,
+      cantidad: Number(l.cantidad) || 0,
       precioUnitario: Number(l.precioUnitario) || 0,
       ivaPorcentaje: Number(l.ivaPorcentaje) || IVA_DEFAULT,
     })),
@@ -66,10 +66,7 @@ export function QuoteForm({ onSubmit, isLoading, defaultValues, isEdit }: QuoteF
   };
 
   const handleFormSubmit = (data: CreateQuoteInput) => {
-    onSubmit({
-      ...data,
-      lines: data.lines.map((l) => ({ ...l, cantidad: 1 })),
-    });
+    onSubmit(data);
   };
 
   return (
@@ -77,7 +74,7 @@ export function QuoteForm({ onSubmit, isLoading, defaultValues, isEdit }: QuoteF
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>{t('forms.client')}</Label>
-          <Select value={watch('clientId') ?? ''} onValueChange={(v) => setValue('clientId', v)}>
+          <Select value={watch('clientId') ?? ''} onValueChange={(v) => setValue('clientId', v, { shouldValidate: true })}>
             <SelectTrigger>
               <SelectValue placeholder={t('forms.selectClient')} />
             </SelectTrigger>
@@ -141,13 +138,17 @@ export function QuoteForm({ onSubmit, isLoading, defaultValues, isEdit }: QuoteF
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div className="md:col-span-2 space-y-1">
                 <Label>{t('forms.lineDescription')}</Label>
                 <Input {...register(`lines.${index}.descripcion`)} placeholder={t('forms.lineDescription')} />
                 {errors.lines?.[index]?.descripcion && (
                   <p className="text-xs text-destructive">{errors.lines[index].descripcion.message}</p>
                 )}
+              </div>
+              <div className="space-y-1">
+                <Label>{t('forms.quantity')}</Label>
+                <Input type="number" step="1" min="1" {...register(`lines.${index}.cantidad`)} />
               </div>
               <div className="space-y-1">
                 <Label>{t('forms.unitPrice')}</Label>

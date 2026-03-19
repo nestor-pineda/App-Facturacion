@@ -12,6 +12,8 @@ router.post('/', quoteController.create);
 router.put('/:id', quoteController.update);
 router.delete('/:id', quoteController.remove);
 router.patch('/:id/send', quoteController.send);
+router.post('/:id/resend', quoteController.resend);
+router.post('/:id/copy', quoteController.copy);
 router.post('/:id/convert', quoteController.convert);
 router.get('/:id/pdf', pdfController.generateQuotePDF);
 
