@@ -39,7 +39,7 @@ export function ServiceForm({ defaultValues, onSubmit, isLoading }: ServiceFormP
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="nombre">{t('forms.name')}</Label>
-        <Input id="nombre" placeholder={t('forms.clientPlaceholder')} {...register('nombre')} />
+        <Input id="nombre" placeholder={t('forms.serviceNamePlaceholder')} {...register('nombre')} />
         {errors.nombre && <p className="text-sm text-destructive">{errors.nombre.message}</p>}
       </div>
       <div className="space-y-2">

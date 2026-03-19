@@ -288,7 +288,8 @@
     "saveChanges": "Save changes",
     "notesPlaceholder": "Additional notes...",
     "descriptionPlaceholder": "Service description",
-    "clientPlaceholder": "Client name"
+    "clientPlaceholder": "Client name",
+    "serviceNamePlaceholder": "Service name"
   },
   "validation": {
     "emailInvalid": "Invalid email",
