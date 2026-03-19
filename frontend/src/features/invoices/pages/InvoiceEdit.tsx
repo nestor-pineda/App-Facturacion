@@ -27,7 +27,7 @@ function invoiceToFormInput(invoice: Invoice): CreateInvoiceInput {
       return {
         serviceId: line.service_id ?? line.serviceId ?? null,
         descripcion: l.descripcion,
-        cantidad: Number(l.cantidad) || 0,
+        cantidad: Math.max(1, Math.floor(Number(l.cantidad) || 1)),
         precioUnitario: Number(line.precio_unitario ?? l.precioUnitario) || 0,
         ivaPorcentaje: Number(line.iva_porcentaje ?? l.ivaPorcentaje) || 21,
       };

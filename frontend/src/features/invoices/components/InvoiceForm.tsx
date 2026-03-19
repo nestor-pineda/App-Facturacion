@@ -144,7 +144,7 @@ export function InvoiceForm({ onSubmit, isLoading, defaultValues, isEdit }: Invo
               </div>
               <div className="space-y-1">
                 <Label>{t('forms.quantity')}</Label>
-                <Input type="number" step="0.01" min="0.01" {...register(`lines.${index}.cantidad`)} />
+                <Input type="number" step="1" min="1" {...register(`lines.${index}.cantidad`)} />
               </div>
               <div className="space-y-1">
                 <Label>{t('forms.unitPrice')}</Label>

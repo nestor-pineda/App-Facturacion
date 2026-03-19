@@ -210,6 +210,48 @@ export const send = async (userId: string, id: string) => {
 };
 
 /**
+ * Re-sends the invoice email without changing its state.
+ * Used for already-sent invoices to send the email again.
+ */
+export const resendInvoiceEmail = async (userId: string, id: string) => {
+  const invoice = await prisma.invoice.findFirst({
+    where: { id, user_id: userId },
+    include: { client: true, user: true, lines: true },
+  });
+
+  if (!invoice) {
+    throw new Error(INVOICE_NOT_FOUND);
+  }
+
+  try {
+    await sendInvoiceEmail({
+      client: { nombre: invoice.client.nombre, email: invoice.client.email },
+      user: { nombre_comercial: invoice.user.nombre_comercial ?? '', nif: invoice.user.nif ?? '' },
+      invoice: {
+        numero: invoice.numero ?? undefined,
+        fecha_emision: invoice.fecha_emision,
+        notas: invoice.notas,
+        subtotal: Number(invoice.subtotal),
+        total_iva: Number(invoice.total_iva),
+        total: Number(invoice.total),
+        lines: invoice.lines.map((l: (typeof invoice.lines)[number]) => ({
+          descripcion: l.descripcion,
+          cantidad: Number(l.cantidad),
+          precio_unitario: Number(l.precio_unitario),
+          iva_porcentaje: Number(l.iva_porcentaje),
+          subtotal: Number(l.subtotal),
+        })),
+      },
+    });
+  } catch (err) {
+    console.error('[email] Failed to resend invoice email:', err);
+    throw err;
+  }
+
+  return invoice;
+};
+
+/**
  * Creates a new invoice in borrador with the same content as an existing sent invoice.
  * Only allowed when the source invoice is in estado 'enviada'.
  */

@@ -5,6 +5,7 @@ import {
   updateInvoice,
   deleteInvoice,
   sendInvoice,
+  resendInvoice,
   copyInvoice,
   downloadInvoicePDF,
 } from '@/api/endpoints/invoices';
@@ -79,6 +80,18 @@ export const useSendInvoice = () => {
     },
     onError: (error: unknown) => {
       toast.error(getApiErrorMessage(error, i18next.t('toast.invoiceSendError')));
+    },
+  });
+};
+
+export const useResendInvoice = () => {
+  return useMutation({
+    mutationFn: resendInvoice,
+    onSuccess: () => {
+      toast.success(i18next.t('toast.invoiceResent'));
+    },
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, i18next.t('toast.invoiceResendError')));
     },
   });
 };

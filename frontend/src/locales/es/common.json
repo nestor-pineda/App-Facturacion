@@ -356,6 +356,8 @@
     "invoiceDeleteError": "Error al eliminar factura",
     "invoiceSent": "Factura enviada y numerada correctamente",
     "invoiceSendError": "Error al enviar factura",
+    "invoiceResent": "Factura reenviada por email",
+    "invoiceResendError": "Error al reenviar factura",
     "invoiceCopied": "Factura copiada como borrador",
     "invoiceCopyError": "Error al copiar factura",
     "pdfDownloaded": "PDF descargado",

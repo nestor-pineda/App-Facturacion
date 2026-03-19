@@ -150,6 +150,24 @@ export const send = async (req: Request, res: Response) => {
   }
 };
 
+export const resend = async (req: Request, res: Response) => {
+  try {
+    const invoice = await invoiceService.resendInvoiceEmail(req.user!.id, req.params.id as string);
+    return res.status(200).json({ success: true, data: invoice });
+  } catch (error) {
+    if (error instanceof Error && error.message === invoiceService.INVOICE_NOT_FOUND) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Factura no encontrada', code: ERROR_CODES.NOT_FOUND },
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
+    });
+  }
+};
+
 export const copy = async (req: Request, res: Response) => {
   try {
     const invoice = await invoiceService.copyInvoice(req.user!.id, req.params.id as string);

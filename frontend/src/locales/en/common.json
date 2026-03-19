@@ -356,6 +356,8 @@
     "invoiceDeleteError": "Error deleting invoice",
     "invoiceSent": "Invoice sent and numbered successfully",
     "invoiceSendError": "Error sending invoice",
+    "invoiceResent": "Invoice resent by email",
+    "invoiceResendError": "Error resending invoice",
     "invoiceCopied": "Invoice copied as draft",
     "invoiceCopyError": "Error copying invoice",
     "pdfDownloaded": "PDF downloaded",

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useInvoices, useSendInvoice, useCopyInvoice, useDeleteInvoice, useDownloadInvoicePDF } from '@/features/invoices/hooks/useInvoices';
+import { useInvoices, useSendInvoice, useResendInvoice, useCopyInvoice, useDeleteInvoice, useDownloadInvoicePDF } from '@/features/invoices/hooks/useInvoices';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -16,6 +16,7 @@ export default function InvoiceDetail() {
   const navigate = useNavigate();
   const { data: invoices, isLoading } = useInvoices();
   const sendMutation = useSendInvoice();
+  const resendMutation = useResendInvoice();
   const copyMutation = useCopyInvoice();
   const deleteMutation = useDeleteInvoice();
   const downloadMutation = useDownloadInvoicePDF();
@@ -117,6 +118,14 @@ export default function InvoiceDetail() {
         <div className="flex flex-wrap gap-2 pt-4">
           {isSent && (
             <>
+              <Button
+                className="bg-black text-white hover:bg-black/90"
+                onClick={() => resendMutation.mutate(invoice.id)}
+                disabled={resendMutation.isPending}
+              >
+                <Send className="h-4 w-4 mr-1" />
+                {resendMutation.isPending ? t('common.saving') : t('common.resend')}
+              </Button>
               <Button
                 variant="outline"
                 className="bg-gray-200 text-gray-800 border-gray-300 hover:bg-gray-300 hover:text-gray-900"

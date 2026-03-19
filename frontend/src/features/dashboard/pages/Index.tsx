@@ -9,7 +9,7 @@ import { useInvoices } from "@/features/invoices/hooks/useInvoices";
 import { useQuotes } from "@/features/quotes/hooks/useQuotes";
 import { useClients } from "@/features/clients/hooks/useClients";
 import { DashboardSkeleton } from "@/components/common/DashboardSkeleton";
-import { formatCurrency } from "@/lib/calculations";
+import { formatCurrency, formatDateDDMMYYYY } from "@/lib/calculations";
 import { ESTADO_BORRADOR, ESTADO_ENVIADA, ESTADO_ENVIADO } from "@/lib/constants";
 import type { EstadoDocument } from "@/types/enums";
 import { useTranslation } from "react-i18next";
@@ -48,7 +48,7 @@ const Index = () => {
     ...(invoices ?? []).map((inv) => ({
       id: inv.id,
       type: 'invoice' as const,
-      number: inv.numero ?? t('common.draft'),
+      number: inv.numero ?? '-',
       clientName: inv.client.nombre,
       total: inv.total,
       status: inv.estado as EstadoDocument,
@@ -57,7 +57,7 @@ const Index = () => {
     ...(quotes ?? []).map((q) => ({
       id: q.id,
       type: 'quote' as const,
-      number: q.numero ?? t('common.draft'),
+      number: q.numero ?? '-',
       clientName: q.client.nombre,
       total: q.total,
       status: q.estado as EstadoDocument,
@@ -70,7 +70,7 @@ const Index = () => {
   const filtered = recentItems.filter((item) => {
     const matchesType = filter === "all" || item.type === filter;
     const matchesSearch =
-      item.number.toLowerCase().includes(search.toLowerCase()) ||
+      (item.number !== '-' && item.number.toLowerCase().includes(search.toLowerCase())) ||
       item.clientName.toLowerCase().includes(search.toLowerCase());
     return matchesType && matchesSearch;
   });
@@ -201,7 +201,7 @@ const Index = () => {
                         </td>
                         <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
                         <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(item.total)}</td>
-                        <td className="px-5 py-4 text-sm text-right text-muted-foreground">{item.date}</td>
+                        <td className="px-5 py-4 text-sm text-right text-muted-foreground">{formatDateDDMMYYYY(item.date)}</td>
                       </tr>
                     ))}
                   </tbody>
