@@ -15,15 +15,20 @@ Este documento describe la arquitectura, contratos de código y reglas de implem
 ### 1.1 Qué puede hacer el agente
 
 - Consultar y buscar clientes, servicios, presupuestos y facturas del usuario autenticado
-- Crear presupuestos y facturas en estado borrador con sus líneas
-- Actualizar documentos en estado borrador
-- Marcar presupuestos como enviados y facturas como enviadas (con flujo de confirmación obligatorio)
-- Eliminar borradores
-- Responder preguntas sobre el estado de la facturación del usuario
+- Gestionar clientes y servicios (listado, creacion y actualizacion)
+- Crear presupuestos y facturas en estado borrador con sus lineas
+- Actualizar y eliminar documentos en estado borrador
+- Marcar presupuestos como enviados y facturas como enviadas (con flujo de confirmacion obligatorio)
+- Reenviar por email presupuestos/facturas ya enviados sin alterar su estado
+- Copiar presupuestos/facturas enviados para crear un nuevo borrador con el mismo contenido
+- Convertir presupuestos en nuevas facturas borrador
+- Descargar PDF de presupuestos y facturas (incluye facturas en estado borrador)
+- Responder preguntas sobre estado, totales, fechas y actividad de facturacion del usuario
 
 ### 1.2 Qué NO puede hacer el agente
 
 - Editar o eliminar facturas en estado `enviada` (regla de negocio inmutable)
+- Editar o eliminar presupuestos en estado `enviado`
 - Acceder a datos de otros usuarios (aislamiento por `user_id` garantizado)
 - Inventar datos no presentes en la base de datos
 - Ejecutar acciones irreversibles sin confirmación explícita del usuario
@@ -231,16 +236,32 @@ crear facturas, consultar facturas, marcar como enviado.
 | :--- | :--- | :--- |
 | `searchClients` | Busca clientes por nombre o email (búsqueda parcial) | Cuando el usuario menciona un cliente por nombre y necesita su ID |
 | `getClientById` | Obtiene un cliente por su UUID exacto | Para verificar datos de un cliente antes de crear documento |
+| `listClients` | Lista clientes del usuario autenticado | Para consultas generales de cartera y seleccion de cliente |
+| `createClient` | Crea un cliente nuevo | Cuando el usuario dicta los datos de alta de cliente |
+| `updateClient` | Actualiza datos de un cliente | Cuando el usuario solicita corregir datos fiscales o contacto |
 | `searchServices` | Busca servicios del catálogo por nombre (búsqueda parcial) | Cuando el usuario menciona un servicio y necesita precio e ID |
 | `listServices` | Lista todos los servicios del usuario | Para mostrar catálogo disponible o cuando el usuario pide opciones |
+| `createService` | Crea un servicio de catálogo | Cuando el usuario quiere dar de alta un nuevo concepto recurrente |
+| `updateService` | Actualiza un servicio existente | Cuando cambia precio base o descripcion del servicio |
 | `createInvoice` | Crea una factura en estado borrador | Cuando el usuario quiere crear una factura nueva |
 | `getInvoice` | Obtiene detalle completo de una factura por ID | Para mostrar detalles o verificar antes de enviar |
 | `listInvoices` | Lista facturas con filtros opcionales (estado, cliente, fechas) | Para búsquedas y consultas sobre facturas |
+| `updateInvoice` | Actualiza una factura en borrador | Cuando se modifican lineas, fecha o notas antes de enviar |
+| `deleteInvoice` | Elimina factura en borrador | **SOLO** tras confirmacion explicita |
 | `sendInvoice` | Marca factura como enviada y genera número legal | **SOLO** tras confirmación explícita del usuario |
+| `resendInvoice` | Reenvia email de factura enviada sin cambiar estado | Cuando el usuario pide reenviar una factura ya emitida |
+| `copyInvoice` | Crea una nueva factura borrador desde una enviada | Cuando el usuario quiere reutilizar una factura anterior |
+| `downloadInvoicePdf` | Genera/descarga PDF de factura | Cuando el usuario pide el PDF (borrador o enviada) |
 | `createQuote` | Crea un presupuesto en estado borrador | Cuando el usuario quiere crear un presupuesto |
+| `getQuote` | Obtiene detalle de un presupuesto por ID | Para verificar contenido antes de enviar/convertir |
 | `listQuotes` | Lista presupuestos con filtros opcionales | Para consultas sobre presupuestos |
+| `updateQuote` | Actualiza un presupuesto en borrador | Cuando se ajustan lineas, fecha o notas |
+| `deleteQuote` | Elimina presupuesto en borrador | **SOLO** tras confirmacion explicita |
 | `sendQuote` | Marca presupuesto como enviado | **SOLO** tras confirmación explícita |
-| `deleteDocument` | Elimina un borrador (factura o presupuesto) | **SOLO** tras confirmación explícita |
+| `resendQuote` | Reenvia email de presupuesto enviado sin cambiar estado | Cuando el usuario pide reenviar un presupuesto |
+| `copyQuote` | Crea un nuevo presupuesto borrador desde uno enviado | Cuando el usuario quiere duplicar un presupuesto previo |
+| `convertQuoteToInvoice` | Convierte presupuesto en factura borrador | Cuando el usuario quiere facturar un presupuesto aceptado |
+| `downloadQuotePdf` | Genera/descarga PDF de presupuesto | Cuando el usuario pide exportar presupuesto en PDF |
 
 ### 6.3 Patrón base de implementación
 
@@ -778,3 +799,54 @@ El agente de Cursor debe completar estos pasos **en orden**. No avanzar al sigui
 - **`ENVIRONMENT.md`** → añadir `GOOGLE_GENAI_API_KEY` a la tabla de variables obligatorias
 - **`general.md`** → añadir `genkit` y `@genkit-ai/googleai` a la sección Stack Tecnológico
 - **`decisions.md`** → añadir entrada `[2026-03]` sobre elección de Genkit + Gemini 2.0 Flash
+
+---
+
+## 16. Cambios Funcionales Recientes (Facturacion Web)
+
+Esta seccion deja trazabilidad de los cambios funcionales aplicados en presupuestos y facturas durante marzo 2026 para mantener sincronizadas implementacion y documentacion.
+
+### 16.1 Presupuestos (Quotes)
+
+- Se anade accion **Reenviar** en listado de presupuestos enviados (menu de 3 puntos), debajo de **Descargar PDF**.
+- Se anade accion **Copiar presupuesto** en listado de presupuestos enviados y en detalle de presupuesto enviado.
+- **Copiar presupuesto** crea un nuevo presupuesto en estado `borrador` con los mismos datos (cliente, notas y lineas) y redirige al detalle del nuevo documento.
+- Se mantiene la regla de negocio de copia solo para presupuestos en estado `enviado`.
+
+### 16.2 Facturas (Invoices)
+
+- Se anade accion **Enviar** y **Descargar PDF** para facturas en estado `borrador` en la pagina de listado.
+- Se anade accion **Reenviar** para facturas en estado `enviada` en listado y en detalle.
+- Se anade accion **Copiar factura** para facturas en estado `enviada` en listado y en detalle.
+- **Copiar factura** crea una nueva factura en estado `borrador` con los mismos datos del documento origen y redirige al detalle de la nueva factura.
+- Se habilita descarga PDF para facturas en estado `borrador` desde backend y frontend.
+- Se garantiza visibilidad del boton **Descargar PDF** en el detalle de factura para todos los estados.
+
+### 16.3 Reglas de datos y validaciones
+
+- Campo **Cantidad** en lineas de factura: solo enteros (`1, 2, 3...`), con validacion de esquema y restricciones de input.
+- Se corrige mapeo de datos `snake_case -> camelCase` en facturas y lineas para evitar visualizacion `NaN` en precio e IVA.
+- Se corrige visualizacion de numero en tablas: cuando no existe numero de documento se muestra `-` en lugar de `(borrador)`.
+
+### 16.4 Formato de fechas y consistencia UI
+
+- Se normaliza el formato de fechas en tablas de facturas y dashboard a `D-M-YYYY` (sin ceros a la izquierda).
+- Se mantiene orden coherente de acciones en menus/contextos:
+  - borrador: `Enviar`, `Descargar PDF`, editar/eliminar segun vista;
+  - enviado: `Descargar PDF`, `Reenviar`, `Copiar`.
+
+### 16.5 Backend (API/Servicios)
+
+- Nuevos endpoints:
+  - `POST /quotes/:id/copy`
+  - `POST /invoices/:id/copy`
+  - `POST /invoices/:id/resend`
+- Nuevos metodos de servicio para copia y reenvio:
+  - `copyQuote`, `copyInvoice`, `resendInvoiceEmail`.
+- Reglas de error especificas por estado no permitido al copiar documentos no enviados.
+
+### 16.6 Frontend (Hooks, Paginas e i18n)
+
+- Nuevos hooks de mutacion para copia y reenvio en presupuestos y facturas.
+- Actualizacion de menus de acciones en listados y botones en paginas de detalle.
+- Nuevas claves de traduccion para acciones (`copy`, `resend`) y toasts de exito/error.

@@ -122,6 +122,22 @@ Marca como `enviado`. Bloquea futuras ediciones. Si las variables SMTP están co
 * **Response 200:** `{ success: true, data: Quote }`
 * **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — el presupuesto ya fue enviado.
 
+### POST `/quotes/:id/resend`
+
+Reenvia por email un presupuesto ya `enviado` sin modificar su estado ni su contenido.
+
+* **Response 200:** `{ success: true, data: Quote }`
+* **Response 404:** `{ success: false, error: { message: "...", code: "NOT_FOUND" } }` — presupuesto no encontrado.
+* **Response 409:** `{ success: false, error: { message: "...", code: "NOT_SENT" } }` — solo se puede reenviar un presupuesto enviado.
+
+### POST `/quotes/:id/copy`
+
+Copia un presupuesto `enviado` y crea un nuevo presupuesto en estado `borrador` con los mismos datos (cliente, notas y lineas).
+
+* **Response 201:** `{ success: true, data: Quote }`
+* **Response 404:** `{ success: false, error: { message: "...", code: "NOT_FOUND" } }` — presupuesto no encontrado.
+* **Response 400:** `{ success: false, error: { message: "...", code: "INTERNAL_ERROR" } }` — solo se puede copiar un presupuesto enviado.
+
 ### POST `/quotes/:id/convert`
 
 Convierte un presupuesto (en cualquier estado) en una nueva factura en estado `borrador`. El presupuesto original no se modifica.
@@ -175,13 +191,27 @@ Elimina una factura en estado `borrador`. Las líneas se eliminan en cascada.
 * **Response 200:** `{ success: true, data: Invoice }`
 * **Response 409:** `{ success: false, error: { message: "Factura ya enviada", code: "ALREADY_SENT" } }`
 
+### POST `/invoices/:id/resend`
+
+Reenvia por email una factura en estado `enviada` sin cambiar su estado.
+
+* **Response 200:** `{ success: true, data: Invoice }`
+* **Response 404:** `{ success: false, error: { message: "...", code: "NOT_FOUND" } }` — factura no encontrada.
+
+### POST `/invoices/:id/copy`
+
+Copia una factura `enviada` y crea una nueva factura en estado `borrador` con los mismos datos.
+
+* **Response 201:** `{ success: true, data: Invoice }`
+* **Response 404:** `{ success: false, error: { message: "...", code: "NOT_FOUND" } }` — factura no encontrada.
+* **Response 400:** `{ success: false, error: { message: "...", code: "INTERNAL_ERROR" } }` — solo se puede copiar una factura enviada.
+
 ### GET `/invoices/:id/pdf`
 
-Genera y descarga el PDF de una factura en estado `enviada`.
+Genera y descarga el PDF de una factura. Disponible en ambos estados (`borrador` y `enviada`).
 
 * **Auth:** Requiere cookie `accessToken`
-* **Response 200:** Archivo binario (`application/pdf`). Header `Content-Disposition: attachment; filename="factura-YYYY-NNN.pdf"`
-* **Response 422:** `{ success: false, error: { message: "...", code: "INVOICE_DRAFT" } }` — la factura está en estado `borrador`. Envíala primero.
+* **Response 200:** Archivo binario (`application/pdf`). Header `Content-Disposition: attachment; filename="factura-YYYY-NNN.pdf"` (o `factura-{id}.pdf` si la factura es borrador sin numero)
 * **Response 404:** `{ success: false, error: { message: "...", code: "NOT_FOUND" } }` — factura no encontrada o no pertenece al usuario.
 * **Response 401:** Token JWT ausente, expirado o inválido.
 
