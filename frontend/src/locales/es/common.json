@@ -316,6 +316,8 @@
   "settings": {
     "title": "Ajustes",
     "subtitle": "Gestiona tu cuenta y preferencias",
+    "profile": "Perfil",
+    "profileDescription": "Actualiza los datos fiscales y de contacto de tu cuenta",
     "language": "Idioma",
     "languageLabel": "Selecciona el idioma de la aplicación",
     "langEs": "Español",
@@ -364,7 +366,9 @@
     "pdfDownloadError": "Error al descargar PDF",
     "accountCreated": "Cuenta creada correctamente. Inicia sesión.",
     "loginError": "Error al iniciar sesión",
-    "registerError": "Error al registrar"
+    "registerError": "Error al registrar",
+    "profileUpdated": "Perfil actualizado correctamente",
+    "profileUpdateError": "Error al actualizar el perfil"
   },
   "notFound": {
     "title": "Página no encontrada",

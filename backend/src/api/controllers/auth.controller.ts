@@ -96,7 +96,7 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const refresh = (req: Request, res: Response) => {
+export const refresh = async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken as string | undefined;
 
   if (!refreshToken) {
@@ -110,7 +110,7 @@ export const refresh = (req: Request, res: Response) => {
   }
 
   try {
-    const { accessToken } = authService.refresh(refreshToken);
+    const { accessToken } = await authService.refresh(refreshToken);
 
     res.cookie('accessToken', accessToken, getCookieOptions(ACCESS_TOKEN_MAX_AGE));
 

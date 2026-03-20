@@ -64,9 +64,13 @@ export const login = async (data: LoginInput) => {
   return { user: userWithoutPassword, accessToken, refreshToken };
 };
 
-export const refresh = (refreshToken: string) => {
+export const refresh = async (refreshToken: string) => {
   try {
     const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { userId: string };
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    if (!user) {
+      throw new Error(INVALID_TOKEN);
+    }
 
     const accessToken = jwt.sign(
       { userId: decoded.userId },

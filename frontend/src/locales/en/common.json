@@ -316,6 +316,8 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Manage your account and preferences",
+    "profile": "Profile",
+    "profileDescription": "Update your account tax and contact details",
     "language": "Language",
     "languageLabel": "Select the application language",
     "langEs": "Español",
@@ -364,7 +366,9 @@
     "pdfDownloadError": "Error downloading PDF",
     "accountCreated": "Account created. Please sign in.",
     "loginError": "Error signing in",
-    "registerError": "Error registering"
+    "registerError": "Error registering",
+    "profileUpdated": "Profile updated successfully",
+    "profileUpdateError": "Error updating profile"
   },
   "notFound": {
     "title": "Page not found",

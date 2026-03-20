@@ -35,7 +35,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       const res = await loginUser(data);
-      login(res.data.data.user);
+      login(res.data.user);
       navigate('/');
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, i18next.t('toast.loginError')));

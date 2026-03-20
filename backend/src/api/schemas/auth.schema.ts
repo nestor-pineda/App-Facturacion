@@ -14,5 +14,14 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'La contraseña es requerida'),
 });
 
+export const updateProfileSchema = z.object({
+  email: z.string().trim().toLowerCase().email('El email no es válido'),
+  nombre_comercial: z.string().trim().min(1, 'El nombre comercial es requerido'),
+  nif: z.string().trim().min(1, 'El NIF es requerido'),
+  direccion_fiscal: z.string().trim().min(1, 'La dirección fiscal es requerida'),
+  telefono: z.string().trim().optional(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
