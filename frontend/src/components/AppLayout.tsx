@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { AgentWidget } from "@/features/agent/components/AgentWidget";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 
@@ -65,6 +66,7 @@ export function AppLayout() {
           </main>
         </div>
       </div>
+      <AgentWidget />
     </SidebarProvider>
   );
 }
