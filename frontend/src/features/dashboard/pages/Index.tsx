@@ -141,8 +141,8 @@ const Index = () => {
               <h2 className="text-xl font-bold">{t('dashboard.recentActivity')}</h2>
             </div>
 
-            <div className="filter-bar">
-              <div className="relative flex-1 max-w-xs">
+            <div className="filter-bar flex-col items-stretch sm:flex-row sm:items-center">
+              <div className="relative w-full sm:flex-1 sm:max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={t('dashboard.searchPlaceholder')}
@@ -151,12 +151,12 @@ const Index = () => {
                   className="pl-9"
                 />
               </div>
-              <div className="flex gap-1 bg-muted rounded-lg p-1">
+              <div className="flex w-full gap-1 bg-muted rounded-lg p-1 sm:w-auto">
                 {filterOptions.map((f) => (
                   <button
                     key={f.value}
                     onClick={() => setFilter(f.value)}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors sm:flex-none ${
                       filter === f.value
                         ? "bg-card text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"

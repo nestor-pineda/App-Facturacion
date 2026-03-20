@@ -84,7 +84,7 @@ const Services = () => {
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('services.table.service')}</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('services.table.description')}</th>
+                <th className="hidden sm:table-cell text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('services.table.description')}</th>
                 <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('services.table.basePrice')}</th>
                 <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-5 py-3">{t('services.table.vat')}</th>
                 <th className="w-12"></th>
@@ -94,7 +94,7 @@ const Services = () => {
               {filtered.map((service) => (
                 <tr key={service.id} className="border-b border-border last:border-0 hover:bg-accent/40 transition-colors">
                   <td className="px-5 py-4 font-medium text-sm">{service.nombre}</td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">{service.descripcion || '—'}</td>
+                  <td className="hidden sm:table-cell px-5 py-4 text-sm text-muted-foreground">{service.descripcion || '—'}</td>
                   <td className="px-5 py-4 text-sm text-right font-mono font-medium">{formatCurrency(service.precioBase)}</td>
                   <td className="px-5 py-4 text-sm text-right text-muted-foreground">{service.ivaPorcentaje}%</td>
                   <td className="px-3 py-4">

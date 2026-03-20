@@ -52,19 +52,19 @@ const Invoices = () => {
 
   return (
     <div className="page-container">
-      <div className="flex items-center justify-between page-header">
+      <div className="page-header flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="page-title">{t('invoices.title')}</h1>
           <p className="page-subtitle">{t('invoices.subtitle', { count: invoices?.length ?? 0 })}</p>
         </div>
-        <Button onClick={() => navigate('/invoices/new')}>
+        <Button className="w-full sm:w-auto" onClick={() => navigate('/invoices/new')}>
           <Plus className="h-4 w-4 mr-2" />
           {t('invoices.newButton')}
         </Button>
       </div>
 
-      <div className="filter-bar">
-        <div className="relative flex-1 max-w-xs">
+      <div className="filter-bar flex-col items-stretch sm:flex-row sm:items-center">
+        <div className="relative w-full sm:flex-1 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={t('invoices.searchPlaceholder')}
@@ -73,12 +73,12 @@ const Invoices = () => {
             className="pl-9"
           />
         </div>
-        <div className="flex gap-1 bg-muted rounded-lg p-1">
+        <div className="flex w-full gap-1 bg-muted rounded-lg p-1 sm:w-auto">
           {filterOptions.map((f) => (
             <button
               key={f.value}
               onClick={() => setStatusFilter(f.value)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors sm:flex-none ${
                 statusFilter === f.value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
