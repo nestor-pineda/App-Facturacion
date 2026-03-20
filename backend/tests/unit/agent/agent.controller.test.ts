@@ -101,4 +101,52 @@ describe('agentChat', () => {
     });
     errSpy.mockRestore();
   });
+
+  it('retorna 503 con AGENT_MISCONFIGURED si Google AI rechaza la API key', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(runBillingFlow).mockRejectedValue({
+      errorDetails: [{ reason: 'API_KEY_INVALID' }],
+    });
+    const req = {
+      body: { message: 'Hola', history: [] },
+      userId: 'user-1',
+    } as unknown as Request;
+    const res = makeRes();
+
+    await agentChat(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: {
+        message:
+          'El asistente no está disponible: revisa GOOGLE_GENAI_API_KEY en el servidor (clave inválida o no configurada).',
+        code: 'AGENT_MISCONFIGURED',
+      },
+    });
+    errSpy.mockRestore();
+  });
+
+  it('retorna 503 con AGENT_RATE_LIMITED si Google AI responde 429 (cuota)', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(runBillingFlow).mockRejectedValue({ status: 429 });
+    const req = {
+      body: { message: 'Hola', history: [] },
+      userId: 'user-1',
+    } as unknown as Request;
+    const res = makeRes();
+
+    await agentChat(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: {
+        message:
+          'El asistente está temporalmente limitado por cuota de Google AI (demasiadas peticiones o free tier agotado). Espera unos minutos o revisa tu plan en Google AI Studio.',
+        code: 'AGENT_RATE_LIMITED',
+      },
+    });
+    errSpy.mockRestore();
+  });
 });

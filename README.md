@@ -24,6 +24,8 @@ npm run dev
 
 Para que al pulsar **Enviar** en un presupuesto o factura se envíe un correo real al cliente, descomenta y rellena las variables SMTP en `backend/.env` (en `.env.example` tienes un bloque de ejemplo con [Mailtrap](https://mailtrap.io) para desarrollo).
 
+**Asistente IA (Genkit + Gemini):** el endpoint `POST /api/v1/agent/chat` y el widget de chat del frontend necesitan una **`GOOGLE_GENAI_API_KEY` válida** de [Google AI Studio](https://aistudio.google.com/apikey). Si la clave es un placeholder o está revocada, la API responderá **503** con `code: AGENT_MISCONFIGURED`. Si Google devuelve **429** por cuota (free tier agotado, demasiadas peticiones), la API responde **503** con `code: AGENT_RATE_LIMITED`. Tras cambiar `.env`, reinicia el backend o deja que nodemon recargue (también vigila `.env` en `npm run dev`).
+
 ### Frontend
 
 ```bash
