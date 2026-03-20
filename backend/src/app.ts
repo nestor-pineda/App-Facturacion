@@ -11,6 +11,7 @@ import serviceRouter from '@/api/routes/service.routes';
 import quoteRouter from '@/api/routes/quote.routes';
 import invoiceRouter from '@/api/routes/invoice.routes';
 import userRouter from '@/api/routes/user.routes';
+import agentRouter from '@/agent/agent.routes';
 
 const isDev = env.NODE_ENV === 'development';
 const allowedOrigins = env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
@@ -32,6 +33,7 @@ app.use('/api/v1/services', generalLimiter, serviceRouter);
 app.use('/api/v1/quotes', generalLimiter, quoteRouter);
 app.use('/api/v1/invoices', generalLimiter, invoiceRouter);
 app.use('/api/v1/users', generalLimiter, userRouter);
+app.use('/api/v1/agent', generalLimiter, agentRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, error: { message: 'Ruta no encontrada', code: 'NOT_FOUND' } });
