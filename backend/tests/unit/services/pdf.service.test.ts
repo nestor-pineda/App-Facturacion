@@ -1,21 +1,43 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockCloseFn, mockPdfFn, mockSetContentFn, mockSetViewportFn, mockNewPageFn, mockLaunchFn } =
+const {
+  mockCloseFn,
+  mockPdfFn,
+  mockSetContentFn,
+  mockSetViewportFn,
+  mockEmulateMediaTypeFn,
+  mockEvaluateHandleFn,
+  mockNewPageFn,
+  mockLaunchFn,
+} =
   vi.hoisted(() => {
     const mockCloseFn = vi.fn().mockResolvedValue(undefined);
     const mockPdfFn = vi.fn().mockResolvedValue(Buffer.from('%PDF-1.4 fake pdf content'));
     const mockSetContentFn = vi.fn().mockResolvedValue(undefined);
     const mockSetViewportFn = vi.fn().mockResolvedValue(undefined);
+    const mockEmulateMediaTypeFn = vi.fn().mockResolvedValue(undefined);
+    const mockEvaluateHandleFn = vi.fn().mockResolvedValue(undefined);
     const mockNewPageFn = vi.fn().mockResolvedValue({
       setViewport: mockSetViewportFn,
+      emulateMediaType: mockEmulateMediaTypeFn,
       setContent: mockSetContentFn,
+      evaluateHandle: mockEvaluateHandleFn,
       pdf: mockPdfFn,
     });
     const mockLaunchFn = vi.fn().mockResolvedValue({
       newPage: mockNewPageFn,
       close: mockCloseFn,
     });
-    return { mockCloseFn, mockPdfFn, mockSetContentFn, mockSetViewportFn, mockNewPageFn, mockLaunchFn };
+    return {
+      mockCloseFn,
+      mockPdfFn,
+      mockSetContentFn,
+      mockSetViewportFn,
+      mockEmulateMediaTypeFn,
+      mockEvaluateHandleFn,
+      mockNewPageFn,
+      mockLaunchFn,
+    };
   });
 
 vi.mock('puppeteer', () => ({
@@ -32,10 +54,14 @@ describe('generatePDF', () => {
     mockPdfFn.mockResolvedValue(Buffer.from('%PDF-1.4 fake pdf content'));
     mockSetContentFn.mockResolvedValue(undefined);
     mockSetViewportFn.mockResolvedValue(undefined);
+    mockEmulateMediaTypeFn.mockResolvedValue(undefined);
+    mockEvaluateHandleFn.mockResolvedValue(undefined);
     mockCloseFn.mockResolvedValue(undefined);
     mockNewPageFn.mockResolvedValue({
       setViewport: mockSetViewportFn,
+      emulateMediaType: mockEmulateMediaTypeFn,
       setContent: mockSetContentFn,
+      evaluateHandle: mockEvaluateHandleFn,
       pdf: mockPdfFn,
     });
     mockLaunchFn.mockResolvedValue({

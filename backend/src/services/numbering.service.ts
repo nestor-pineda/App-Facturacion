@@ -1,11 +1,10 @@
 import { prisma } from '@/config/database';
 
-export const generateInvoiceNumber = async (userId: string): Promise<string> => {
+export const generateInvoiceNumber = async (_userId: string): Promise<string> => {
   const year = new Date().getFullYear();
 
   const lastInvoice = await prisma.invoice.findFirst({
     where: {
-      user_id: userId,
       numero: { startsWith: `${year}/` },
     },
     orderBy: { numero: 'desc' },

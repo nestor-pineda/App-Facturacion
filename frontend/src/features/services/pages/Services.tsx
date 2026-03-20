@@ -77,14 +77,6 @@ const Services = () => {
           icon={Package}
           title={search ? t('services.notFound') : t('services.emptyState.title')}
           description={search ? t('services.emptyState.tryOtherTerms') : t('services.emptyState.description')}
-          action={
-            !search ? (
-              <Button onClick={() => setDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                {t('services.newButton')}
-              </Button>
-            ) : undefined
-          }
         />
       ) : (
         <div className="data-table-wrapper">

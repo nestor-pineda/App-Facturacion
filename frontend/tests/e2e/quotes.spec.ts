@@ -39,11 +39,11 @@ test.describe('Quotes', () => {
     await expect(page).toHaveURL(/\/quotes\/[a-f0-9-]+/);
 
     await page.getByRole('button', { name: /^Enviar$|^Send$/i }).first().click();
-    await page.getByRole('button', { name: /Confirmar|Confirm/i }).click();
+    await page.getByRole('alertdialog').getByRole('button', { name: /^Enviar$|^Send$/i }).click();
     await expect(page.getByText(/Enviado|Sent/)).toBeVisible({ timeout: 15_000 });
 
     await page.getByRole('button', { name: /Convertir a factura|Convert to invoice/i }).click();
-    await page.getByRole('button', { name: /Confirmar|Confirm/i }).click();
+    await page.getByRole('alertdialog').getByRole('button', { name: /Convertir|Convert/i }).click();
     await expect(page).toHaveURL(/\/invoices/, { timeout: 15_000 });
     await expect(page.locator('table tbody tr')).toHaveCount(1, { timeout: 10_000 });
   });

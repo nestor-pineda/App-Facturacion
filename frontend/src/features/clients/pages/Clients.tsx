@@ -78,14 +78,6 @@ const Clients = () => {
           icon={Users}
           title={search ? t('clients.notFound') : t('clients.emptyState.title')}
           description={search ? t('clients.emptyState.tryOtherTerms') : t('clients.emptyState.description')}
-          action={
-            !search ? (
-              <Button onClick={() => setDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                {t('clients.newButton')}
-              </Button>
-            ) : undefined
-          }
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

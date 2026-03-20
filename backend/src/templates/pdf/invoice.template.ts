@@ -31,6 +31,10 @@ export const renderInvoiceTemplate = (data: InvoiceTemplateData): string => {
     </div>`
     : '';
 
+  const emitterPhoneHtml = data.emisor.telefono
+    ? `<div class="meta-row"><span class="meta-label">Tel:</span><span class="meta-value">${escapeHtml(data.emisor.telefono)}</span></div>`
+    : '';
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -52,8 +56,33 @@ export const renderInvoiceTemplate = (data: InvoiceTemplateData): string => {
         <span class="meta-value">${formatDate(data.fecha)}</span>
       </div>
       <div class="meta-row">
+        <span class="meta-label">Emisor:</span>
+        <span class="meta-value">${escapeHtml(data.emisor.nombre)}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">NIF emisor:</span>
+        <span class="meta-value">${escapeHtml(data.emisor.nif)}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Dirección emisor:</span>
+        <span class="meta-value">${escapeHtml(data.emisor.direccion)}</span>
+      </div>
+      ${emitterPhoneHtml}
+      <div class="meta-row">
         <span class="meta-label">Cliente:</span>
         <span class="meta-value">${escapeHtml(data.cliente.nombre)}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">NIF cliente:</span>
+        <span class="meta-value">${escapeHtml(data.cliente.nif)}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Dirección cliente:</span>
+        <span class="meta-value">${escapeHtml(data.cliente.direccion)}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Email cliente:</span>
+        <span class="meta-value">${escapeHtml(data.cliente.email)}</span>
       </div>
       ${data.numero ? `<div class="meta-row"><span class="meta-label">Número:</span><span class="meta-value">${escapeHtml(data.numero)}</span></div>` : ''}
     </div>

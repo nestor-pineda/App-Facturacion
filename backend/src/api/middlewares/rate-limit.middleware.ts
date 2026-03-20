@@ -2,10 +2,13 @@ import rateLimit from 'express-rate-limit';
 
 const WINDOW_MS = 15 * 60 * 1000;
 const IS_TEST = process.env.NODE_ENV === 'test';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const GENERAL_LIMIT = IS_PRODUCTION ? 100 : 5000;
+const AUTH_LIMIT = IS_PRODUCTION ? 10 : 500;
 
 export const generalLimiter = rateLimit({
   windowMs: WINDOW_MS,
-  limit: 100,
+  limit: GENERAL_LIMIT,
   skip: () => IS_TEST,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
@@ -20,7 +23,7 @@ export const generalLimiter = rateLimit({
 
 export const authLimiter = rateLimit({
   windowMs: WINDOW_MS,
-  limit: 10,
+  limit: AUTH_LIMIT,
   skip: () => IS_TEST,
   standardHeaders: 'draft-8',
   legacyHeaders: false,

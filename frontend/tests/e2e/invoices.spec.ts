@@ -41,8 +41,8 @@ test.describe('Invoices', () => {
     await expect(page).toHaveURL(/\/invoices\/[a-f0-9-]+/);
 
     await page.getByRole('button', { name: /Enviar|Send/i }).first().click();
-    await page.getByRole('button', { name: /Confirmar|Confirm/i }).click();
-    await expect(page.getByText(/\d{4}\/\d{3}/)).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('alertdialog').getByRole('button', { name: /Enviar factura|Send invoice/i }).click();
+    await expect(page.getByText(/^Enviada$|^Sent$/i)).toBeVisible({ timeout: 15_000 });
 
     const downloadPromise = page.waitForEvent('download', { timeout: 15_000 });
     await page.getByRole('button', { name: /Descargar|Download/i }).click();

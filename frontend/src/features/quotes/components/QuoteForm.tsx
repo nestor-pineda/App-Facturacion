@@ -75,7 +75,7 @@ export function QuoteForm({ onSubmit, isLoading, defaultValues, isEdit }: QuoteF
         <div className="space-y-2">
           <Label>{t('forms.client')}</Label>
           <Select value={watch('clientId') ?? ''} onValueChange={(v) => setValue('clientId', v, { shouldValidate: true })}>
-            <SelectTrigger>
+            <SelectTrigger aria-label={t('forms.client')}>
               <SelectValue placeholder={t('forms.selectClient')} />
             </SelectTrigger>
             <SelectContent>
@@ -121,7 +121,7 @@ export function QuoteForm({ onSubmit, isLoading, defaultValues, isEdit }: QuoteF
               <div className="flex items-center gap-2">
                 {services && services.length > 0 && (
                   <Select value={watch(`lines.${index}.serviceId`) ?? ''} onValueChange={(v) => handleServiceSelect(index, v)}>
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-48" aria-label={t('forms.fromCatalog')}>
                       <SelectValue placeholder={t('forms.fromCatalog')} />
                     </SelectTrigger>
                     <SelectContent>
