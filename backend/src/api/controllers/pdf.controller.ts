@@ -19,6 +19,7 @@ const mapInvoiceToTemplateData = (
 ): InvoiceTemplateData => ({
   tipo: 'factura',
   numero: invoice.numero ?? undefined,
+  estado: invoice.estado,
   fecha: invoice.fecha_emision,
   emisor: {
     nombre: invoice.user.nombre_comercial,
@@ -55,6 +56,7 @@ const mapQuoteToTemplateData = (
 ): QuoteTemplateData => ({
   tipo: 'presupuesto',
   numero: quote.numero ?? undefined,
+  estado: quote.estado,
   fecha: quote.fecha,
   emisor: {
     nombre: quote.user.nombre_comercial,

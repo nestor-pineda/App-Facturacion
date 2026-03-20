@@ -18,17 +18,20 @@ export const generatePDF = async (html: string): Promise<Buffer> => {
     const page = await browser.newPage();
 
     await page.setViewport({ width: 1200, height: 1600 });
+    await page.emulateMediaType('screen');
 
     await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.evaluateHandle('document.fonts.ready');
 
     const pdf = await page.pdf({
       format: 'A4',
       printBackground: true,
+      preferCSSPageSize: true,
       margin: {
-        top: '20mm',
-        right: '15mm',
-        bottom: '20mm',
-        left: '15mm',
+        top: '0mm',
+        right: '0mm',
+        bottom: '0mm',
+        left: '0mm',
       },
     });
 

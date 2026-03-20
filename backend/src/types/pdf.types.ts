@@ -23,6 +23,7 @@ export interface DocumentTotals {
 export interface InvoiceTemplateData {
   tipo: 'factura';
   numero?: string;
+  estado?: 'borrador' | 'enviada';
   fecha: Date;
   emisor: DocumentParty;
   cliente: Omit<DocumentParty, 'telefono'> & { email: string };
@@ -34,6 +35,7 @@ export interface InvoiceTemplateData {
 export interface QuoteTemplateData {
   tipo: 'presupuesto';
   numero?: string;
+  estado?: 'borrador' | 'enviado';
   fecha: Date;
   emisor: DocumentParty;
   cliente: Omit<DocumentParty, 'telefono'> & { email: string };

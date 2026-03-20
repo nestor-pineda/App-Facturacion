@@ -32,14 +32,6 @@ export const renderQuoteTemplate = (data: QuoteTemplateData): string => {
     </div>`
     : '';
 
-  const telefonoHtml = data.emisor.telefono
-    ? `<p>Tel: ${escapeHtml(data.emisor.telefono)}</p>`
-    : '';
-
-  const numeroHtml = data.numero
-    ? `<p class="document-number">${escapeHtml(data.numero)}</p>`
-    : '';
-
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -51,29 +43,23 @@ export const renderQuoteTemplate = (data: QuoteTemplateData): string => {
     <div class="header">
       <div class="document-title">
         <h1>PRESUPUESTO</h1>
-        ${numeroHtml}
-      </div>
-      <div class="document-date">
-        <p>Fecha: ${formatDate(data.fecha)}</p>
+        <p class="document-subtitle">${escapeHtml(data.cliente.nombre)}</p>
       </div>
     </div>
 
-    <div class="parties">
-      <div class="party">
-        <h3>Emisor</h3>
-        <p><strong>${escapeHtml(data.emisor.nombre)}</strong></p>
-        <p>NIF: ${escapeHtml(data.emisor.nif)}</p>
-        <p>${escapeHtml(data.emisor.direccion)}</p>
-        ${telefonoHtml}
+    <div class="meta-grid">
+      <div class="meta-row">
+        <span class="meta-label">Fecha:</span>
+        <span class="meta-value">${formatDate(data.fecha)}</span>
       </div>
-      <div class="party">
-        <h3>Cliente</h3>
-        <p><strong>${escapeHtml(data.cliente.nombre)}</strong></p>
-        <p>CIF/NIF: ${escapeHtml(data.cliente.nif)}</p>
-        <p>${escapeHtml(data.cliente.direccion)}</p>
-        <p>${escapeHtml(data.cliente.email)}</p>
+      <div class="meta-row">
+        <span class="meta-label">Cliente:</span>
+        <span class="meta-value">${escapeHtml(data.cliente.nombre)}</span>
       </div>
+      ${data.numero ? `<div class="meta-row"><span class="meta-label">Número:</span><span class="meta-value">${escapeHtml(data.numero)}</span></div>` : ''}
     </div>
+
+    ${notesHtml}
 
     <table class="lines-table">
       <thead>
@@ -90,20 +76,18 @@ export const renderQuoteTemplate = (data: QuoteTemplateData): string => {
 
     <div class="totals">
       <div class="totals-row">
-        <span>Subtotal (Base Imponible):</span>
+        <span>Subtotal:</span>
         <span>${formatCurrency(data.totales.subtotal)}</span>
       </div>
       <div class="totals-row">
-        <span>IVA (21%):</span>
+        <span>IVA:</span>
         <span>${formatCurrency(data.totales.totalIva)}</span>
       </div>
       <div class="totals-row total-final">
-        <span><strong>TOTAL:</strong></span>
-        <span><strong>${formatCurrency(data.totales.total)}</strong></span>
+        <span>Total:</span>
+        <span>${formatCurrency(data.totales.total)}</span>
       </div>
     </div>
-
-    ${notesHtml}
 
     <div class="footer">
       <p class="legal-text">Presupuesto no vinculante. Documento generado electrónicamente.</p>
