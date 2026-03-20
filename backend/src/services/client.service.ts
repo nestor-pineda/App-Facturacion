@@ -3,6 +3,23 @@ import type { CreateClientInput, UpdateClientInput } from '@/api/schemas/client.
 
 export const CLIENT_NOT_FOUND = 'CLIENT_NOT_FOUND';
 
+export const search = async (userId: string, query: string) => {
+  const q = query.trim();
+  if (q.length === 0) {
+    return [];
+  }
+  return prisma.client.findMany({
+    where: {
+      user_id: userId,
+      OR: [
+        { nombre: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+      ],
+    },
+    orderBy: { created_at: 'asc' },
+  });
+};
+
 export const list = async (userId: string) => {
   const clients = await prisma.client.findMany({
     where: { user_id: userId },
