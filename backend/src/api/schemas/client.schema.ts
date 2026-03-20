@@ -5,6 +5,7 @@ export const createClientSchema = z.object({
   email: z.string().trim().toLowerCase().email('El email no es válido'),
   cif_nif: z.string().trim().min(1, 'El CIF/NIF es requerido'),
   direccion: z.string().trim().min(1, 'La dirección es requerida'),
+  telefono: z.string().trim().optional(),
 });
 
 export const updateClientSchema = createClientSchema.partial();

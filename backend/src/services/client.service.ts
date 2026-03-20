@@ -20,6 +20,7 @@ export const create = async (userId: string, data: CreateClientInput) => {
       email: data.email,
       cif_nif: data.cif_nif,
       direccion: data.direccion,
+      telefono: data.telefono,
     },
   });
 };

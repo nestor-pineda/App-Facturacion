@@ -6,13 +6,14 @@ import type { Client } from '@/types/entities';
 
 /** Map API response (snake_case) to frontend Client (camelCase). */
 function mapClientFromApi(raw: Record<string, unknown>): Client {
+  const telefonoRaw = raw.telefono != null ? String(raw.telefono).trim() : '';
   return {
     id: String(raw.id),
     nombre: String(raw.nombre),
     email: String(raw.email),
     cifNif: String((raw as { cif_nif?: string }).cif_nif ?? ''),
     direccion: String(raw.direccion),
-    telefono: raw.telefono != null ? String(raw.telefono) : undefined,
+    telefono: telefonoRaw || undefined,
     createdAt: String(raw.created_at),
     updatedAt: String(raw.updated_at),
   };

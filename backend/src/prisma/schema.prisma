@@ -42,6 +42,7 @@ model Client {
   email     String
   cif_nif   String
   direccion String
+  telefono  String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
