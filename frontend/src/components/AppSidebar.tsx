@@ -58,7 +58,12 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <div className={`px-4 py-6 ${collapsed ? "px-2" : ""}`}>
-          <div className="flex items-center gap-2">
+          <NavLink
+            to="/"
+            end
+            className="flex items-center gap-2 rounded-md"
+            activeClassName=""
+          >
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <Receipt className="h-4 w-4 text-primary-foreground" />
             </div>
@@ -67,7 +72,7 @@ export function AppSidebar() {
                 InvoiceApp
               </span>
             )}
-          </div>
+          </NavLink>
         </div>
 
         <SidebarGroup>
