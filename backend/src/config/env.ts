@@ -12,6 +12,7 @@ const envSchema = z.object({
   PORT: z.string().transform(Number).pipe(z.number().positive()),
   NODE_ENV: z.enum(['development', 'production', 'test']),
   ALLOWED_ORIGINS: z.string(),
+  GOOGLE_GENAI_API_KEY: z.string().min(1, 'Google AI API key requerida'),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().transform(Number).pipe(z.number().positive()).optional(),
   SMTP_USER: z.string().optional(),

@@ -9,6 +9,9 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    env: {
+      GOOGLE_GENAI_API_KEY: 'vitest-placeholder-google-genai-api-key',
+    },
     setupFiles: ['./tests/setup.ts'],
     testTimeout: 30000,
     // Los tests de integración comparten la misma DB: ejecución secuencial obligatoria

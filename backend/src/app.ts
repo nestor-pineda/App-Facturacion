@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { env } from '@/config/env';
+import '@/agent/genkit.config';
 import { generalLimiter, authLimiter } from '@/api/middlewares/rate-limit.middleware';
 import authRouter from '@/api/routes/auth.routes';
 import clientRouter from '@/api/routes/client.routes';
