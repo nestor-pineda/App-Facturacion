@@ -1,4 +1,4 @@
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
 import { ai, GEMINI_MODEL_NAME } from '@/agent/genkit.config';
 import { SYSTEM_PROMPT } from '@/agent/prompts/system.prompt';
 import {

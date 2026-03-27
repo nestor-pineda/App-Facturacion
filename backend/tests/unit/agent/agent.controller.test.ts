@@ -170,7 +170,7 @@ describe('agentChat', () => {
       success: false,
       error: {
         message:
-          'El modelo configurado para el asistente no está disponible para este proyecto de Google AI. Actualiza el modelo en el servidor (recomendado: gemini-2.5-flash).',
+          'El modelo configurado para el asistente no está disponible para este proyecto de Google AI. Actualiza el modelo en el servidor (p. ej. gemini-3-flash-preview o gemini-2.5-flash).',
         code: 'AGENT_MODEL_UNAVAILABLE',
       },
     });

@@ -11,6 +11,6 @@ describe('genkit.config', () => {
     const { ai, GEMINI_MODEL_NAME } = await import('@/agent/genkit.config');
     expect(ai).toBeDefined();
     expect(typeof ai.generate).toBe('function');
-    expect(GEMINI_MODEL_NAME).toBe('gemini-2.5-flash');
+    expect(GEMINI_MODEL_NAME).toBe('gemini-3-flash-preview');
   });
 });

@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/nestor-pineda/App-Facturacion#readme",
   "dependencies": {
-    "@genkit-ai/googleai": "1.28.0",
+    "@genkit-ai/google-genai": "1.30.1",
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "@types/bcrypt": "^6.0.0",

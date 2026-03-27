@@ -1,10 +1,10 @@
 import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
 import { env } from '@/config/env';
 
 /**
- * `gemini-2.0-flash` ya no está disponible para cuentas/proyectos nuevos.
- * Migramos a `gemini-2.5-flash`, recomendado en la documentación actual de Genkit.
+ * Plugin oficial actual: `@genkit-ai/google-genai` (sustituye a `@genkit-ai/googleai`).
+ * Modelo Gemini 3 Flash según IDs conocidos del SDK: `gemini-3-flash-preview`.
  */
 export const ai = genkit({
   plugins: [
@@ -13,5 +13,5 @@ export const ai = genkit({
     }),
   ],
 });
-export const GEMINI_MODEL_NAME = 'gemini-2.5-flash' as const;
+export const GEMINI_MODEL_NAME = 'gemini-3-flash-preview' as const;
 

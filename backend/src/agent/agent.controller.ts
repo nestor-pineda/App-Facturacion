@@ -20,7 +20,7 @@ const AGENT_RATE_LIMITED_MESSAGE =
   'El asistente está temporalmente limitado por cuota de Google AI (demasiadas peticiones o free tier agotado). Espera unos minutos o revisa tu plan en Google AI Studio.';
 
 const AGENT_MODEL_UNAVAILABLE_MESSAGE =
-  'El modelo configurado para el asistente no está disponible para este proyecto de Google AI. Actualiza el modelo en el servidor (recomendado: gemini-2.5-flash).';
+  'El modelo configurado para el asistente no está disponible para este proyecto de Google AI. Actualiza el modelo en el servidor (p. ej. gemini-3-flash-preview o gemini-2.5-flash).';
 
 function isGoogleAiApiKeyInvalidError(error: unknown): boolean {
   if (!error || typeof error !== 'object') {

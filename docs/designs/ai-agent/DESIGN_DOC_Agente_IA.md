@@ -42,15 +42,15 @@ El módulo se integra dentro del proyecto Express/TypeScript existente sin intro
 
 | Elemento | Valor |
 | :--- | :--- |
-| **Librería** | `genkit@1` + `@genkit-ai/googleai@1` |
-| **Modelo IA** | `gemini-2.0-flash` — Free Tier Google AI |
-| **Proveedor** | Google AI (`googleAI` plugin de Genkit) — **NO** Vertex AI |
+| **Librería** | `genkit@1` + `@genkit-ai/google-genai@1` (plugin oficial; reemplaza a `@genkit-ai/googleai`) |
+| **Modelo IA** | `gemini-3-flash-preview` (ID en API/SDK; preview hasta estabilización por parte de Google) |
+| **Proveedor** | Google AI (`googleAI` desde `@genkit-ai/google-genai`) — **NO** Vertex AI |
 | **API Key** | Variable de entorno `GOOGLE_GENAI_API_KEY` (gratuita en [aistudio.google.com](https://aistudio.google.com/apikey)) |
 | **Transporte** | Endpoint Express `POST /api/v1/agent/chat`, protegido con middleware JWT existente |
 | **Estado sesión** | Sin persistencia en DB para MVP. Historial enviado por el cliente en cada request |
 | **Lenguaje** | TypeScript 5.x (igual que el resto del proyecto) |
 
-> ⚠️ **CRÍTICO:** NO usar el plugin `@genkit-ai/vertexai`. Usar exclusivamente `@genkit-ai/googleai` para evitar costes. La API key se obtiene gratis en https://aistudio.google.com/apikey
+> ⚠️ **CRÍTICO:** NO usar el plugin `@genkit-ai/vertexai`. Usar exclusivamente **`@genkit-ai/google-genai`** (API key de [Google AI Studio](https://aistudio.google.com/apikey)). El paquete `@genkit-ai/googleai` queda en desuso frente a `google-genai` para modelos recientes.
 
 ---
 
@@ -94,7 +94,7 @@ POST /api/v1/agent/chat
   │     ├─► Construye messages con system + history + message
   │     └─► ai.generate() con tools registradas
   │
-  ├─► Gemini 2.0 Flash decide qué tool llamar
+  ├─► Gemini (p. ej. `gemini-3-flash-preview`) decide qué tool llamar
   │
   ├─► Genkit ejecuta la tool (ej: createInvoiceTool)
   │     └─► Llama a invoiceService.create(userId, data)
@@ -111,13 +111,13 @@ POST /api/v1/agent/chat
 El `userId` **NUNCA** se pasa como parte del mensaje del usuario ni se lee desde los argumentos de la tool. Se inyecta mediante **closure** en el momento de crear las tools para cada request. Esto garantiza el aislamiento de datos.
 
 ```typescript
-// En billing.flow.ts
+// En billing.flow.ts (imports: googleAI desde @genkit-ai/google-genai; ai, GEMINI_MODEL_NAME desde genkit.config)
 export async function runBillingFlow(message, history, userId) {
   // Las tools se crean con el userId capturado en closure
   const tools = createToolsForUser(userId);
   
   const response = await ai.generate({
-    model: gemini20Flash,
+    model: googleAI.model(GEMINI_MODEL_NAME),
     system: SYSTEM_PROMPT,
     messages: [...history, { role: 'user', content: [{ text: message }] }],
     tools,
@@ -137,17 +137,19 @@ Este archivo inicializa Genkit una única vez al arrancar el servidor. Se import
 ```typescript
 // src/agent/genkit.config.ts
 import { genkit } from 'genkit';
-import { googleAI, gemini20Flash } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
 import { env } from '../config/env';
+
+export const GEMINI_MODEL_NAME = 'gemini-3-flash-preview' as const;
 
 export const ai = genkit({
   plugins: [
     googleAI({ apiKey: env.GOOGLE_GENAI_API_KEY }),
   ],
 });
-
-export { gemini20Flash };
 ```
+
+En `billing.flow.ts` el modelo se referencia como `googleAI.model(GEMINI_MODEL_NAME)` importando `googleAI` desde `@genkit-ai/google-genai`.
 
 ### 4.2 Variable de entorno requerida
 
@@ -414,7 +416,8 @@ const searchClientsTool = ai.defineTool(
 
 ```typescript
 // src/agent/flows/billing.flow.ts
-import { ai, gemini20Flash } from '../genkit.config';
+import { googleAI } from '@genkit-ai/google-genai';
+import { ai, GEMINI_MODEL_NAME } from '../genkit.config';
 import { SYSTEM_PROMPT } from '../prompts/system.prompt';
 import { createClientTools } from '../tools/client.tools';
 import { createServiceTools } from '../tools/service.tools';
@@ -449,7 +452,7 @@ export async function runBillingFlow(
   const toolsUsed: string[] = [];
 
   const response = await ai.generate({
-    model: gemini20Flash,
+    model: googleAI.model(GEMINI_MODEL_NAME),
     system: SYSTEM_PROMPT,
     messages: [
       // Transformar historial del cliente al formato de Genkit
@@ -612,7 +615,7 @@ app.use('/api/v1/agent', agentRouter);
 ## 9. Dependencias a Instalar
 
 ```bash
-npm install --save-exact genkit@1 @genkit-ai/googleai@1
+npm install --save-exact genkit@1 @genkit-ai/google-genai@1
 ```
 
 > ⚠️ **NO instalar** `@genkit-ai/vertexai`, `@genkit-ai/firebase` ni ningún otro plugin de Genkit. Esos servicios tienen coste económico.
@@ -621,7 +624,7 @@ Verificar versiones disponibles antes de instalar:
 
 ```bash
 npm view genkit version
-npm view @genkit-ai/googleai version
+npm view @genkit-ai/google-genai version
 ```
 
 Actualizar `ENVIRONMENT.md` añadiendo:
@@ -729,8 +732,9 @@ El backend **NO persiste** el historial de conversación en base de datos para e
 
 | Escenario | Comportamiento esperado | HTTP |
 | :--- | :--- | :--- |
-| API key inválida o expirada | Log del error, respuesta `AGENT_ERROR` al cliente | 500 |
-| Rate limit de Google AI alcanzado | Log del error, mensaje "intenta de nuevo" al cliente | 500 |
+| API key inválida o expirada | Log del error, respuesta `503` `AGENT_MISCONFIGURED` cuando aplique | 503 |
+| Rate limit / tope de gasto de Google AI | Log del error, respuesta `503` `AGENT_RATE_LIMITED` | 503 |
+| Modelo no disponible para el proyecto (404) | Log del error, respuesta `503` `AGENT_MODEL_UNAVAILABLE` | 503 |
 | Tool lanza error (ej: cliente no encontrado) | Gemini recibe el error y lo explica en lenguaje natural | 200 |
 | Schema Zod inválido en request | Error de validación estándar del proyecto | 400 |
 | JWT expirado o inválido | Middleware `authenticate` rechaza, igual que cualquier endpoint | 401 |
@@ -744,8 +748,8 @@ El backend **NO persiste** el historial de conversación en base de datos para e
 | :--- | :--- |
 | Historial máximo | 20 mensajes por request (validado por Zod) |
 | Longitud máx. mensaje | 2000 caracteres (validado por Zod) |
-| Modelo | `gemini-2.0-flash` únicamente |
-| Coste | 0€ — Free tier Google AI (1.500 req/día, 1M tokens/min) |
+| Modelo | Por defecto `gemini-3-flash-preview` (ajustar `GEMINI_MODEL_NAME` si Google renombra el ID) |
+| Coste | Depende del plan/cuotas de Google AI Studio; el free tier tiene límites que pueden cambiar |
 | Persistencia | Sin persistencia en DB para MVP |
 | IVA soportado | Solo 21% (igual que el resto del MVP) |
 | Idioma | Solo español (definido en system prompt) |
@@ -760,7 +764,7 @@ El agente de Cursor debe completar estos pasos **en orden**. No avanzar al sigui
 
 - [ ] Obtener `GOOGLE_GENAI_API_KEY` en [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 - [ ] Añadir `GOOGLE_GENAI_API_KEY` a `.env`, `.env.example` y `src/config/env.ts`
-- [ ] Instalar `genkit` y `@genkit-ai/googleai` con `npm install --save-exact`
+- [ ] Instalar `genkit` y `@genkit-ai/google-genai` con `npm install --save-exact`
 - [ ] Crear `src/agent/genkit.config.ts` con la configuración mínima
 - [ ] Importar `genkit.config.ts` en `app.ts`/`server.ts`
 - [ ] Verificar que el servidor arranca sin errores: `npm run dev`
@@ -797,8 +801,8 @@ El agente de Cursor debe completar estos pasos **en orden**. No avanzar al sigui
 
 - **`API.md`** → añadir sección `POST /agent/chat` con contrato completo
 - **`ENVIRONMENT.md`** → añadir `GOOGLE_GENAI_API_KEY` a la tabla de variables obligatorias
-- **`general.md`** → añadir `genkit` y `@genkit-ai/googleai` a la sección Stack Tecnológico
-- **`decisions.md`** → añadir entrada `[2026-03]` sobre elección de Genkit + Gemini 2.0 Flash
+- **`general.md`** → añadir `genkit` y `@genkit-ai/google-genai` a la sección Stack Tecnológico
+- **`decisions.md`** → mantener entrada sobre Genkit + Google AI (modelo y plugin actualizados según evolución de Google)
 
 ---
 

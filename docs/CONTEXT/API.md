@@ -246,7 +246,8 @@ Orquesta el asistente de facturación (Genkit + modelo Gemini). El usuario auten
 * **Response 500:** `{ success: false, error: { message: "El agente no pudo procesar la solicitud", code: "AGENT_ERROR" } }` — error al ejecutar el flujo (modelo, Genkit o servicios internos), salvo el caso de clave inválida (ver siguiente).
 * **Response 503:** `{ success: false, error: { message: string, code: string } }` — servicio del asistente no disponible temporalmente:
   * `AGENT_MISCONFIGURED` — Google AI rechazó `GOOGLE_GENAI_API_KEY` (clave inválida o mal configurada).
-  * `AGENT_RATE_LIMITED` — cuota o límite de peticiones de Google AI (p. ej. 429 / free tier agotado).
+  * `AGENT_RATE_LIMITED` — cuota o límite de peticiones de Google AI (p. ej. 429 / free tier agotado, *spending cap*, etc.).
+  * `AGENT_MODEL_UNAVAILABLE` — el modelo configurado en el backend no está disponible para el proyecto o ha sido retirado (p. ej. 404 de la API de modelos); actualizar el ID de modelo en el servidor.
 
 **Nota de convención:** El cuerpo de este endpoint usa los nombres de campo del schema Zod del agente (`message`, `history`, `role`, `content`), alineados con el cliente web. El resto de recursos de dominio de la API sigue **snake_case** en request/response según `docs/CONTEXT/NAMING-CONVENTIONS.md`.
 
@@ -258,7 +259,7 @@ Orquesta el asistente de facturación (Genkit + modelo Gemini). El usuario auten
 * **401 (Unauthorized):** Token JWT ausente, expirado o inválido.
 * **404 (Not Found):** El recurso no existe o no pertenece al `user_id` del token.
 * **409 (Conflict):** Intento de modificar o eliminar un documento ya enviado (`ALREADY_SENT`), o de reenviar una factura ya emitida.
-* **503 (Service Unavailable):** En el endpoint del agente (`POST /agent/chat`), indica configuración incorrecta de la clave de Google AI (`AGENT_MISCONFIGURED`).
+* **503 (Service Unavailable):** En el endpoint del agente (`POST /agent/chat`), indica clave inválida (`AGENT_MISCONFIGURED`), cuota o tope de uso (`AGENT_RATE_LIMITED`) o modelo no disponible para el proyecto (`AGENT_MODEL_UNAVAILABLE`).
 
 ```
 

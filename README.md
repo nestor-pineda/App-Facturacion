@@ -8,7 +8,7 @@ Este proyecto es una aplicación de facturación para autónomos en España con 
 
 ## Stack tecnológico utilizado
 
-- **Backend:** Node.js, Express, PostgreSQL, Prisma, Genkit + Gemini
+- **Backend:** Node.js, Express, PostgreSQL, Prisma, Genkit + `@genkit-ai/google-genai` (Gemini, p. ej. `gemini-3-flash-preview`)
 - **Frontend:** React 18, TypeScript, Vite, shadcn/ui
 - **Testing:** Playwright (E2E) y suites de tests por paquete
 - **Entorno recomendado:** npm workspaces en monorepo
@@ -26,7 +26,7 @@ npm run dev
 
 Para que al pulsar **Enviar** en un presupuesto o factura se envíe un correo real al cliente, descomenta y rellena las variables SMTP en `backend/.env` (en `.env.example` tienes un bloque de ejemplo con [Mailtrap](https://mailtrap.io) para desarrollo).
 
-**Asistente IA (Genkit + Gemini):** el endpoint `POST /api/v1/agent/chat` y el widget de chat del frontend necesitan una **`GOOGLE_GENAI_API_KEY` válida** de [Google AI Studio](https://aistudio.google.com/apikey). Si la clave es un placeholder o está revocada, la API responderá **503** con `code: AGENT_MISCONFIGURED`. Si Google devuelve **429** por cuota (free tier agotado, demasiadas peticiones), la API responde **503** con `code: AGENT_RATE_LIMITED`. Tras cambiar `.env`, reinicia el backend o deja que nodemon recargue (también vigila `.env` en `npm run dev`).
+**Asistente IA (Genkit + Gemini):** el endpoint `POST /api/v1/agent/chat` y el widget de chat del frontend necesitan una **`GOOGLE_GENAI_API_KEY` válida** de [Google AI Studio](https://aistudio.google.com/apikey). El backend usa el plugin **`@genkit-ai/google-genai`** (no el paquete legacy `@genkit-ai/googleai`). Si la clave es un placeholder o está revocada, la API responde **503** con `code: AGENT_MISCONFIGURED`. Si Google devuelve **429** (cuota, límite de frecuencia o *spending cap*), la API responde **503** con `code: AGENT_RATE_LIMITED`. Si el modelo configurado no está disponible para tu proyecto (**404**), la API responde **503** con `code: AGENT_MODEL_UNAVAILABLE`. Tras cambiar `.env`, reinicia el backend o deja que nodemon recargue (también vigila `.env` en `npm run dev`).
 
 ### Frontend (desarrollo)
 
