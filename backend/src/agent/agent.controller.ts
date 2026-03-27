@@ -1,3 +1,4 @@
+import util from 'node:util';
 import { Request, Response } from 'express';
 import { AgentChatSchema } from '@/agent/agent.schemas';
 import { runBillingFlow } from '@/agent/flows/billing.flow';
@@ -60,8 +61,22 @@ export async function agentChat(req: Request, res: Response) {
     const result = await runBillingFlow(message, history, userId);
     return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.error('[AgentChat] Error:', error);
+    console.error(
+      '[AgentChat] Error (inspect):',
+      util.inspect(error, { depth: 12, colors: false, maxArrayLength: null, breakLength: 120 })
+    );
+    if (error instanceof Error) {
+      console.error('[AgentChat] Error message:', error.message);
+      console.error('[AgentChat] Error stack:', error.stack);
+      if (error.cause !== undefined) {
+        console.error(
+          '[AgentChat] Error cause:',
+          util.inspect(error.cause, { depth: 12, colors: false, maxArrayLength: null })
+        );
+      }
+    }
     if (isGoogleAiApiKeyInvalidError(error)) {
+      console.error('[AgentChat] Classified as AGENT_MISCONFIGURED (Google API key invalid)');
       return res.status(503).json({
         success: false,
         error: {
@@ -71,6 +86,9 @@ export async function agentChat(req: Request, res: Response) {
       });
     }
     if (isGoogleAiRateLimitedError(error)) {
+      console.error(
+        '[AgentChat] Classified as AGENT_RATE_LIMITED (HTTP 429 / cuota o límite de Google Generative AI)'
+      );
       return res.status(503).json({
         success: false,
         error: {
