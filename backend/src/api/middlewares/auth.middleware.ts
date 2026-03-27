@@ -23,6 +23,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: string };
     req.user = { id: decoded.userId };
+    req.userId = decoded.userId;
     next();
   } catch {
     return res.status(401).json({

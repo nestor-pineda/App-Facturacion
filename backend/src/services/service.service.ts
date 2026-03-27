@@ -3,6 +3,20 @@ import type { CreateServiceInput, UpdateServiceInput } from '@/api/schemas/servi
 
 export const SERVICE_NOT_FOUND = 'SERVICE_NOT_FOUND';
 
+export const search = async (userId: string, query: string) => {
+  const q = query.trim();
+  if (q.length === 0) {
+    return [];
+  }
+  return prisma.service.findMany({
+    where: {
+      user_id: userId,
+      nombre: { contains: q, mode: 'insensitive' },
+    },
+    orderBy: { created_at: 'asc' },
+  });
+};
+
 export const list = async (userId: string) => {
   return prisma.service.findMany({
     where: { user_id: userId },

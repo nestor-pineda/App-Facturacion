@@ -458,6 +458,40 @@ Si en el futuro se introduce un middleware o capa que normalice automáticamente
 
 ---
 
+## [2026-03-20] Genkit + Google AI para el agente de facturación
+
+### Decisión
+Implementar el módulo de **agente conversacional** con **Genkit 1.x**, plugin oficial **`@genkit-ai/google-genai`** (sustituye al paquete legacy **`@genkit-ai/googleai`**) y modelo **`gemini-3-flash-preview`** (ID de API actual en el SDK; puede cambiar cuando Google estabilice el nombre). La autenticación sigue siendo la API key en `GOOGLE_GENAI_API_KEY`.
+
+### Actualización (marzo 2026)
+- **Plugin:** migración a `@genkit-ai/google-genai@1.30.1` alineado con `genkit@1.30.1`.
+- **Modelo:** `gemini-2.0-flash` dejó de estar disponible para proyectos/cuentas nuevas; el backend usa **`gemini-3-flash-preview`** vía `googleAI.model(GEMINI_MODEL_NAME)` en `billing.flow.ts`.
+
+### Contexto
+Se necesitaba un asistente en lenguaje natural que orqueste las operaciones ya existentes (clientes, servicios, facturas, presupuestos) sin duplicar reglas de negocio, con coste controlado en MVP y despliegue sencillo.
+
+### Razones
+- **Orquestación sobre servicios internos:** Genkit encaja con `ai.generate` + tools que delegan en `clientService`, `invoiceService`, etc., manteniendo `userId` inyectado por closure (sin confiar en el input del modelo).
+- **Coste y simplicidad operativa:** Google AI Studio ofrece free tier con API key; no se usa Vertex AI ni el plugin `@genkit-ai/vertexai`, evitones de facturación cloud distinta.
+- **Modelo adecuado para chat + tools:** la familia Gemini Flash (actualmente 3.x preview en API) mantiene buen equilibrio entre latencia, instrucciones y llamadas a herramientas para consultas y borradores.
+- **Stack alineado con el backend:** TypeScript, mismo proceso Express, variables validadas con Zod en `env.ts`.
+
+### Alternativa descartada
+- **Vertex AI:** más peso operativo y costes; el diseño del producto prioriza API key gratuita de AI Studio.
+- **Llamadas directas al REST de Gemini sin framework:** más código manual para tools, historial y observabilidad; Genkit estandariza el patrón.
+- **Otros proveedores (OpenAI, etc.):** no requeridos en esta fase; la decisión queda acotada al stack documentado en el design doc del agente.
+
+### Consecuencias
+✅ Endpoint único `POST /api/v1/agent/chat` con contrato estable (`message`, `history`, respuesta `reply` + `toolsUsed`).  
+✅ Dependencia explícita de `GOOGLE_GENAI_API_KEY` en arranque y de **`@genkit-ai/google-genai`** como plugin de modelos (sincronizado con la versión mayor de `genkit`).  
+⚠️ Límites, disponibilidad y renombres de modelos en Google AI aplican al agente; puede ser necesario actualizar `GEMINI_MODEL_NAME` cuando Google estabilice IDs.  
+⚠️ Sin persistencia de conversación en servidor en MVP: el cliente reenvía el historial (máx. 20 mensajes).
+
+### Revisión
+Revisar si el volumen de uso, requisitos de privacidad (datos en Google AI) o necesidad de modelos propios obligan a migrar a Vertex, modelo distinto o proveedor adicional.
+
+---
+
 ## Plantilla para Nuevas Decisiones
 
 ```markdown

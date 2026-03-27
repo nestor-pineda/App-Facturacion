@@ -5,5 +5,7 @@ declare module 'express-serve-static-core' {
     user?: {
       id: string;
     };
+    /** Mismo valor que `user.id` tras `authenticate` (convención del agente IA). */
+    userId?: string;
   }
 }

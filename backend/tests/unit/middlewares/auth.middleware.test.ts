@@ -32,6 +32,7 @@ describe('authenticate middleware', () => {
     // Assert
     expect(next).toHaveBeenCalledOnce();
     expect(req.user).toEqual({ id: userId });
+    expect(req.userId).toBe(userId);
     expect(res.status).not.toHaveBeenCalled();
   });
 
