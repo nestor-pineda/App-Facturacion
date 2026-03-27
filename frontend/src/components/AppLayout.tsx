@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { AgentWidget } from "@/features/agent/components/AgentWidget";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { Analytics } from "@vercel/analytics/react";
 
 const DEFAULT_USER_INITIALS = "US";
 const COMMERCIAL_NAME_CAMEL_KEY = "nombreComercial";
@@ -67,6 +68,7 @@ export function AppLayout() {
         </div>
       </div>
       <AgentWidget />
+      <Analytics />
     </SidebarProvider>
   );
 }
