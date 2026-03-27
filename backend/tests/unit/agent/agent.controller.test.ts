@@ -149,4 +149,31 @@ describe('agentChat', () => {
     });
     errSpy.mockRestore();
   });
+
+  it('retorna 503 con AGENT_MODEL_UNAVAILABLE si Google AI responde 404 de modelo no disponible', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(runBillingFlow).mockRejectedValue({
+      status: 404,
+      message:
+        'This model models/gemini-2.0-flash is no longer available to new users. Please update your code to use a newer model.',
+    });
+    const req = {
+      body: { message: 'Hola', history: [] },
+      userId: 'user-1',
+    } as unknown as Request;
+    const res = makeRes();
+
+    await agentChat(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: {
+        message:
+          'El modelo configurado para el asistente no está disponible para este proyecto de Google AI. Actualiza el modelo en el servidor (recomendado: gemini-2.5-flash).',
+        code: 'AGENT_MODEL_UNAVAILABLE',
+      },
+    });
+    errSpy.mockRestore();
+  });
 });

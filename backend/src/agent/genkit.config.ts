@@ -1,10 +1,10 @@
 import { genkit } from 'genkit';
-import { googleAI, gemini20Flash } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/googleai';
 import { env } from '@/config/env';
 
 /**
- * Usamos `gemini20Flash` (modelo `gemini-2.0-flash` en la API).
- * `gemini15Flash` / `gemini-1.5-flash` devuelve 404 en v1beta (modelo retirado o no expuesto).
+ * `gemini-2.0-flash` ya no está disponible para cuentas/proyectos nuevos.
+ * Migramos a `gemini-2.5-flash`, recomendado en la documentación actual de Genkit.
  */
 export const ai = genkit({
   plugins: [
@@ -13,5 +13,5 @@ export const ai = genkit({
     }),
   ],
 });
+export const GEMINI_MODEL_NAME = 'gemini-2.5-flash' as const;
 
-export { gemini20Flash };

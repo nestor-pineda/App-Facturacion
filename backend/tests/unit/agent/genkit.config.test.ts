@@ -7,10 +7,10 @@ vi.mock('@/config/env', () => ({
 }));
 
 describe('genkit.config', () => {
-  it('exports ai and gemini20Flash', async () => {
-    const { ai, gemini20Flash } = await import('@/agent/genkit.config');
+  it('exports ai and GEMINI_MODEL_NAME', async () => {
+    const { ai, GEMINI_MODEL_NAME } = await import('@/agent/genkit.config');
     expect(ai).toBeDefined();
     expect(typeof ai.generate).toBe('function');
-    expect(gemini20Flash).toBeDefined();
+    expect(GEMINI_MODEL_NAME).toBe('gemini-2.5-flash');
   });
 });

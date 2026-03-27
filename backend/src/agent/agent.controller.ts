@@ -8,6 +8,7 @@ const ERROR_CODES = {
   AGENT_ERROR: 'AGENT_ERROR',
   AGENT_MISCONFIGURED: 'AGENT_MISCONFIGURED',
   AGENT_RATE_LIMITED: 'AGENT_RATE_LIMITED',
+  AGENT_MODEL_UNAVAILABLE: 'AGENT_MODEL_UNAVAILABLE',
 } as const;
 
 const AGENT_FAILURE_MESSAGE = 'El agente no pudo procesar la solicitud';
@@ -17,6 +18,9 @@ const AGENT_MISCONFIGURED_MESSAGE =
 
 const AGENT_RATE_LIMITED_MESSAGE =
   'El asistente está temporalmente limitado por cuota de Google AI (demasiadas peticiones o free tier agotado). Espera unos minutos o revisa tu plan en Google AI Studio.';
+
+const AGENT_MODEL_UNAVAILABLE_MESSAGE =
+  'El modelo configurado para el asistente no está disponible para este proyecto de Google AI. Actualiza el modelo en el servidor (recomendado: gemini-2.5-flash).';
 
 function isGoogleAiApiKeyInvalidError(error: unknown): boolean {
   if (!error || typeof error !== 'object') {
@@ -38,6 +42,21 @@ function isGoogleAiRateLimitedError(error: unknown): boolean {
     error !== null &&
     'status' in error &&
     (error as { status: number }).status === 429
+  );
+}
+
+function isGoogleAiModelUnavailableError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+  const withStatus = error as { status?: unknown; message?: unknown };
+  const is404 = withStatus.status === 404;
+  const message =
+    typeof withStatus.message === 'string' ? withStatus.message.toLowerCase() : '';
+  return (
+    is404 &&
+    (message.includes('model') &&
+      (message.includes('no longer available') || message.includes('not found')))
   );
 }
 
@@ -94,6 +113,16 @@ export async function agentChat(req: Request, res: Response) {
         error: {
           message: AGENT_RATE_LIMITED_MESSAGE,
           code: ERROR_CODES.AGENT_RATE_LIMITED,
+        },
+      });
+    }
+    if (isGoogleAiModelUnavailableError(error)) {
+      console.error('[AgentChat] Classified as AGENT_MODEL_UNAVAILABLE (modelo no disponible)');
+      return res.status(503).json({
+        success: false,
+        error: {
+          message: AGENT_MODEL_UNAVAILABLE_MESSAGE,
+          code: ERROR_CODES.AGENT_MODEL_UNAVAILABLE,
         },
       });
     }

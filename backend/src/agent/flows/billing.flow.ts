@@ -1,4 +1,5 @@
-import { ai, gemini20Flash } from '@/agent/genkit.config';
+import { googleAI } from '@genkit-ai/googleai';
+import { ai, GEMINI_MODEL_NAME } from '@/agent/genkit.config';
 import { SYSTEM_PROMPT } from '@/agent/prompts/system.prompt';
 import {
   createClientTools,
@@ -30,7 +31,7 @@ export async function runBillingFlow(
     createQuoteTools(userId);
 
   const response = await ai.generate({
-    model: gemini20Flash,
+    model: googleAI.model(GEMINI_MODEL_NAME),
     system: SYSTEM_PROMPT,
     messages: [
       ...history.map(m => ({
