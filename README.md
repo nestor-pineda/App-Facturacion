@@ -2,18 +2,20 @@
 
 Aplicación web para gestión de facturación destinada a autónomos en España.
 
-## Estructura del Proyecto
+## Descripción general del proyecto
 
-```
-APP-FACTURACION/
-├── backend/        # API Node.js + Express + PostgreSQL + Prisma
-├── frontend/       # React 18 + TypeScript + Vite + shadcn/ui (integrado con backend)
-└── docs/           # Documentación técnica
-```
+Este proyecto es una aplicación de facturación para autónomos en España con arquitectura monorepo (`backend` + `frontend`). Permite gestionar el ciclo de facturación y ofrece utilidades de soporte como envío de correos y asistente IA.
 
-## Inicio Rápido
+## Stack tecnológico utilizado
 
-### Backend
+- **Backend:** Node.js, Express, PostgreSQL, Prisma, Genkit + Gemini
+- **Frontend:** React 18, TypeScript, Vite, shadcn/ui
+- **Testing:** Playwright (E2E) y suites de tests por paquete
+- **Entorno recomendado:** npm workspaces en monorepo
+
+## Información sobre instalación y ejecución
+
+### Backend (desarrollo)
 
 ```bash
 cd backend
@@ -24,7 +26,9 @@ npm run dev
 
 Para que al pulsar **Enviar** en un presupuesto o factura se envíe un correo real al cliente, descomenta y rellena las variables SMTP en `backend/.env` (en `.env.example` tienes un bloque de ejemplo con [Mailtrap](https://mailtrap.io) para desarrollo).
 
-### Frontend
+**Asistente IA (Genkit + Gemini):** el endpoint `POST /api/v1/agent/chat` y el widget de chat del frontend necesitan una **`GOOGLE_GENAI_API_KEY` válida** de [Google AI Studio](https://aistudio.google.com/apikey). Si la clave es un placeholder o está revocada, la API responderá **503** con `code: AGENT_MISCONFIGURED`. Si Google devuelve **429** por cuota (free tier agotado, demasiadas peticiones), la API responde **503** con `code: AGENT_RATE_LIMITED`. Tras cambiar `.env`, reinicia el backend o deja que nodemon recargue (también vigila `.env` en `npm run dev`).
+
+### Frontend (desarrollo)
 
 ```bash
 cd frontend
@@ -34,6 +38,14 @@ npm run dev
 ```
 
 El frontend arranca en `http://localhost:8080` y hace proxy de las peticiones `/api` al backend en `localhost:3000`.
+
+### Monorepo (backend + frontend a la vez)
+
+```bash
+npm install            # Instala concurrently en root
+npm run install:all    # Instala dependencias de todos los paquetes
+npm run dev            # Arranca backend y frontend en paralelo
+```
 
 ### Popular la base de datos (datos de prueba)
 
@@ -66,15 +78,26 @@ npx prisma studio
 
 Se abrirá en el navegador (por defecto `http://localhost:5555`). Asegúrate de tener configurado `DATABASE_URL` en `backend/.env` (por ejemplo copiando `backend/.env.example` a `backend/.env` y ajustando usuario, contraseña y nombre de la base de datos).
 
-### Monorepo (ambos a la vez)
+## Estructura del proyecto
 
-```bash
-npm install            # Instala concurrently en root
-npm run install:all    # Instala dependencias de todos los paquetes
-npm run dev            # Arranca backend y frontend en paralelo
+```
+APP-FACTURACION/
+├── backend/        # API Node.js + Express + PostgreSQL + Prisma
+├── frontend/       # React 18 + TypeScript + Vite + shadcn/ui (integrado con backend)
+└── docs/           # Documentación técnica
 ```
 
-## Scripts Disponibles
+## Funcionalidades principales
+
+- Gestión de clientes y servicios.
+- Creación y gestión de presupuestos y facturas.
+- Envío de presupuestos/facturas por correo mediante SMTP.
+- Asistente IA para soporte en el flujo de facturación (`POST /api/v1/agent/chat`).
+- Datos de prueba y credenciales preconfiguradas para entorno de desarrollo.
+
+## Información adicional
+
+### Scripts disponibles
 
 | Comando | Descripción |
 |---|---|
