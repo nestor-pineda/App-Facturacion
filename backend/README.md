@@ -63,10 +63,12 @@ JWT_EXPIRES_IN="1h"
 JWT_REFRESH_EXPIRES_IN="7d"
 PORT=3000
 NODE_ENV="development"
-ALLOWED_ORIGINS="http://localhost:5173"
+ALLOWED_ORIGINS="http://localhost:8080,http://localhost:5173"
 ```
 
-> **Importante:** `JWT_SECRET` y `JWT_REFRESH_SECRET` deben tener al menos 32 caracteres. En producción usa valores aleatorios generados de forma segura. Para pruebas locales basta con cualquier cadena larga.
+> **Importante:** `JWT_SECRET` y `JWT_REFRESH_SECRET` deben ser **dos cadenas distintas**, cada una de **al menos 32 caracteres**. El schema Zod en `src/config/env.ts` lo valida al arrancar: si son iguales, el proceso sale con error (`JWT_SECRET y JWT_REFRESH_SECRET deben ser distintos`). En producción usa valores aleatorios generados de forma segura y distintos entre sí; en local basta con dos frases largas diferentes (como en el ejemplo de arriba).
+
+> **CORS y anti-CSRF:** `ALLOWED_ORIGINS` debe listar los orígenes exactos del frontend (separados por coma). El frontend de este monorepo corre en **`http://localhost:8080`** (Vite); si ahí solo tienes `http://localhost:5173`, el login y el resto de mutaciones responderán **403** («Origen de la petición no permitido»). Las peticiones `POST`, `PUT`, `PATCH` y `DELETE` bajo `/api` exigen además `Origin` o `Referer` permitido y la cabecera `X-Requested-With: XMLHttpRequest` (el cliente web ya la incluye). Clientes no navegador deben replicar ambas.
 
 ---
 

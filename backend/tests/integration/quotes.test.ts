@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
+import { withMutationGuards } from '../helpers/mutation-guard.helper';
 import app from '@/app';
 import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
@@ -35,29 +36,29 @@ describe('POST /api/v1/quotes', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app).post(QUOTES_URL).send({});
+    const response = await withMutationGuards(request(app).post(QUOTES_URL)).send({});
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
   });
 
   it('should create a quote in borrador state and return 201', async () => {
-    const response = await request(app)
-      .post(QUOTES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({
         client_id: clientId,
@@ -83,8 +84,8 @@ describe('POST /api/v1/quotes', () => {
   });
 
   it('should store snapshot data on lines (not live service data)', async () => {
-    const response = await request(app)
-      .post(QUOTES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({
         client_id: clientId,
@@ -108,8 +109,8 @@ describe('POST /api/v1/quotes', () => {
   });
 
   it('should return 400 when required fields are missing', async () => {
-    const response = await request(app)
-      .post(QUOTES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({ client_id: clientId });
 
@@ -118,8 +119,8 @@ describe('POST /api/v1/quotes', () => {
   });
 
   it('should return 400 when lines array is empty', async () => {
-    const response = await request(app)
-      .post(QUOTES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({ client_id: clientId, fecha: '2026-01-15', lines: [] });
 
@@ -129,8 +130,8 @@ describe('POST /api/v1/quotes', () => {
 
   it('should return 404 when client_id belongs to another user', async () => {
     const otherCookies = await createSecondUserAndGetCookies();
-    const otherClientRes = await request(app)
-      .post(CLIENTS_URL)
+    const otherClientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', otherCookies)
       .send({
         nombre: 'Empresa Otra Quote',
@@ -140,8 +141,8 @@ describe('POST /api/v1/quotes', () => {
       });
     expect(otherClientRes.status).toBe(201);
 
-    const response = await request(app)
-      .post(QUOTES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({
         client_id: otherClientRes.body.data.id,
@@ -163,8 +164,8 @@ describe('POST /api/v1/quotes', () => {
 
   it('should return 404 when service_id belongs to another user', async () => {
     const otherCookies = await createSecondUserAndGetCookies();
-    const otherServiceRes = await request(app)
-      .post(SERVICES_URL)
+    const otherServiceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', otherCookies)
       .send({
         nombre: 'Servicio quote otro usuario',
@@ -173,8 +174,8 @@ describe('POST /api/v1/quotes', () => {
       });
     expect(otherServiceRes.status).toBe(201);
 
-    const response = await request(app)
-      .post(QUOTES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({
         client_id: clientId,
@@ -224,17 +225,17 @@ describe('GET /api/v1/quotes', () => {
     const { createSecondUserAndGetCookies } = await import('../helpers/auth.helper');
     const otherCookies = await createSecondUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
 
-    await request(app)
-      .post(QUOTES_URL)
+    await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({
         client_id: clientRes.body.data.id,
@@ -251,12 +252,12 @@ describe('GET /api/v1/quotes', () => {
   });
 
   it('should filter quotes by estado query param', async () => {
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
 
@@ -269,18 +270,18 @@ describe('GET /api/v1/quotes', () => {
       lines: [{ service_id: serviceId, descripcion: 'Test', cantidad: 1, precio_unitario: 100, iva_porcentaje: 21 }],
     };
 
-    const q1Res = await request(app)
-      .post(QUOTES_URL)
+    const q1Res = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send(quotePayload);
 
-    await request(app)
-      .post(QUOTES_URL)
+    await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send(quotePayload);
 
-    await request(app)
-      .patch(`${QUOTES_URL}/${q1Res.body.data.id}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${QUOTES_URL}/${q1Res.body.data.id}/send`))
       .set('Cookie', cookies);
 
     const response = await request(app)
@@ -293,28 +294,28 @@ describe('GET /api/v1/quotes', () => {
   });
 
   it('should filter quotes by client_id query param', async () => {
-    const client1Res = await request(app)
-      .post(CLIENTS_URL)
+    const client1Res = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
-    const client2Res = await request(app)
-      .post(CLIENTS_URL)
+    const client2Res = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send({ ...validClient, email: 'otro@cliente.com', cif_nif: 'B87654321' });
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
 
     const linePayload = [{ service_id: serviceRes.body.data.id, descripcion: 'Test', cantidad: 1, precio_unitario: 100, iva_porcentaje: 21 }];
 
-    await request(app)
-      .post(QUOTES_URL)
+    await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({ client_id: client1Res.body.data.id, fecha: '2026-01-15', lines: linePayload });
 
-    await request(app)
-      .post(QUOTES_URL)
+    await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({ client_id: client2Res.body.data.id, fecha: '2026-01-15', lines: linePayload });
 
@@ -345,27 +346,27 @@ describe('PUT /api/v1/quotes/:id', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
-    const quoteRes = await request(app)
-      .post(QUOTES_URL)
+    const quoteRes = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send(basePayload());
     quoteId = quoteRes.body.data.id;
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app).put(`${QUOTES_URL}/${quoteId}`).send(basePayload());
+    const response = await withMutationGuards(request(app).put(`${QUOTES_URL}/${quoteId}`)).send(basePayload());
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
@@ -381,8 +382,8 @@ describe('PUT /api/v1/quotes/:id', () => {
       ],
     };
 
-    const response = await request(app)
-      .put(`${QUOTES_URL}/${quoteId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${QUOTES_URL}/${quoteId}`))
       .set('Cookie', cookies)
       .send(updatedPayload);
 
@@ -406,8 +407,8 @@ describe('PUT /api/v1/quotes/:id', () => {
       ],
     };
 
-    const response = await request(app)
-      .put(`${QUOTES_URL}/${quoteId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${QUOTES_URL}/${quoteId}`))
       .set('Cookie', cookies)
       .send(updatedPayload);
 
@@ -419,8 +420,8 @@ describe('PUT /api/v1/quotes/:id', () => {
   });
 
   it('should return 400 when validation fails', async () => {
-    const response = await request(app)
-      .put(`${QUOTES_URL}/${quoteId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${QUOTES_URL}/${quoteId}`))
       .set('Cookie', cookies)
       .send({ client_id: clientId });
 
@@ -429,8 +430,8 @@ describe('PUT /api/v1/quotes/:id', () => {
   });
 
   it('should return 404 for non-existent quote', async () => {
-    const response = await request(app)
-      .put(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000`)
+    const response = await withMutationGuards(request(app)
+      .put(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000`))
       .set('Cookie', cookies)
       .send(basePayload());
 
@@ -439,12 +440,12 @@ describe('PUT /api/v1/quotes/:id', () => {
   });
 
   it('should return 409 ALREADY_SENT when trying to update an enviado quote', async () => {
-    await request(app)
-      .patch(`${QUOTES_URL}/${quoteId}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${QUOTES_URL}/${quoteId}/send`))
       .set('Cookie', cookies);
 
-    const response = await request(app)
-      .put(`${QUOTES_URL}/${quoteId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${QUOTES_URL}/${quoteId}`))
       .set('Cookie', cookies)
       .send(basePayload());
 
@@ -462,20 +463,20 @@ describe('DELETE /api/v1/quotes/:id', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
-    const quoteRes = await request(app)
-      .post(QUOTES_URL)
+    const quoteRes = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({
         client_id: clientId,
@@ -486,15 +487,15 @@ describe('DELETE /api/v1/quotes/:id', () => {
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app).delete(`${QUOTES_URL}/${quoteId}`);
+    const response = await withMutationGuards(request(app).delete(`${QUOTES_URL}/${quoteId}`));
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
   });
 
   it('should delete a borrador quote and return 200', async () => {
-    const response = await request(app)
-      .delete(`${QUOTES_URL}/${quoteId}`)
+    const response = await withMutationGuards(request(app)
+      .delete(`${QUOTES_URL}/${quoteId}`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
@@ -507,8 +508,8 @@ describe('DELETE /api/v1/quotes/:id', () => {
   });
 
   it('should return 404 for non-existent quote', async () => {
-    const response = await request(app)
-      .delete(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000`)
+    const response = await withMutationGuards(request(app)
+      .delete(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
@@ -516,12 +517,12 @@ describe('DELETE /api/v1/quotes/:id', () => {
   });
 
   it('should return 409 ALREADY_SENT when trying to delete an enviado quote', async () => {
-    await request(app)
-      .patch(`${QUOTES_URL}/${quoteId}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${QUOTES_URL}/${quoteId}/send`))
       .set('Cookie', cookies);
 
-    const response = await request(app)
-      .delete(`${QUOTES_URL}/${quoteId}`)
+    const response = await withMutationGuards(request(app)
+      .delete(`${QUOTES_URL}/${quoteId}`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(409);
@@ -537,29 +538,29 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app).patch(`${QUOTES_URL}/some-id/send`);
+    const response = await withMutationGuards(request(app).patch(`${QUOTES_URL}/some-id/send`));
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
   });
 
   it('should mark a borrador quote as enviado and return 200', async () => {
-    const createRes = await request(app)
-      .post(QUOTES_URL)
+    const createRes = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({
         client_id: clientId,
@@ -571,8 +572,8 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
     const sendQuoteEmailSpy = vi.mocked(emailService.sendQuoteEmail);
     sendQuoteEmailSpy.mockClear();
 
-    const response = await request(app)
-      .patch(`${QUOTES_URL}/${quoteId}/send`)
+    const response = await withMutationGuards(request(app)
+      .patch(`${QUOTES_URL}/${quoteId}/send`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
@@ -583,8 +584,8 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
   });
 
   it('should return 404 for non-existent quote', async () => {
-    const response = await request(app)
-      .patch(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/send`)
+    const response = await withMutationGuards(request(app)
+      .patch(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/send`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
@@ -592,8 +593,8 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
   });
 
   it('should return 409 ALREADY_SENT when trying to send an already-sent quote', async () => {
-    const createRes = await request(app)
-      .post(QUOTES_URL)
+    const createRes = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send({
         client_id: clientId,
@@ -602,12 +603,12 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
       });
     const quoteId = createRes.body.data.id;
 
-    await request(app)
-      .patch(`${QUOTES_URL}/${quoteId}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${QUOTES_URL}/${quoteId}/send`))
       .set('Cookie', cookies);
 
-    const response = await request(app)
-      .patch(`${QUOTES_URL}/${quoteId}/send`)
+    const response = await withMutationGuards(request(app)
+      .patch(`${QUOTES_URL}/${quoteId}/send`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(409);
@@ -634,35 +635,35 @@ describe('POST /api/v1/quotes/:id/copy', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
-    const quoteRes = await request(app)
-      .post(QUOTES_URL)
+    const quoteRes = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send(buildQuotePayload());
     quoteId = quoteRes.body.data.id;
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app).post(`${QUOTES_URL}/${quoteId}/copy`);
+    const response = await withMutationGuards(request(app).post(`${QUOTES_URL}/${quoteId}/copy`));
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
   });
 
   it('should copy a borrador quote and return 201 with a new borrador quote', async () => {
-    const response = await request(app)
-      .post(`${QUOTES_URL}/${quoteId}/copy`)
+    const response = await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/${quoteId}/copy`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
@@ -686,12 +687,12 @@ describe('POST /api/v1/quotes/:id/copy', () => {
   });
 
   it('should copy an enviado quote and return 201 with a new borrador quote', async () => {
-    await request(app)
-      .patch(`${QUOTES_URL}/${quoteId}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${QUOTES_URL}/${quoteId}/send`))
       .set('Cookie', cookies);
 
-    const response = await request(app)
-      .post(`${QUOTES_URL}/${quoteId}/copy`)
+    const response = await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/${quoteId}/copy`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
@@ -705,8 +706,8 @@ describe('POST /api/v1/quotes/:id/copy', () => {
   });
 
   it('should return 404 for non-existent quote', async () => {
-    const response = await request(app)
-      .post(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/copy`)
+    const response = await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/copy`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
@@ -733,35 +734,35 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
-    const quoteRes = await request(app)
-      .post(QUOTES_URL)
+    const quoteRes = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
       .set('Cookie', cookies)
       .send(buildQuotePayload());
     quoteId = quoteRes.body.data.id;
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app).post(`${QUOTES_URL}/${quoteId}/convert`);
+    const response = await withMutationGuards(request(app).post(`${QUOTES_URL}/${quoteId}/convert`));
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
   });
 
   it('should convert a borrador quote and return 201 with a new invoice', async () => {
-    const response = await request(app)
-      .post(`${QUOTES_URL}/${quoteId}/convert`)
+    const response = await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
@@ -779,8 +780,8 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   });
 
   it('should copy all lines verbatim from the quote', async () => {
-    const response = await request(app)
-      .post(`${QUOTES_URL}/${quoteId}/convert`)
+    const response = await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
@@ -793,12 +794,12 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   });
 
   it('should convert an enviado quote and return 201', async () => {
-    await request(app)
-      .patch(`${QUOTES_URL}/${quoteId}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${QUOTES_URL}/${quoteId}/send`))
       .set('Cookie', cookies);
 
-    const response = await request(app)
-      .post(`${QUOTES_URL}/${quoteId}/convert`)
+    const response = await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
@@ -807,8 +808,8 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   });
 
   it('should use provided fecha_emision when given', async () => {
-    const response = await request(app)
-      .post(`${QUOTES_URL}/${quoteId}/convert`)
+    const response = await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`))
       .set('Cookie', cookies)
       .send({ fecha_emision: '2026-06-15' });
 
@@ -818,8 +819,8 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   });
 
   it('should set fecha_emision when not provided', async () => {
-    const response = await request(app)
-      .post(`${QUOTES_URL}/${quoteId}/convert`)
+    const response = await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
@@ -827,8 +828,8 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   });
 
   it('should return 400 when fecha_emision has invalid format', async () => {
-    const response = await request(app)
-      .post(`${QUOTES_URL}/${quoteId}/convert`)
+    const response = await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`))
       .set('Cookie', cookies)
       .send({ fecha_emision: 'not-a-date' });
 
@@ -837,8 +838,8 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   });
 
   it('should return 404 for non-existent quote', async () => {
-    const response = await request(app)
-      .post(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/convert`)
+    const response = await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/convert`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
@@ -846,8 +847,8 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   });
 
   it('should not modify the original quote after conversion', async () => {
-    await request(app)
-      .post(`${QUOTES_URL}/${quoteId}/convert`)
+    await withMutationGuards(request(app)
+      .post(`${QUOTES_URL}/${quoteId}/convert`))
       .set('Cookie', cookies);
 
     const quoteRes = await request(app)

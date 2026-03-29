@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
+import { withMutationGuards } from '../helpers/mutation-guard.helper';
 import app from '@/app';
 import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
@@ -67,31 +68,31 @@ describe('GET /api/v1/invoices', () => {
   });
 
   it('should filter invoices by estado query param', async () => {
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
 
     const clientId = clientRes.body.data.id;
     const serviceId = serviceRes.body.data.id;
 
-    const inv1Res = await request(app)
-      .post(INVOICES_URL)
+    const inv1Res = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
 
-    await request(app)
-      .post(INVOICES_URL)
+    await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
 
     // Send only the first invoice
-    await request(app)
-      .patch(`${INVOICES_URL}/${inv1Res.body.data.id}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${INVOICES_URL}/${inv1Res.body.data.id}/send`))
       .set('Cookie', cookies);
 
     const response = await request(app)
@@ -112,29 +113,29 @@ describe('POST /api/v1/invoices', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app).post(INVOICES_URL).send({});
+    const response = await withMutationGuards(request(app).post(INVOICES_URL)).send({});
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
   });
 
   it('should create an invoice in borrador state with numero null', async () => {
-    const response = await request(app)
-      .post(INVOICES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
 
@@ -148,8 +149,8 @@ describe('POST /api/v1/invoices', () => {
   });
 
   it('should return 400 when required fields are missing', async () => {
-    const response = await request(app)
-      .post(INVOICES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send({ client_id: clientId });
 
@@ -158,8 +159,8 @@ describe('POST /api/v1/invoices', () => {
   });
 
   it('should return 400 when lines array is empty', async () => {
-    const response = await request(app)
-      .post(INVOICES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send({ client_id: clientId, fecha_emision: '2026-01-20', lines: [] });
 
@@ -169,8 +170,8 @@ describe('POST /api/v1/invoices', () => {
 
   it('should return 404 when client_id belongs to another user', async () => {
     const otherCookies = await createSecondUserAndGetCookies();
-    const otherClientRes = await request(app)
-      .post(CLIENTS_URL)
+    const otherClientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', otherCookies)
       .send({
         nombre: 'Empresa Otra',
@@ -180,8 +181,8 @@ describe('POST /api/v1/invoices', () => {
       });
     expect(otherClientRes.status).toBe(201);
 
-    const response = await request(app)
-      .post(INVOICES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildInvoicePayload(otherClientRes.body.data.id, serviceId));
 
@@ -191,8 +192,8 @@ describe('POST /api/v1/invoices', () => {
 
   it('should return 404 when service_id belongs to another user', async () => {
     const otherCookies = await createSecondUserAndGetCookies();
-    const otherServiceRes = await request(app)
-      .post(SERVICES_URL)
+    const otherServiceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', otherCookies)
       .send({
         nombre: 'Servicio otro usuario',
@@ -201,8 +202,8 @@ describe('POST /api/v1/invoices', () => {
       });
     expect(otherServiceRes.status).toBe(201);
 
-    const response = await request(app)
-      .post(INVOICES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, otherServiceRes.body.data.id));
 
@@ -228,28 +229,28 @@ describe('PUT /api/v1/invoices/:id', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
-    const invRes = await request(app)
-      .post(INVOICES_URL)
+    const invRes = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(basePayload(clientId, serviceId));
     invoiceId = invRes.body.data.id;
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app)
-      .put(`${INVOICES_URL}/${invoiceId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${INVOICES_URL}/${invoiceId}`))
       .send(basePayload(clientId, serviceId));
 
     expect(response.status).toBe(401);
@@ -266,8 +267,8 @@ describe('PUT /api/v1/invoices/:id', () => {
       ],
     };
 
-    const response = await request(app)
-      .put(`${INVOICES_URL}/${invoiceId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${INVOICES_URL}/${invoiceId}`))
       .set('Cookie', cookies)
       .send(updatedPayload);
 
@@ -291,8 +292,8 @@ describe('PUT /api/v1/invoices/:id', () => {
       ],
     };
 
-    const response = await request(app)
-      .put(`${INVOICES_URL}/${invoiceId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${INVOICES_URL}/${invoiceId}`))
       .set('Cookie', cookies)
       .send(updatedPayload);
 
@@ -304,8 +305,8 @@ describe('PUT /api/v1/invoices/:id', () => {
   });
 
   it('should return 400 when validation fails', async () => {
-    const response = await request(app)
-      .put(`${INVOICES_URL}/${invoiceId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${INVOICES_URL}/${invoiceId}`))
       .set('Cookie', cookies)
       .send({ client_id: clientId });
 
@@ -314,8 +315,8 @@ describe('PUT /api/v1/invoices/:id', () => {
   });
 
   it('should return 404 for non-existent invoice', async () => {
-    const response = await request(app)
-      .put(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000`)
+    const response = await withMutationGuards(request(app)
+      .put(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000`))
       .set('Cookie', cookies)
       .send(basePayload(clientId, serviceId));
 
@@ -324,12 +325,12 @@ describe('PUT /api/v1/invoices/:id', () => {
   });
 
   it('should return 409 ALREADY_SENT when trying to update an enviada invoice', async () => {
-    await request(app)
-      .patch(`${INVOICES_URL}/${invoiceId}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${INVOICES_URL}/${invoiceId}/send`))
       .set('Cookie', cookies);
 
-    const response = await request(app)
-      .put(`${INVOICES_URL}/${invoiceId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${INVOICES_URL}/${invoiceId}`))
       .set('Cookie', cookies)
       .send(basePayload(clientId, serviceId));
 
@@ -347,35 +348,35 @@ describe('DELETE /api/v1/invoices/:id', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
-    const invRes = await request(app)
-      .post(INVOICES_URL)
+    const invRes = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
     invoiceId = invRes.body.data.id;
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app).delete(`${INVOICES_URL}/${invoiceId}`);
+    const response = await withMutationGuards(request(app).delete(`${INVOICES_URL}/${invoiceId}`));
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
   });
 
   it('should delete a borrador invoice and return 200', async () => {
-    const response = await request(app)
-      .delete(`${INVOICES_URL}/${invoiceId}`)
+    const response = await withMutationGuards(request(app)
+      .delete(`${INVOICES_URL}/${invoiceId}`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
@@ -388,8 +389,8 @@ describe('DELETE /api/v1/invoices/:id', () => {
   });
 
   it('should return 404 for non-existent invoice', async () => {
-    const response = await request(app)
-      .delete(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000`)
+    const response = await withMutationGuards(request(app)
+      .delete(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
@@ -397,12 +398,12 @@ describe('DELETE /api/v1/invoices/:id', () => {
   });
 
   it('should return 409 ALREADY_SENT when trying to delete an enviada invoice', async () => {
-    await request(app)
-      .patch(`${INVOICES_URL}/${invoiceId}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${INVOICES_URL}/${invoiceId}/send`))
       .set('Cookie', cookies);
 
-    const response = await request(app)
-      .delete(`${INVOICES_URL}/${invoiceId}`)
+    const response = await withMutationGuards(request(app)
+      .delete(`${INVOICES_URL}/${invoiceId}`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(409);
@@ -418,29 +419,29 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app).patch(`${INVOICES_URL}/some-id/send`);
+    const response = await withMutationGuards(request(app).patch(`${INVOICES_URL}/some-id/send`));
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
   });
 
   it('should generate a numero and change estado to enviada', async () => {
-    const createRes = await request(app)
-      .post(INVOICES_URL)
+    const createRes = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
     const invoiceId = createRes.body.data.id;
@@ -448,8 +449,8 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
     const sendInvoiceEmailSpy = vi.mocked(emailService.sendInvoiceEmail);
     sendInvoiceEmailSpy.mockClear();
 
-    const response = await request(app)
-      .patch(`${INVOICES_URL}/${invoiceId}/send`)
+    const response = await withMutationGuards(request(app)
+      .patch(`${INVOICES_URL}/${invoiceId}/send`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(200);
@@ -463,40 +464,40 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
   it('should generate correlative numbers (YYYY/001, YYYY/002)', async () => {
     const year = new Date().getFullYear();
 
-    const inv1Res = await request(app)
-      .post(INVOICES_URL)
+    const inv1Res = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
 
-    const inv2Res = await request(app)
-      .post(INVOICES_URL)
+    const inv2Res = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
 
-    await request(app)
-      .patch(`${INVOICES_URL}/${inv1Res.body.data.id}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${INVOICES_URL}/${inv1Res.body.data.id}/send`))
       .set('Cookie', cookies);
 
-    const sendRes2 = await request(app)
-      .patch(`${INVOICES_URL}/${inv2Res.body.data.id}/send`)
+    const sendRes2 = await withMutationGuards(request(app)
+      .patch(`${INVOICES_URL}/${inv2Res.body.data.id}/send`))
       .set('Cookie', cookies);
 
     expect(sendRes2.body.data.numero).toBe(`${year}/002`);
   });
 
   it('should return 409 ALREADY_SENT if invoice is already enviada', async () => {
-    const createRes = await request(app)
-      .post(INVOICES_URL)
+    const createRes = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildInvoicePayload(clientId, serviceId));
     const invoiceId = createRes.body.data.id;
 
-    await request(app)
-      .patch(`${INVOICES_URL}/${invoiceId}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${INVOICES_URL}/${invoiceId}/send`))
       .set('Cookie', cookies);
 
-    const response = await request(app)
-      .patch(`${INVOICES_URL}/${invoiceId}/send`)
+    const response = await withMutationGuards(request(app)
+      .patch(`${INVOICES_URL}/${invoiceId}/send`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(409);
@@ -504,8 +505,8 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
   });
 
   it('should return 404 for non-existent invoice', async () => {
-    const response = await request(app)
-      .patch(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000/send`)
+    const response = await withMutationGuards(request(app)
+      .patch(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000/send`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(404);
@@ -537,35 +538,35 @@ describe('POST /api/v1/invoices/:id/copy', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
 
-    const invoiceRes = await request(app)
-      .post(INVOICES_URL)
+    const invoiceRes = await withMutationGuards(request(app)
+      .post(INVOICES_URL))
       .set('Cookie', cookies)
       .send(buildPayloadWithNotes());
     invoiceId = invoiceRes.body.data.id;
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await request(app).post(`${INVOICES_URL}/${invoiceId}/copy`);
+    const response = await withMutationGuards(request(app).post(`${INVOICES_URL}/${invoiceId}/copy`));
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
   });
 
   it('should copy a borrador invoice and return 201 with a new borrador invoice', async () => {
-    const response = await request(app)
-      .post(`${INVOICES_URL}/${invoiceId}/copy`)
+    const response = await withMutationGuards(request(app)
+      .post(`${INVOICES_URL}/${invoiceId}/copy`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
@@ -587,12 +588,12 @@ describe('POST /api/v1/invoices/:id/copy', () => {
   });
 
   it('should copy an enviada invoice and return 201 with a new borrador invoice', async () => {
-    await request(app)
-      .patch(`${INVOICES_URL}/${invoiceId}/send`)
+    await withMutationGuards(request(app)
+      .patch(`${INVOICES_URL}/${invoiceId}/send`))
       .set('Cookie', cookies);
 
-    const response = await request(app)
-      .post(`${INVOICES_URL}/${invoiceId}/copy`)
+    const response = await withMutationGuards(request(app)
+      .post(`${INVOICES_URL}/${invoiceId}/copy`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(201);
@@ -606,8 +607,8 @@ describe('POST /api/v1/invoices/:id/copy', () => {
   });
 
   it('should return 404 for non-existent invoice', async () => {
-    const response = await request(app)
-      .post(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000/copy`)
+    const response = await withMutationGuards(request(app)
+      .post(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000/copy`))
       .set('Cookie', cookies);
 
     expect(response.status).toBe(404);

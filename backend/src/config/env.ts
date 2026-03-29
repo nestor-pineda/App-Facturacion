@@ -26,7 +26,11 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().default('Facturación <noreply@facturacion.app>'),
-});
+})
+  .refine((data) => data.JWT_SECRET !== data.JWT_REFRESH_SECRET, {
+    message: 'JWT_SECRET y JWT_REFRESH_SECRET deben ser distintos',
+    path: ['JWT_REFRESH_SECRET'],
+  });
 
 const parsed = envSchema.safeParse(process.env);
 

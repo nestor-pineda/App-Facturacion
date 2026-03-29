@@ -130,7 +130,7 @@ Provoca errores intencionados (rutas inexistentes, IDs malformados, errores de D
 ### 5.3 Validar variables de entorno al arrancar el servidor
 **Categorías:** Security Misconfiguration
 
-Arranca el servidor sin `JWT_SECRET` o sin `DATABASE_URL` y verifica que la aplicación falla inmediatamente con un error claro y no arranca en un estado parcialmente configurado. El schema Zod en `src/config/env.ts` debe bloquear el arranque si falta alguna variable obligatoria.
+Arranca el servidor sin `JWT_SECRET` o sin `DATABASE_URL` y verifica que la aplicación falla inmediatamente con un error claro y no arranca en un estado parcialmente configurado. El schema Zod en `src/config/env.ts` debe bloquear el arranque si falta alguna variable obligatoria. Comprueba también que, si `JWT_SECRET` y `JWT_REFRESH_SECRET` son la misma cadena (aunque cumplan longitud mínima), el arranque falla: deben ser **dos valores distintos** de al menos 32 caracteres.
 
 ### 5.4 Agregar cabeceras de seguridad HTTP
 **Categorías:** Security Misconfiguration

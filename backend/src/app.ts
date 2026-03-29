@@ -2,6 +2,8 @@ import express, { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { BROWSER_MUTATION_HEADER_NAME } from '@/api/constants/browser-mutation.constants';
+import { browserMutationGuard } from '@/api/middlewares/browser-mutation-guard.middleware';
 import { env } from '@/config/env';
 import '@/agent/genkit.config';
 import { generalLimiter, authLimiter } from '@/api/middlewares/rate-limit.middleware';
@@ -14,14 +16,21 @@ import userRouter from '@/api/routes/user.routes';
 import agentRouter from '@/agent/agent.routes';
 
 const isDev = env.NODE_ENV === 'development';
-const allowedOrigins = env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+const allowedOrigins = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    allowedHeaders: ['Content-Type', BROWSER_MUTATION_HEADER_NAME],
+  }),
+);
 app.use(cookieParser());
 app.use(express.json());
+app.use(browserMutationGuard);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });

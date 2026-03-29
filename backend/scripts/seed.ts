@@ -15,19 +15,36 @@
  *   npx ts-node -r tsconfig-paths/register scripts/seed.ts
  */
 
+import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 
-dotenv.config();
+// Siempre backend/.env (no depende del cwd). override: true evita que un DATABASE_URL
+// residual en la shell apunte a otra instancia distinta de la que ves en tu cliente SQL.
+const envPath = path.resolve(__dirname, '../.env');
+dotenv.config({ path: envPath, override: true });
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
-  console.error('❌ DATABASE_URL no está definida en el archivo .env');
+  console.error(`❌ DATABASE_URL no está definida. Añádela en ${envPath}`);
   process.exit(1);
 }
+
+function logDatabaseTarget(urlStr: string) {
+  try {
+    const { hostname, port, pathname } = new URL(urlStr);
+    const dbName = decodeURIComponent(pathname.replace(/^\//, '') || '(sin nombre)');
+    const portPart = port ? `:${port}` : '';
+    console.log(`📡 Destino: ${hostname}${portPart} → "${dbName}" (tablas: users, clients, …)\n`);
+  } catch {
+    console.log('📡 DATABASE_URL definida; comprueba host/puerto en tu cliente SQL.\n');
+  }
+}
+
+logDatabaseTarget(DATABASE_URL);
 
 const adapter = new PrismaPg({ connectionString: DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -72,7 +89,7 @@ async function main() {
   }
 
   // ── Usuario ────────────────────────────────────────────────────────────────
-  const hashedPassword = await bcrypt.hash(SEED_USER_PASSWORD, 10);
+  const hashedPassword = await bcrypt.hash(SEED_USER_PASSWORD, 12);
 
   const user = await prisma.user.create({
     data: {
@@ -523,6 +540,12 @@ async function main() {
     });
     console.log('   ✅ Factura 5 — borrador (Alpha)');
   }
+
+  const userRows = await prisma.user.count({ where: { email: SEED_USER_EMAIL } });
+  const invoiceRows = await prisma.invoice.count({ where: { user_id: user.id } });
+  console.log(
+    `\n🔎 Lectura inmediata en esta conexión: ${userRows} usuario(s) seed, ${invoiceRows} factura(s).`,
+  );
 
   // ── Resumen ────────────────────────────────────────────────────────────────
   console.log('\n✅ Seed completado con éxito.\n');

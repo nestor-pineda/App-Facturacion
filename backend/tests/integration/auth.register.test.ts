@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
+import { withMutationGuards } from '../helpers/mutation-guard.helper';
 import app from '@/app';
 
 const REGISTER_URL = '/api/v1/auth/register';
@@ -15,7 +16,7 @@ const validPayload = {
 describe('POST /api/v1/auth/register', () => {
   it('should register a new user and return 201', async () => {
     // Act
-    const response = await request(app).post(REGISTER_URL).send(validPayload);
+    const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(validPayload);
 
     // Assert
     expect(response.status).toBe(201);
@@ -30,7 +31,7 @@ describe('POST /api/v1/auth/register', () => {
     const invalidPayload = { ...validPayload, email: 'not-an-email' };
 
     // Act
-    const response = await request(app).post(REGISTER_URL).send(invalidPayload);
+    const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(invalidPayload);
 
     // Assert
     expect(response.status).toBe(400);
@@ -43,7 +44,7 @@ describe('POST /api/v1/auth/register', () => {
     const invalidPayload = { ...validPayload, password: 'short' };
 
     // Act
-    const response = await request(app).post(REGISTER_URL).send(invalidPayload);
+    const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(invalidPayload);
 
     // Assert
     expect(response.status).toBe(400);
@@ -56,7 +57,7 @@ describe('POST /api/v1/auth/register', () => {
     const incompletePayload = { email: 'test@test.com', password: 'Password123' };
 
     // Act
-    const response = await request(app).post(REGISTER_URL).send(incompletePayload);
+    const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(incompletePayload);
 
     // Assert
     expect(response.status).toBe(400);
@@ -66,10 +67,10 @@ describe('POST /api/v1/auth/register', () => {
 
   it('should return 409 when email is already registered', async () => {
     // Arrange - first registration
-    await request(app).post(REGISTER_URL).send(validPayload);
+    await withMutationGuards(request(app).post(REGISTER_URL)).send(validPayload);
 
     // Act - second registration with the same email
-    const response = await request(app).post(REGISTER_URL).send(validPayload);
+    const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(validPayload);
 
     // Assert
     expect(response.status).toBe(409);

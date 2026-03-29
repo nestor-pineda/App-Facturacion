@@ -27,3 +27,7 @@ export const QUERY_KEYS = {
 
 /** React Hook Form: validación tras blur y luego en cada cambio (inline) */
 export const FORM_VALIDATION_MODE = 'onTouched' as const;
+
+/** Debe coincidir con backend/src/api/constants/browser-mutation.constants.ts (anti-CSRF en mutaciones). */
+export const BROWSER_MUTATION_HEADER_NAME = 'X-Requested-With';
+export const BROWSER_MUTATION_HEADER_VALUE = 'XMLHttpRequest';

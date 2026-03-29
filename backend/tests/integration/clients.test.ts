@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
+import { withMutationGuards } from '../helpers/mutation-guard.helper';
 import app from '@/app';
 import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
@@ -38,8 +39,8 @@ describe('GET /api/v1/clients', () => {
     const cookies1 = await createUserAndGetCookies();
     const cookies2 = await createSecondUserAndGetCookies();
 
-    await request(app)
-      .post(CLIENTS_URL)
+    await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies1)
       .send(validClient);
 
@@ -54,7 +55,7 @@ describe('GET /api/v1/clients', () => {
 
 describe('POST /api/v1/clients', () => {
   it('should return 401 without auth token', async () => {
-    const response = await request(app).post(CLIENTS_URL).send(validClient);
+    const response = await withMutationGuards(request(app).post(CLIENTS_URL)).send(validClient);
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
@@ -63,8 +64,8 @@ describe('POST /api/v1/clients', () => {
   it('should create a client and return 201', async () => {
     const cookies = await createUserAndGetCookies();
 
-    const response = await request(app)
-      .post(CLIENTS_URL)
+    const response = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
 
@@ -79,8 +80,8 @@ describe('POST /api/v1/clients', () => {
   it('should return 400 when required fields are missing', async () => {
     const cookies = await createUserAndGetCookies();
 
-    const response = await request(app)
-      .post(CLIENTS_URL)
+    const response = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send({ nombre: 'Solo nombre' });
 
@@ -92,8 +93,8 @@ describe('POST /api/v1/clients', () => {
   it('should return 400 with invalid email', async () => {
     const cookies = await createUserAndGetCookies();
 
-    const response = await request(app)
-      .post(CLIENTS_URL)
+    const response = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send({ ...validClient, email: 'not-an-email' });
 
@@ -106,14 +107,14 @@ describe('POST /api/v1/clients', () => {
     const duplicateEmail = 'duplicado@empresa.com';
     const clientPayload = { ...validClient, email: duplicateEmail };
 
-    await request(app)
-      .post(CLIENTS_URL)
+    await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(clientPayload)
       .expect(201);
 
-    const response = await request(app)
-      .post(CLIENTS_URL)
+    const response = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(clientPayload);
 
@@ -126,8 +127,8 @@ describe('POST /api/v1/clients', () => {
 
 describe('PUT /api/v1/clients/:id', () => {
   it('should return 401 without auth token', async () => {
-    const response = await request(app)
-      .put(`${CLIENTS_URL}/some-id`)
+    const response = await withMutationGuards(request(app)
+      .put(`${CLIENTS_URL}/some-id`))
       .send({ nombre: 'Nuevo Nombre' });
 
     expect(response.status).toBe(401);
@@ -137,15 +138,15 @@ describe('PUT /api/v1/clients/:id', () => {
   it('should update a client and return 200', async () => {
     const cookies = await createUserAndGetCookies();
 
-    const createRes = await request(app)
-      .post(CLIENTS_URL)
+    const createRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
 
     const clientId = createRes.body.data.id;
 
-    const response = await request(app)
-      .put(`${CLIENTS_URL}/${clientId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${CLIENTS_URL}/${clientId}`))
       .set('Cookie', cookies)
       .send({ ...validClient, nombre: 'Nombre Actualizado' });
 
@@ -157,8 +158,8 @@ describe('PUT /api/v1/clients/:id', () => {
   it('should return 404 when client does not exist', async () => {
     const cookies = await createUserAndGetCookies();
 
-    const response = await request(app)
-      .put(`${CLIENTS_URL}/00000000-0000-0000-0000-000000000000`)
+    const response = await withMutationGuards(request(app)
+      .put(`${CLIENTS_URL}/00000000-0000-0000-0000-000000000000`))
       .set('Cookie', cookies)
       .send(validClient);
 
@@ -170,15 +171,15 @@ describe('PUT /api/v1/clients/:id', () => {
     const cookies1 = await createUserAndGetCookies();
     const cookies2 = await createSecondUserAndGetCookies();
 
-    const createRes = await request(app)
-      .post(CLIENTS_URL)
+    const createRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies1)
       .send(validClient);
 
     const clientId = createRes.body.data.id;
 
-    const response = await request(app)
-      .put(`${CLIENTS_URL}/${clientId}`)
+    const response = await withMutationGuards(request(app)
+      .put(`${CLIENTS_URL}/${clientId}`))
       .set('Cookie', cookies2)
       .send(validClient);
 

@@ -24,6 +24,8 @@ cp .env.example .env   # Configurar variables de entorno
 npm run dev
 ```
 
+En `backend/.env`, **`JWT_SECRET` y `JWT_REFRESH_SECRET` deben ser dos cadenas distintas**, cada una de **al menos 32 caracteres**. El arranque valida esto con Zod: si copias el mismo valor en ambas, el proceso termina con error. Usa el ejemplo de `.env.example` o genera valores aleatorios distintos para cada una.
+
 Para que al pulsar **Enviar** en un presupuesto o factura se envíe un correo real al cliente, descomenta y rellena las variables SMTP en `backend/.env` (en `.env.example` tienes un bloque de ejemplo con [Mailtrap](https://mailtrap.io) para desarrollo).
 
 **Asistente IA (Genkit + Gemini):** el endpoint `POST /api/v1/agent/chat` y el widget de chat del frontend necesitan una **`GOOGLE_GENAI_API_KEY` válida** de [Google AI Studio](https://aistudio.google.com/apikey). El backend usa el plugin **`@genkit-ai/google-genai`** (no el paquete legacy `@genkit-ai/googleai`). Si la clave es un placeholder o está revocada, la API responde **503** con `code: AGENT_MISCONFIGURED`. Si Google devuelve **429** (cuota, límite de frecuencia o *spending cap*), la API responde **503** con `code: AGENT_RATE_LIMITED`. Si el modelo configurado no está disponible para tu proyecto (**404**), la API responde **503** con `code: AGENT_MODEL_UNAVAILABLE`. Tras cambiar `.env`, reinicia el backend o deja que nodemon recargue (también vigila `.env` en `npm run dev`).
@@ -172,8 +174,8 @@ El build de Vite deja el resultado en `frontend/dist/`. En Vercel (o similar) el
 | Variable | Descripción |
 |----------|-------------|
 | `DATABASE_URL` | URL de PostgreSQL (ej. Neon) |
-| `JWT_SECRET` | Secreto de al menos 32 caracteres |
-| `JWT_REFRESH_SECRET` | Otro secreto de al menos 32 caracteres |
+| `JWT_SECRET` | Secreto de ≥32 caracteres (debe ser **distinto** de `JWT_REFRESH_SECRET`; Zod lo comprueba al arrancar) |
+| `JWT_REFRESH_SECRET` | Otro secreto de ≥32 caracteres, **distinto** del anterior |
 | `ALLOWED_ORIGINS` | URL del frontend en producción (ej. `https://tu-app.vercel.app`) |
 | `PORT` | Lo suele asignar el host (ej. Render) |
 | `NODE_ENV` | `production` |

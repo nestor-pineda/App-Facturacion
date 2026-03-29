@@ -1,5 +1,6 @@
 import request from 'supertest';
 import app from '@/app';
+import { withMutationGuards } from './mutation-guard.helper';
 
 const REGISTER_URL = '/api/v1/auth/register';
 const LOGIN_URL = '/api/v1/auth/login';
@@ -23,10 +24,11 @@ const SECOND_USER = {
 export const createUserAndGetCookies = async (
   user: typeof DEFAULT_USER = DEFAULT_USER,
 ): Promise<string[]> => {
-  await request(app).post(REGISTER_URL).send(user);
-  const res = await request(app)
-    .post(LOGIN_URL)
-    .send({ email: user.email, password: user.password });
+  await withMutationGuards(request(app).post(REGISTER_URL)).send(user);
+  const res = await withMutationGuards(request(app).post(LOGIN_URL)).send({
+    email: user.email,
+    password: user.password,
+  });
   return res.headers['set-cookie'] as string[];
 };
 

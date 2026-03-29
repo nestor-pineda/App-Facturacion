@@ -1,12 +1,26 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
-import { API_BASE_PATH } from '@/lib/constants';
+import {
+  API_BASE_PATH,
+  BROWSER_MUTATION_HEADER_NAME,
+  BROWSER_MUTATION_HEADER_VALUE,
+} from '@/lib/constants';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    [BROWSER_MUTATION_HEADER_NAME]: BROWSER_MUTATION_HEADER_VALUE,
+  },
   withCredentials: true,
 });
+
+const refreshRequestConfig = {
+  withCredentials: true,
+  headers: {
+    [BROWSER_MUTATION_HEADER_NAME]: BROWSER_MUTATION_HEADER_VALUE,
+  },
+};
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -54,7 +68,7 @@ apiClient.interceptors.response.use(
         await axios.post(
           `${import.meta.env.VITE_API_URL || ''}${API_BASE_PATH}/auth/refresh`,
           {},
-          { withCredentials: true },
+          refreshRequestConfig,
         );
         processQueue(null);
         return apiClient(originalRequest);
