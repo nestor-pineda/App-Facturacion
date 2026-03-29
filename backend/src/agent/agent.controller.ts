@@ -2,6 +2,7 @@ import util from 'node:util';
 import { Request, Response } from 'express';
 import { AgentChatSchema } from '@/agent/agent.schemas';
 import { runBillingFlow } from '@/agent/flows/billing.flow';
+import { env } from '@/config/env';
 
 const ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
@@ -75,6 +76,16 @@ export async function agentChat(req: Request, res: Response) {
 
   const { message, history } = parsed.data;
   const userId = req.userId!;
+
+  if (!env.GOOGLE_GENAI_API_KEY) {
+    return res.status(503).json({
+      success: false,
+      error: {
+        message: AGENT_MISCONFIGURED_MESSAGE,
+        code: ERROR_CODES.AGENT_MISCONFIGURED,
+      },
+    });
+  }
 
   try {
     const result = await runBillingFlow(message, history, userId);

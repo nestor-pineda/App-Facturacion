@@ -5,9 +5,10 @@ import { describe, expect, it } from 'vitest';
 const BACKEND_ROOT = resolve(__dirname, '../../..');
 
 describe('GOOGLE_GENAI_API_KEY in env configuration', () => {
-  it('validates GOOGLE_GENAI_API_KEY as non-empty string in env.ts', () => {
+  it('permite GOOGLE_GENAI_API_KEY opcional (preprocess + string min(1) optional) en env.ts', () => {
     const envTs = readFileSync(resolve(BACKEND_ROOT, 'src/config/env.ts'), 'utf8');
-    expect(envTs).toMatch(/GOOGLE_GENAI_API_KEY:\s*z\.string\(\)\.min\(1/);
+    expect(envTs).toContain('GOOGLE_GENAI_API_KEY');
+    expect(envTs).toMatch(/z\.string\(\)\.min\(1\)\.optional\(\)/);
   });
 
   it('documents GOOGLE_GENAI_API_KEY in .env.example', () => {
