@@ -6,7 +6,6 @@ import { sendInvoiceEmail } from '@/services/email.service';
 export const INVOICE_NOT_FOUND = 'INVOICE_NOT_FOUND';
 export const ALREADY_SENT = 'ALREADY_SENT';
 export const INVOICE_DRAFT = 'INVOICE_DRAFT';
-export const INVOICE_NOT_SENT = 'INVOICE_NOT_SENT';
 
 const roundTwo = (n: number) => Math.round(n * 100) / 100;
 
@@ -252,8 +251,8 @@ export const resendInvoiceEmail = async (userId: string, id: string) => {
 };
 
 /**
- * Creates a new invoice in borrador with the same content as an existing sent invoice.
- * Only allowed when the source invoice is in estado 'enviada'.
+ * Creates a new invoice in borrador with the same content as an existing invoice
+ * (borrador or enviada). Uses today's date as fecha_emision for the new draft.
  */
 export const copyInvoice = async (userId: string, id: string) => {
   const invoice = await prisma.invoice.findFirst({
@@ -263,10 +262,6 @@ export const copyInvoice = async (userId: string, id: string) => {
 
   if (!invoice) {
     throw new Error(INVOICE_NOT_FOUND);
-  }
-
-  if (invoice.estado !== 'enviada') {
-    throw new Error(INVOICE_NOT_SENT);
   }
 
   const today = new Date().toISOString().slice(0, 10);

@@ -548,6 +548,105 @@ describe('PATCH /api/v1/quotes/:id/send', () => {
   });
 });
 
+describe('POST /api/v1/quotes/:id/copy', () => {
+  let cookies: string[];
+  let clientId: string;
+  let serviceId: string;
+  let quoteId: string;
+
+  const buildQuotePayload = () => ({
+    client_id: clientId,
+    fecha: '2026-03-01',
+    notas: 'Presupuesto de consultoría',
+    lines: [
+      { service_id: serviceId, descripcion: 'Consultoría web', cantidad: 5, precio_unitario: 200, iva_porcentaje: 21 },
+      { descripcion: 'Reunión de seguimiento', cantidad: 2, precio_unitario: 75, iva_porcentaje: 21 },
+    ],
+  });
+
+  beforeEach(async () => {
+    cookies = await createUserAndGetCookies();
+
+    const clientRes = await request(app)
+      .post(CLIENTS_URL)
+      .set('Cookie', cookies)
+      .send(validClient);
+    clientId = clientRes.body.data.id;
+
+    const serviceRes = await request(app)
+      .post(SERVICES_URL)
+      .set('Cookie', cookies)
+      .send(validService);
+    serviceId = serviceRes.body.data.id;
+
+    const quoteRes = await request(app)
+      .post(QUOTES_URL)
+      .set('Cookie', cookies)
+      .send(buildQuotePayload());
+    quoteId = quoteRes.body.data.id;
+  });
+
+  it('should return 401 without auth token', async () => {
+    const response = await request(app).post(`${QUOTES_URL}/${quoteId}/copy`);
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe('NO_TOKEN');
+  });
+
+  it('should copy a borrador quote and return 201 with a new borrador quote', async () => {
+    const response = await request(app)
+      .post(`${QUOTES_URL}/${quoteId}/copy`)
+      .set('Cookie', cookies);
+
+    expect(response.status).toBe(201);
+    expect(response.body.success).toBe(true);
+
+    const copy = response.body.data;
+    expect(copy.id).not.toBe(quoteId);
+    expect(copy.estado).toBe('borrador');
+    expect(copy.client_id).toBe(clientId);
+    expect(copy.notas).toBe('Presupuesto de consultoría');
+    expect(copy.lines).toHaveLength(2);
+
+    const descriptions = copy.lines.map((l: { descripcion: string }) => l.descripcion);
+    expect(descriptions).toContain('Consultoría web');
+    expect(descriptions).toContain('Reunión de seguimiento');
+    expect(Number(copy.subtotal)).toBe(1150);
+    expect(Number(copy.total)).toBeCloseTo(1391.5, 1);
+
+    const listRes = await request(app).get(QUOTES_URL).set('Cookie', cookies);
+    expect(listRes.body.data).toHaveLength(2);
+  });
+
+  it('should copy an enviado quote and return 201 with a new borrador quote', async () => {
+    await request(app)
+      .patch(`${QUOTES_URL}/${quoteId}/send`)
+      .set('Cookie', cookies);
+
+    const response = await request(app)
+      .post(`${QUOTES_URL}/${quoteId}/copy`)
+      .set('Cookie', cookies);
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.estado).toBe('borrador');
+    expect(response.body.data.id).not.toBe(quoteId);
+    expect(response.body.data.notas).toBe('Presupuesto de consultoría');
+    expect(response.body.data.lines).toHaveLength(2);
+
+    const listRes = await request(app).get(QUOTES_URL).set('Cookie', cookies);
+    expect(listRes.body.data).toHaveLength(2);
+  });
+
+  it('should return 404 for non-existent quote', async () => {
+    const response = await request(app)
+      .post(`${QUOTES_URL}/00000000-0000-0000-0000-000000000000/copy`)
+      .set('Cookie', cookies);
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+});
+
 describe('POST /api/v1/quotes/:id/convert', () => {
   let cookies: string[];
   let clientId: string;

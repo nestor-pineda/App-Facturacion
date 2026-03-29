@@ -180,12 +180,6 @@ export const copy = async (req: Request, res: Response) => {
           error: { message: 'Factura no encontrada', code: ERROR_CODES.NOT_FOUND },
         });
       }
-      if (error.message === invoiceService.INVOICE_NOT_SENT) {
-        return res.status(400).json({
-          success: false,
-          error: { message: 'Solo se puede copiar una factura enviada', code: ERROR_CODES.INTERNAL_ERROR },
-        });
-      }
     }
     return res.status(500).json({
       success: false,

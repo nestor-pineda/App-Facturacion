@@ -216,12 +216,6 @@ export const copy = async (req: Request, res: Response) => {
           error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
         });
       }
-      if (error.message === quoteService.QUOTE_NOT_SENT) {
-        return res.status(400).json({
-          success: false,
-          error: { message: 'Solo se puede copiar un presupuesto enviado', code: ERROR_CODES.INTERNAL_ERROR },
-        });
-      }
     }
     return res.status(500).json({
       success: false,

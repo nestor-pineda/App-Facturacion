@@ -469,3 +469,105 @@ describe('PATCH /api/v1/invoices/:id/send', () => {
     expect(response.body.error.code).toBe('NOT_FOUND');
   });
 });
+
+describe('POST /api/v1/invoices/:id/copy', () => {
+  let cookies: string[];
+  let clientId: string;
+  let serviceId: string;
+  let invoiceId: string;
+
+  const buildPayloadWithNotes = () => ({
+    client_id: clientId,
+    fecha_emision: '2026-02-10',
+    notas: 'Factura de prueba copia',
+    lines: [
+      {
+        service_id: serviceId,
+        descripcion: 'Servicio principal',
+        cantidad: 2,
+        precio_unitario: 150.0,
+        iva_porcentaje: 21,
+      },
+    ],
+  });
+
+  beforeEach(async () => {
+    cookies = await createUserAndGetCookies();
+
+    const clientRes = await request(app)
+      .post(CLIENTS_URL)
+      .set('Cookie', cookies)
+      .send(validClient);
+    clientId = clientRes.body.data.id;
+
+    const serviceRes = await request(app)
+      .post(SERVICES_URL)
+      .set('Cookie', cookies)
+      .send(validService);
+    serviceId = serviceRes.body.data.id;
+
+    const invoiceRes = await request(app)
+      .post(INVOICES_URL)
+      .set('Cookie', cookies)
+      .send(buildPayloadWithNotes());
+    invoiceId = invoiceRes.body.data.id;
+  });
+
+  it('should return 401 without auth token', async () => {
+    const response = await request(app).post(`${INVOICES_URL}/${invoiceId}/copy`);
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe('NO_TOKEN');
+  });
+
+  it('should copy a borrador invoice and return 201 with a new borrador invoice', async () => {
+    const response = await request(app)
+      .post(`${INVOICES_URL}/${invoiceId}/copy`)
+      .set('Cookie', cookies);
+
+    expect(response.status).toBe(201);
+    expect(response.body.success).toBe(true);
+
+    const copy = response.body.data;
+    expect(copy.id).not.toBe(invoiceId);
+    expect(copy.estado).toBe('borrador');
+    expect(copy.client_id).toBe(clientId);
+    expect(copy.notas).toBe('Factura de prueba copia');
+    expect(copy.numero).toBeNull();
+    expect(copy.lines).toHaveLength(1);
+    expect(copy.lines[0].descripcion).toBe('Servicio principal');
+    expect(Number(copy.subtotal)).toBe(300);
+    expect(Number(copy.total)).toBeCloseTo(363, 1);
+
+    const listRes = await request(app).get(INVOICES_URL).set('Cookie', cookies);
+    expect(listRes.body.data).toHaveLength(2);
+  });
+
+  it('should copy an enviada invoice and return 201 with a new borrador invoice', async () => {
+    await request(app)
+      .patch(`${INVOICES_URL}/${invoiceId}/send`)
+      .set('Cookie', cookies);
+
+    const response = await request(app)
+      .post(`${INVOICES_URL}/${invoiceId}/copy`)
+      .set('Cookie', cookies);
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.estado).toBe('borrador');
+    expect(response.body.data.id).not.toBe(invoiceId);
+    expect(response.body.data.notas).toBe('Factura de prueba copia');
+    expect(response.body.data.lines).toHaveLength(1);
+
+    const listRes = await request(app).get(INVOICES_URL).set('Cookie', cookies);
+    expect(listRes.body.data).toHaveLength(2);
+  });
+
+  it('should return 404 for non-existent invoice', async () => {
+    const response = await request(app)
+      .post(`${INVOICES_URL}/00000000-0000-0000-0000-000000000000/copy`)
+      .set('Cookie', cookies);
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+});

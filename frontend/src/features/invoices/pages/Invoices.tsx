@@ -171,6 +171,21 @@ const Invoices = () => {
                             <Download className="h-4 w-4 mr-2" />
                             {downloadPdfMutation.isPending ? t('common.downloading') : t('common.download')}
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyMutation.mutate(inv.id, {
+                                onSuccess: (res) => {
+                                  const newId = (res?.data as { id?: string })?.id;
+                                  if (newId) navigate(`/invoices/${newId}`);
+                                },
+                              });
+                            }}
+                            disabled={copyMutation.isPending}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            {copyMutation.isPending ? t('common.saving') : t('invoices.detail.copyInvoice')}
+                          </DropdownMenuItem>
                         </>
                       )}
                       {inv.estado === ESTADO_ENVIADA && (

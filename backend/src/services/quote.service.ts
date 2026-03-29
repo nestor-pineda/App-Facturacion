@@ -4,7 +4,6 @@ import { sendQuoteEmail } from '@/services/email.service';
 
 export const QUOTE_NOT_FOUND = 'QUOTE_NOT_FOUND';
 export const QUOTE_ALREADY_SENT = 'QUOTE_ALREADY_SENT';
-export const QUOTE_NOT_SENT = 'QUOTE_NOT_SENT';
 
 export const getById = async (userId: string, id: string) => {
   const quote = await prisma.quote.findFirst({
@@ -280,8 +279,8 @@ export const resendQuoteEmail = async (userId: string, id: string) => {
 };
 
 /**
- * Creates a new quote in borrador with the same content as an existing sent quote.
- * Only allowed when the source quote is in estado 'enviado'.
+ * Creates a new quote in borrador with the same content as an existing quote
+ * (borrador or enviado).
  */
 export const copyQuote = async (userId: string, id: string) => {
   const quote = await prisma.quote.findFirst({
@@ -291,10 +290,6 @@ export const copyQuote = async (userId: string, id: string) => {
 
   if (!quote) {
     throw new Error(QUOTE_NOT_FOUND);
-  }
-
-  if (quote.estado !== 'enviado') {
-    throw new Error(QUOTE_NOT_SENT);
   }
 
   const data: CreateQuoteInput = {

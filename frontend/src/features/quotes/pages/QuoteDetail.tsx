@@ -40,6 +40,13 @@ export default function QuoteDetail() {
 
   const isDraft = quote.estado === ESTADO_BORRADOR;
 
+  const copyToNewDraft = () =>
+    copyMutation.mutate(quote.id, {
+      onSuccess: (res) => {
+        if (res?.data?.id) navigate(`/quotes/${res.data.id}`);
+      },
+    });
+
   return (
     <div className="page-container max-w-3xl mx-auto">
       <div className="page-header">
@@ -114,6 +121,15 @@ export default function QuoteDetail() {
           </Button>
           {isDraft && (
             <>
+              <Button
+                variant="outline"
+                className="bg-gray-200 text-gray-800 border-gray-300 hover:bg-gray-300 hover:text-gray-900"
+                onClick={copyToNewDraft}
+                disabled={copyMutation.isPending}
+              >
+                <Copy className="h-4 w-4 mr-1" />
+                {copyMutation.isPending ? t('common.saving') : t('quotes.detail.copyQuote')}
+              </Button>
               <Button variant="outline" onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
                 <Pencil className="h-4 w-4 mr-1" /> {t('common.edit')}
               </Button>
@@ -130,13 +146,7 @@ export default function QuoteDetail() {
               <Button
                 variant="outline"
                 className="bg-gray-200 text-gray-800 border-gray-300 hover:bg-gray-300 hover:text-gray-900"
-                onClick={() =>
-                  copyMutation.mutate(quote.id, {
-                    onSuccess: (res) => {
-                      if (res?.data?.id) navigate(`/quotes/${res.data.id}`);
-                    },
-                  })
-                }
+                onClick={copyToNewDraft}
                 disabled={copyMutation.isPending}
               >
                 <Copy className="h-4 w-4 mr-1" />
