@@ -2,7 +2,7 @@ import {
   wrapHtml,
   renderLinesTable,
   renderTotals,
-  formatDate,
+  formatDateDashDMY,
   escapeHtml,
   type EmailLine,
 } from '@/templates/email/shared';
@@ -24,25 +24,39 @@ export interface InvoiceTemplateData {
 export const renderInvoiceEmailHtml = (data: InvoiceTemplateData): string => {
   const { client, user, invoice } = data;
 
+  const titleText = invoice.numero
+    ? `Factura ${escapeHtml(invoice.numero)}`
+    : 'Factura';
+
   const body = `
-    <div class="header">
-      <h1>Factura ${invoice.numero ? escapeHtml(invoice.numero) : ''}</h1>
-      <p>${escapeHtml(user.nombre_comercial)} &mdash; Fecha: ${formatDate(invoice.fecha_emision)}</p>
+    <div class="doc-header">
+      <h1>${titleText}</h1>
+      <p class="doc-subtitle">${escapeHtml(client.nombre)}</p>
     </div>
-    <div class="body">
-      <p class="greeting">Estimado/a <strong>${escapeHtml(client.nombre)}</strong>,</p>
-      <p>Le remitimos la siguiente factura por los servicios prestados:</p>
-      ${renderLinesTable(invoice.lines)}
-      ${renderTotals(invoice.subtotal, invoice.total_iva, invoice.total)}
-      ${
-        invoice.notas
-          ? `<div class="notes"><strong>Notas:</strong><br>${escapeHtml(invoice.notas)}</div>`
-          : ''
-      }
-      <p style="margin-top:24px;font-size:13px;color:#555;">
-        Emitido por: <strong>${escapeHtml(user.nombre_comercial)}</strong> &mdash; NIF: ${escapeHtml(user.nif)}
-      </p>
-    </div>`;
+    <table class="meta-grid" role="presentation">
+      <tr>
+        <td>
+          <span class="meta-label">Fecha:</span>
+          <span class="meta-value">${formatDateDashDMY(invoice.fecha_emision)}</span>
+        </td>
+        <td>
+          <span class="meta-label">Cliente:</span>
+          <span class="meta-value">${escapeHtml(client.nombre)}</span>
+        </td>
+      </tr>
+    </table>
+    <p class="intro">Estimado/a <strong>${escapeHtml(client.nombre)}</strong>,</p>
+    <p class="intro-secondary">Le remitimos la siguiente factura por los servicios prestados:</p>
+    ${renderLinesTable(invoice.lines)}
+    ${renderTotals(invoice.subtotal, invoice.total_iva, invoice.total)}
+    ${
+      invoice.notas
+        ? `<div class="notes-box"><strong>Notas:</strong><br>${escapeHtml(invoice.notas)}</div>`
+        : ''
+    }
+    <p class="issuer-line">
+      Emitido por: <strong>${escapeHtml(user.nombre_comercial)}</strong> &mdash; NIF: ${escapeHtml(user.nif)}
+    </p>`;
 
   return wrapHtml(`Factura ${invoice.numero ?? ''} de ${user.nombre_comercial}`, body);
 };
