@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
 import { createInvoiceSchema, updateInvoiceSchema } from '@/api/schemas/document.schema';
+import {
+  RELATED_CLIENT_NOT_FOUND,
+  RELATED_SERVICE_NOT_FOUND,
+} from '@/services/document-ownership.service';
 import * as invoiceService from '@/services/invoice.service';
 
 const ERROR_CODES = {
@@ -45,7 +49,19 @@ export const create = async (req: Request, res: Response) => {
   try {
     const invoice = await invoiceService.create(req.user!.id, parsed.data);
     return res.status(201).json({ success: true, data: invoice });
-  } catch {
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.message === RELATED_CLIENT_NOT_FOUND || error.message === RELATED_SERVICE_NOT_FOUND)
+    ) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Cliente o servicio no encontrado o no pertenece a tu cuenta.',
+          code: ERROR_CODES.NOT_FOUND,
+        },
+      });
+    }
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -83,6 +99,16 @@ export const update = async (req: Request, res: Response) => {
         return res.status(409).json({
           success: false,
           error: { message: 'La factura ya fue enviada y no puede modificarse', code: ERROR_CODES.ALREADY_SENT },
+        });
+      }
+
+      if (error.message === RELATED_CLIENT_NOT_FOUND || error.message === RELATED_SERVICE_NOT_FOUND) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: 'Cliente o servicio no encontrado o no pertenece a tu cuenta.',
+            code: ERROR_CODES.NOT_FOUND,
+          },
         });
       }
     }

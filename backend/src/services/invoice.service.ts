@@ -1,5 +1,6 @@
 import { prisma } from '@/config/database';
 import type { CreateInvoiceInput, DocumentLineInput, UpdateInvoiceInput } from '@/api/schemas/document.schema';
+import { assertDocumentRefsForUser } from '@/services/document-ownership.service';
 import { generateInvoiceNumber } from '@/services/numbering.service';
 import { sendInvoiceEmail } from '@/services/email.service';
 
@@ -73,6 +74,7 @@ export const list = async (userId: string, filters: InvoiceFilters = {}) => {
 };
 
 export const create = async (userId: string, data: CreateInvoiceInput) => {
+  await assertDocumentRefsForUser(prisma, userId, data.client_id, data.lines);
   const totals = calculateDocumentTotals(data.lines);
 
   return prisma.invoice.create({
@@ -115,6 +117,8 @@ export const update = async (userId: string, id: string, data: UpdateInvoiceInpu
     if (invoice.estado !== 'borrador') {
       throw new Error(ALREADY_SENT);
     }
+
+    await assertDocumentRefsForUser(tx, userId, data.client_id, data.lines);
 
     await tx.invoiceLine.deleteMany({ where: { invoice_id: id } });
     return tx.invoice.update({

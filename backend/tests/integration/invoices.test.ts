@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '@/app';
-import { createUserAndGetCookies } from '../helpers/auth.helper';
+import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
 vi.mock('@/services/email.service', () => ({
   sendQuoteEmail: vi.fn().mockResolvedValue(undefined),
@@ -165,6 +165,49 @@ describe('POST /api/v1/invoices', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('should return 404 when client_id belongs to another user', async () => {
+    const otherCookies = await createSecondUserAndGetCookies();
+    const otherClientRes = await request(app)
+      .post(CLIENTS_URL)
+      .set('Cookie', otherCookies)
+      .send({
+        nombre: 'Empresa Otra',
+        email: 'cliente-otro-usuario@test.com',
+        cif_nif: 'B11111111',
+        direccion: 'Calle Otra 1',
+      });
+    expect(otherClientRes.status).toBe(201);
+
+    const response = await request(app)
+      .post(INVOICES_URL)
+      .set('Cookie', cookies)
+      .send(buildInvoicePayload(otherClientRes.body.data.id, serviceId));
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('should return 404 when service_id belongs to another user', async () => {
+    const otherCookies = await createSecondUserAndGetCookies();
+    const otherServiceRes = await request(app)
+      .post(SERVICES_URL)
+      .set('Cookie', otherCookies)
+      .send({
+        nombre: 'Servicio otro usuario',
+        precio_base: 50,
+        iva_porcentaje: 21,
+      });
+    expect(otherServiceRes.status).toBe(201);
+
+    const response = await request(app)
+      .post(INVOICES_URL)
+      .set('Cookie', cookies)
+      .send(buildInvoicePayload(clientId, otherServiceRes.body.data.id));
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe('NOT_FOUND');
   });
 });
 

@@ -1,5 +1,6 @@
 import { prisma } from '@/config/database';
 import type { CreateQuoteInput, DocumentLineInput, UpdateQuoteInput } from '@/api/schemas/document.schema';
+import { assertDocumentRefsForUser } from '@/services/document-ownership.service';
 import { sendQuoteEmail } from '@/services/email.service';
 
 export const QUOTE_NOT_FOUND = 'QUOTE_NOT_FOUND';
@@ -71,6 +72,7 @@ const calculateDocumentTotals = (lines: DocumentLineInput[]) => {
 };
 
 export const create = async (userId: string, data: CreateQuoteInput) => {
+  await assertDocumentRefsForUser(prisma, userId, data.client_id, data.lines);
   const totals = calculateDocumentTotals(data.lines);
 
   return prisma.quote.create({
@@ -113,6 +115,8 @@ export const update = async (userId: string, id: string, data: UpdateQuoteInput)
     if (quote.estado !== 'borrador') {
       throw new Error(QUOTE_ALREADY_SENT);
     }
+
+    await assertDocumentRefsForUser(tx, userId, data.client_id, data.lines);
 
     await tx.quoteLine.deleteMany({ where: { quote_id: id } });
     return tx.quote.update({
@@ -166,6 +170,8 @@ export const convertToInvoice = async (userId: string, quoteId: string, fechaEmi
   if (!quote) {
     throw new Error(QUOTE_NOT_FOUND);
   }
+
+  await assertDocumentRefsForUser(prisma, userId, quote.client_id, quote.lines);
 
   return prisma.invoice.create({
     data: {

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '@/app';
-import { createUserAndGetCookies } from '../helpers/auth.helper';
+import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
 vi.mock('@/services/email.service', () => ({
   sendQuoteEmail: vi.fn().mockResolvedValue(undefined),
@@ -125,6 +125,73 @@ describe('POST /api/v1/quotes', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('should return 404 when client_id belongs to another user', async () => {
+    const otherCookies = await createSecondUserAndGetCookies();
+    const otherClientRes = await request(app)
+      .post(CLIENTS_URL)
+      .set('Cookie', otherCookies)
+      .send({
+        nombre: 'Empresa Otra Quote',
+        email: 'cliente-quote-otro@test.com',
+        cif_nif: 'B22222222',
+        direccion: 'Calle Otra 2',
+      });
+    expect(otherClientRes.status).toBe(201);
+
+    const response = await request(app)
+      .post(QUOTES_URL)
+      .set('Cookie', cookies)
+      .send({
+        client_id: otherClientRes.body.data.id,
+        fecha: '2026-01-15',
+        lines: [
+          {
+            service_id: serviceId,
+            descripcion: 'Línea',
+            cantidad: 1,
+            precio_unitario: 100,
+            iva_porcentaje: 21,
+          },
+        ],
+      });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('should return 404 when service_id belongs to another user', async () => {
+    const otherCookies = await createSecondUserAndGetCookies();
+    const otherServiceRes = await request(app)
+      .post(SERVICES_URL)
+      .set('Cookie', otherCookies)
+      .send({
+        nombre: 'Servicio quote otro usuario',
+        precio_base: 99,
+        iva_porcentaje: 21,
+      });
+    expect(otherServiceRes.status).toBe(201);
+
+    const response = await request(app)
+      .post(QUOTES_URL)
+      .set('Cookie', cookies)
+      .send({
+        client_id: clientId,
+        fecha: '2026-01-15',
+        lines: [
+          {
+            service_id: otherServiceRes.body.data.id,
+            descripcion: 'Línea',
+            cantidad: 1,
+            precio_unitario: 100,
+            iva_porcentaje: 21,
+          },
+        ],
+      });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe('NOT_FOUND');
   });
 });
 
