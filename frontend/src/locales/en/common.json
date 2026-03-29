@@ -366,6 +366,7 @@
     "pdfDownloadError": "Error downloading PDF",
     "accountCreated": "Account created. Please sign in.",
     "loginError": "Error signing in",
+    "loginFailedGeneric": "Unable to sign in.",
     "registerError": "Error registering",
     "profileUpdated": "Profile updated successfully",
     "profileUpdateError": "Error updating profile"

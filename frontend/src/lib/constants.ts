@@ -8,6 +8,7 @@ export const ESTADO_ENVIADO = 'enviado' as const;
 export const API_BASE_PATH = '/api/v1';
 
 export const API_ERROR_CODES = {
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   NO_TOKEN: 'NO_TOKEN',
   INVALID_TOKEN: 'INVALID_TOKEN',
   ALREADY_SENT: 'ALREADY_SENT',

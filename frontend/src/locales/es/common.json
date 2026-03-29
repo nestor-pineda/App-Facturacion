@@ -366,6 +366,7 @@
     "pdfDownloadError": "Error al descargar PDF",
     "accountCreated": "Cuenta creada correctamente. Inicia sesión.",
     "loginError": "Error al iniciar sesión",
+    "loginFailedGeneric": "No ha sido posible hacer login.",
     "registerError": "Error al registrar",
     "profileUpdated": "Perfil actualizado correctamente",
     "profileUpdateError": "Error al actualizar el perfil"

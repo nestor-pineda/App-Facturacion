@@ -31,6 +31,10 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (originalRequest.url?.includes('/auth/login')) {
+        return Promise.reject(error);
+      }
+
       if (originalRequest.url?.includes('/auth/refresh')) {
         useAuthStore.getState().logout();
         window.location.href = '/login';

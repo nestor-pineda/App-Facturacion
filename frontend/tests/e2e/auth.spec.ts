@@ -18,6 +18,17 @@ test.describe('Auth', () => {
     await expect(page.getByRole('heading', { name: /Dashboard/i })).toBeVisible({ timeout: 20_000 });
   });
 
+  test('login with wrong password shows generic error toast', async ({ page }) => {
+    const user = await registerNewUser(page);
+    await page.locator('#email').fill(user.email);
+    await page.locator('#password').fill('definitely-wrong-password');
+    await page.getByRole('button', { name: /Iniciar sesión|Sign in/i }).click();
+    await expect(page).toHaveURL(/\/login/);
+    await expect(
+      page.getByText(/No ha sido posible hacer login\.|Unable to sign in\./),
+    ).toBeVisible({ timeout: 15_000 });
+  });
+
   test('logout redirects to login', async ({ page }) => {
     await registerAndLogin(page);
     await expect(page).toHaveURL('/');

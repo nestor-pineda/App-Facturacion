@@ -13,8 +13,7 @@ import { Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import i18next from 'i18next';
-import { getApiErrorMessage } from '@/lib/api-error';
+import { getApiErrorMessage, isInvalidCredentialsError } from '@/lib/api-error';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -38,7 +37,11 @@ export default function Login() {
       login(res.data.user);
       navigate('/');
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, i18next.t('toast.loginError')));
+      const message = isInvalidCredentialsError(err)
+        ? t('toast.loginFailedGeneric')
+        : getApiErrorMessage(err, t('toast.loginError'));
+      console.warn(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
