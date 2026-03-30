@@ -83,7 +83,7 @@ describe('POST /api/v1/quotes', () => {
     expect(Number(response.body.data.total)).toBeCloseTo(242, 1);
   });
 
-  it('should store snapshot data on lines (not live service data)', async () => {
+  it('should snapshot descripcion, precio and IVA from catalog when service_id is present', async () => {
     const response = await withMutationGuards(request(app)
       .post(QUOTES_URL))
       .set('Cookie', cookies)
@@ -93,7 +93,7 @@ describe('POST /api/v1/quotes', () => {
         lines: [
           {
             service_id: serviceId,
-            descripcion: 'Descripción snapshot',
+            descripcion: 'Texto del cliente ignorado',
             cantidad: 1,
             precio_unitario: 50.0,
             iva_porcentaje: 10,
@@ -103,7 +103,31 @@ describe('POST /api/v1/quotes', () => {
 
     expect(response.status).toBe(201);
     const line = response.body.data.lines[0];
-    expect(line.descripcion).toBe('Descripción snapshot');
+    expect(line.descripcion).toBe('Consultoría');
+    expect(Number(line.precio_unitario)).toBe(100);
+    expect(Number(line.iva_porcentaje)).toBe(21);
+  });
+
+  it('should keep client-supplied amounts when service_id is omitted (manual line)', async () => {
+    const response = await withMutationGuards(request(app)
+      .post(QUOTES_URL))
+      .set('Cookie', cookies)
+      .send({
+        client_id: clientId,
+        fecha: '2026-01-15',
+        lines: [
+          {
+            descripcion: 'Línea manual',
+            cantidad: 1,
+            precio_unitario: 50.0,
+            iva_porcentaje: 10,
+          },
+        ],
+      });
+
+    expect(response.status).toBe(201);
+    const line = response.body.data.lines[0];
+    expect(line.descripcion).toBe('Línea manual');
     expect(Number(line.precio_unitario)).toBe(50);
     expect(Number(line.iva_porcentaje)).toBe(10);
   });
@@ -378,7 +402,7 @@ describe('PUT /api/v1/quotes/:id', () => {
       fecha: '2026-06-01',
       notas: 'Nota actualizada',
       lines: [
-        { service_id: serviceId, descripcion: 'Servicio actualizado', cantidad: 3, precio_unitario: 200, iva_porcentaje: 10 },
+        { descripcion: 'Servicio actualizado', cantidad: 3, precio_unitario: 200, iva_porcentaje: 10 },
       ],
     };
 
@@ -677,10 +701,10 @@ describe('POST /api/v1/quotes/:id/copy', () => {
     expect(copy.lines).toHaveLength(2);
 
     const descriptions = copy.lines.map((l: { descripcion: string }) => l.descripcion);
-    expect(descriptions).toContain('Consultoría web');
+    expect(descriptions).toContain('Consultoría');
     expect(descriptions).toContain('Reunión de seguimiento');
-    expect(Number(copy.subtotal)).toBe(1150);
-    expect(Number(copy.total)).toBeCloseTo(1391.5, 1);
+    expect(Number(copy.subtotal)).toBe(650);
+    expect(Number(copy.total)).toBeCloseTo(786.5, 1);
 
     const listRes = await request(app).get(QUOTES_URL).set('Cookie', cookies);
     expect(listRes.body.data).toHaveLength(2);
@@ -772,9 +796,9 @@ describe('POST /api/v1/quotes/:id/convert', () => {
     expect(invoice.estado).toBe('borrador');
     expect(invoice.numero).toBeNull();
     expect(invoice.client_id).toBe(clientId);
-    expect(Number(invoice.subtotal)).toBe(1150);
-    expect(Number(invoice.total_iva)).toBeCloseTo(241.5, 1);
-    expect(Number(invoice.total)).toBeCloseTo(1391.5, 1);
+    expect(Number(invoice.subtotal)).toBe(650);
+    expect(Number(invoice.total_iva)).toBeCloseTo(136.5, 1);
+    expect(Number(invoice.total)).toBeCloseTo(786.5, 1);
     expect(invoice.notas).toBe('Presupuesto de consultoría');
     expect(invoice.lines).toHaveLength(2);
   });
@@ -787,9 +811,9 @@ describe('POST /api/v1/quotes/:id/convert', () => {
     expect(response.status).toBe(201);
     const lines = response.body.data.lines;
     const descriptions = lines.map((l: { descripcion: string }) => l.descripcion);
-    expect(descriptions).toContain('Consultoría web');
+    expect(descriptions).toContain('Consultoría');
     expect(descriptions).toContain('Reunión de seguimiento');
-    expect(Number(lines.find((l: { descripcion: string }) => l.descripcion === 'Consultoría web').subtotal)).toBe(1000);
+    expect(Number(lines.find((l: { descripcion: string }) => l.descripcion === 'Consultoría').subtotal)).toBe(500);
     expect(Number(lines.find((l: { descripcion: string }) => l.descripcion === 'Reunión de seguimiento').subtotal)).toBe(150);
   });
 

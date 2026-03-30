@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 import {
   parseInvoiceListQuery,
@@ -16,6 +17,7 @@ const ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   NOT_FOUND: 'NOT_FOUND',
   ALREADY_SENT: 'ALREADY_SENT',
+  NUMERO_CONFLICT: 'NUMERO_CONFLICT',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;
 
@@ -183,6 +185,16 @@ export const send = async (req: Request, res: Response) => {
     const invoice = await invoiceService.send(req.user!.id, paramsParsed.data.id);
     return res.status(200).json({ success: true, data: invoice });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return res.status(409).json({
+        success: false,
+        error: {
+          message: 'No se pudo asignar un número de factura único. Vuelve a intentarlo.',
+          code: ERROR_CODES.NUMERO_CONFLICT,
+        },
+      });
+    }
+
     if (error instanceof Error) {
       if (error.message === invoiceService.INVOICE_NOT_FOUND) {
         return res.status(404).json({
@@ -195,6 +207,16 @@ export const send = async (req: Request, res: Response) => {
         return res.status(409).json({
           success: false,
           error: { message: 'Factura ya enviada', code: ERROR_CODES.ALREADY_SENT },
+        });
+      }
+
+      if (error.message === invoiceService.INVOICE_NUMERO_ASSIGNMENT_EXHAUSTED) {
+        return res.status(409).json({
+          success: false,
+          error: {
+            message: 'No se pudo asignar un número de factura único. Vuelve a intentarlo.',
+            code: ERROR_CODES.NUMERO_CONFLICT,
+          },
         });
       }
     }

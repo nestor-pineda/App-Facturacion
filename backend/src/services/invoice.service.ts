@@ -1,12 +1,18 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/config/database';
 import type { CreateInvoiceInput, DocumentLineInput, UpdateInvoiceInput } from '@/api/schemas/document.schema';
 import { assertDocumentRefsForUser } from '@/services/document-ownership.service';
+import { applyCatalogSnapshotsToDocumentLines } from '@/services/document-line-snapshot.service';
 import { generateInvoiceNumber } from '@/services/numbering.service';
 import { sendInvoiceEmail } from '@/services/email.service';
 
 export const INVOICE_NOT_FOUND = 'INVOICE_NOT_FOUND';
 export const ALREADY_SENT = 'ALREADY_SENT';
 export const INVOICE_DRAFT = 'INVOICE_DRAFT';
+/** Internal invariant: numbering loop should return before hitting this. */
+export const INVOICE_NUMERO_ASSIGNMENT_EXHAUSTED = 'INVOICE_NUMERO_ASSIGNMENT_EXHAUSTED';
+
+const NUMERO_ASSIGNMENT_MAX_ATTEMPTS = 8;
 
 const roundTwo = (n: number) => Math.round(n * 100) / 100;
 
@@ -75,7 +81,8 @@ export const list = async (userId: string, filters: InvoiceFilters = {}) => {
 
 export const create = async (userId: string, data: CreateInvoiceInput) => {
   await assertDocumentRefsForUser(prisma, userId, data.client_id, data.lines);
-  const totals = calculateDocumentTotals(data.lines);
+  const lines = await applyCatalogSnapshotsToDocumentLines(prisma, userId, data.lines);
+  const totals = calculateDocumentTotals(lines);
 
   return prisma.invoice.create({
     data: {
@@ -87,7 +94,7 @@ export const create = async (userId: string, data: CreateInvoiceInput) => {
       total_iva: totals.total_iva,
       total: totals.total,
       lines: {
-        create: data.lines.map((line) => {
+        create: lines.map((line) => {
           const { subtotal } = calculateLineTotals(line);
           return {
             service_id: line.service_id,
@@ -105,8 +112,6 @@ export const create = async (userId: string, data: CreateInvoiceInput) => {
 };
 
 export const update = async (userId: string, id: string, data: UpdateInvoiceInput) => {
-  const totals = calculateDocumentTotals(data.lines);
-
   return prisma.$transaction(async (tx: typeof prisma) => {
     const invoice = await tx.invoice.findFirst({ where: { id, user_id: userId } });
 
@@ -119,6 +124,8 @@ export const update = async (userId: string, id: string, data: UpdateInvoiceInpu
     }
 
     await assertDocumentRefsForUser(tx, userId, data.client_id, data.lines);
+    const lines = await applyCatalogSnapshotsToDocumentLines(tx, userId, data.lines);
+    const totals = calculateDocumentTotals(lines);
 
     await tx.invoiceLine.deleteMany({ where: { invoice_id: id } });
     return tx.invoice.update({
@@ -131,7 +138,7 @@ export const update = async (userId: string, id: string, data: UpdateInvoiceInpu
         total_iva: totals.total_iva,
         total: totals.total,
         lines: {
-          create: data.lines.map((line) => {
+          create: lines.map((line) => {
             const { subtotal } = calculateLineTotals(line);
             return {
               service_id: line.service_id,
@@ -177,13 +184,25 @@ export const send = async (userId: string, id: string) => {
     throw new Error(ALREADY_SENT);
   }
 
-  const numero = await generateInvoiceNumber(userId);
-
-  const sent = await prisma.invoice.update({
-    where: { id },
-    data: { estado: 'enviada', numero },
-    include: { lines: true },
-  });
+  const sent = await (async () => {
+    for (let attempt = 0; attempt < NUMERO_ASSIGNMENT_MAX_ATTEMPTS; attempt++) {
+      const numero = await generateInvoiceNumber(userId);
+      try {
+        return await prisma.invoice.update({
+          where: { id },
+          data: { estado: 'enviada', numero },
+          include: { lines: true },
+        });
+      } catch (err) {
+        const isUniqueViolation =
+          err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002';
+        if (!isUniqueViolation || attempt === NUMERO_ASSIGNMENT_MAX_ATTEMPTS - 1) {
+          throw err;
+        }
+      }
+    }
+    throw new Error(INVOICE_NUMERO_ASSIGNMENT_EXHAUSTED);
+  })();
 
   try {
     await sendInvoiceEmail({

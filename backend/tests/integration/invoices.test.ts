@@ -272,7 +272,7 @@ describe('PUT /api/v1/invoices/:id', () => {
       fecha_emision: '2026-07-01',
       notas: 'Nota actualizada',
       lines: [
-        { service_id: serviceId, descripcion: 'Servicio actualizado', cantidad: 2, precio_unitario: 300, iva_porcentaje: 10 },
+        { descripcion: 'Servicio actualizado', cantidad: 2, precio_unitario: 300, iva_porcentaje: 10 },
       ],
     };
 
@@ -588,9 +588,9 @@ describe('POST /api/v1/invoices/:id/copy', () => {
     expect(copy.notas).toBe('Factura de prueba copia');
     expect(copy.numero).toBeNull();
     expect(copy.lines).toHaveLength(1);
-    expect(copy.lines[0].descripcion).toBe('Servicio principal');
-    expect(Number(copy.subtotal)).toBe(300);
-    expect(Number(copy.total)).toBeCloseTo(363, 1);
+    expect(copy.lines[0].descripcion).toBe('Diseño web');
+    expect(Number(copy.subtotal)).toBe(400);
+    expect(Number(copy.total)).toBeCloseTo(484, 1);
 
     const listRes = await request(app).get(INVOICES_URL).set('Cookie', cookies);
     expect(listRes.body.data).toHaveLength(2);

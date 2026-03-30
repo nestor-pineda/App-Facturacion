@@ -1,6 +1,7 @@
 import { prisma } from '@/config/database';
 import type { CreateQuoteInput, DocumentLineInput, UpdateQuoteInput } from '@/api/schemas/document.schema';
 import { assertDocumentRefsForUser } from '@/services/document-ownership.service';
+import { applyCatalogSnapshotsToDocumentLines } from '@/services/document-line-snapshot.service';
 import { sendQuoteEmail } from '@/services/email.service';
 
 export const QUOTE_NOT_FOUND = 'QUOTE_NOT_FOUND';
@@ -73,7 +74,8 @@ const calculateDocumentTotals = (lines: DocumentLineInput[]) => {
 
 export const create = async (userId: string, data: CreateQuoteInput) => {
   await assertDocumentRefsForUser(prisma, userId, data.client_id, data.lines);
-  const totals = calculateDocumentTotals(data.lines);
+  const lines = await applyCatalogSnapshotsToDocumentLines(prisma, userId, data.lines);
+  const totals = calculateDocumentTotals(lines);
 
   return prisma.quote.create({
     data: {
@@ -85,7 +87,7 @@ export const create = async (userId: string, data: CreateQuoteInput) => {
       total_iva: totals.total_iva,
       total: totals.total,
       lines: {
-        create: data.lines.map((line) => {
+        create: lines.map((line) => {
           const { subtotal } = calculateLineTotals(line);
           return {
             service_id: line.service_id,
@@ -103,8 +105,6 @@ export const create = async (userId: string, data: CreateQuoteInput) => {
 };
 
 export const update = async (userId: string, id: string, data: UpdateQuoteInput) => {
-  const totals = calculateDocumentTotals(data.lines);
-
   return prisma.$transaction(async (tx: typeof prisma) => {
     const quote = await tx.quote.findFirst({ where: { id, user_id: userId } });
 
@@ -117,6 +117,8 @@ export const update = async (userId: string, id: string, data: UpdateQuoteInput)
     }
 
     await assertDocumentRefsForUser(tx, userId, data.client_id, data.lines);
+    const lines = await applyCatalogSnapshotsToDocumentLines(tx, userId, data.lines);
+    const totals = calculateDocumentTotals(lines);
 
     await tx.quoteLine.deleteMany({ where: { quote_id: id } });
     return tx.quote.update({
@@ -129,7 +131,7 @@ export const update = async (userId: string, id: string, data: UpdateQuoteInput)
         total_iva: totals.total_iva,
         total: totals.total,
         lines: {
-          create: data.lines.map((line) => {
+          create: lines.map((line) => {
             const { subtotal } = calculateLineTotals(line);
             return {
               service_id: line.service_id,
