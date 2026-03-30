@@ -201,6 +201,8 @@ Si no defines `VITE_API_URL`, el frontend asumirá peticiones relativas a `/api`
 
 (O incluir `prisma migrate deploy` en un script de start si prefieres ejecutarlo en cada arranque.)
 
+En el **panel Environment de Render** debes definir **todas** las variables obligatorias del backend; en el servidor no hay `.env` (el log `injecting env (0) from .env` es normal). Si al arrancar ves `SEND_CONFIRMATION_SECRET":["Required"]` u otro campo en `Variables de entorno inválidas`, falta esa clave en el panel: añade `SEND_CONFIRMATION_SECRET` (≥32 caracteres, **distinta** de `JWT_SECRET` y `JWT_REFRESH_SECRET`).
+
 **Frontend (ej. Vercel):**
 
 - **Build Command:** `npm run build`
