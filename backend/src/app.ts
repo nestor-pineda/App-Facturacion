@@ -16,15 +16,20 @@ import userRouter from '@/api/routes/user.routes';
 import agentRouter from '@/agent/agent.routes';
 
 const isDev = env.NODE_ENV === 'development';
-const allowedOrigins = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
+
+/** Métodos que expone la API REST (OPTIONS lo usa el preflight CORS). */
+const CORS_ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] as const;
+
+const UNHANDLED_ERROR_LOG_LABEL = '[express] Unhandled error';
 
 const app = express();
 
 app.use(helmet());
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: env.ALLOWED_ORIGINS,
     credentials: true,
+    methods: [...CORS_ALLOWED_METHODS],
     allowedHeaders: ['Content-Type', BROWSER_MUTATION_HEADER_NAME],
   }),
 );
@@ -49,6 +54,7 @@ app.use((_req, res) => {
 });
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(UNHANDLED_ERROR_LOG_LABEL, err);
   res.status(500).json({
     success: false,
     error: {

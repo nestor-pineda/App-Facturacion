@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '@/app';
 import { BROWSER_MUTATION_HEADER_NAME, BROWSER_MUTATION_HEADER_VALUE } from '@/api/constants/browser-mutation.constants';
-import { parseAllowedOriginsList } from '@/api/middlewares/browser-mutation-guard.middleware';
 import { env } from '@/config/env';
 import { withMutationGuards } from '../helpers/mutation-guard.helper';
 
@@ -17,7 +16,7 @@ const validUser = {
 };
 
 describe('Browser mutation guard (Origin + X-Requested-With)', () => {
-  const allowedOriginsList = parseAllowedOriginsList(env.ALLOWED_ORIGINS);
+  const allowedOriginsList = env.ALLOWED_ORIGINS;
   const [allowedOrigin] = allowedOriginsList;
   if (allowedOrigin === undefined) {
     throw new Error(

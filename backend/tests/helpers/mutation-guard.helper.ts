@@ -1,11 +1,9 @@
 import type { Test } from 'supertest';
 import { BROWSER_MUTATION_HEADER_NAME, BROWSER_MUTATION_HEADER_VALUE } from '@/api/constants/browser-mutation.constants';
-import { parseAllowedOriginsList } from '@/api/middlewares/browser-mutation-guard.middleware';
 import { env } from '@/config/env';
 
 const primaryAllowedOrigin = (): string => {
-  const list = parseAllowedOriginsList(env.ALLOWED_ORIGINS);
-  const first = list[0];
+  const first = env.ALLOWED_ORIGINS[0];
   if (!first) {
     throw new Error('ALLOWED_ORIGINS debe definir al menos un origen para tests');
   }

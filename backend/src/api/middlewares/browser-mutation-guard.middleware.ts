@@ -24,12 +24,6 @@ const FORBIDDEN_HEADER = {
   },
 } as const;
 
-export const parseAllowedOriginsList = (raw: string): string[] =>
-  raw
-    .split(',')
-    .map((o) => o.trim())
-    .filter(Boolean);
-
 function isAllowedOrigin(origin: string, allowed: string[]): boolean {
   return allowed.includes(origin);
 }
@@ -67,7 +61,7 @@ export const browserMutationGuard = (req: Request, res: Response, next: NextFunc
     return next();
   }
 
-  const allowed = parseAllowedOriginsList(env.ALLOWED_ORIGINS);
+  const allowed = env.ALLOWED_ORIGINS;
   if (resolveTrustedOrigin(req, allowed) == null) {
     return res.status(403).json(FORBIDDEN_ORIGIN);
   }

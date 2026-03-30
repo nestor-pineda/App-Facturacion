@@ -3,6 +3,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+/** Parsea ALLOWED_ORIGINS (coma-separada) para CORS y browser mutation guard. */
+export const parseAllowedOriginsList = (raw: string): string[] =>
+  raw
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
 const envSchema = z.object({
   DATABASE_URL: z.string().url('DATABASE_URL debe ser una URL válida'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET debe tener mínimo 32 caracteres'),
@@ -11,7 +18,20 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   PORT: z.string().transform(Number).pipe(z.number().positive()),
   NODE_ENV: z.enum(['development', 'production', 'test']),
-  ALLOWED_ORIGINS: z.string(),
+  ALLOWED_ORIGINS: z
+    .string()
+    .trim()
+    .min(1, 'ALLOWED_ORIGINS no puede estar vacío')
+    .transform(parseAllowedOriginsList)
+    .pipe(
+      z
+        .array(z.string().min(1))
+        .min(1, 'Debe haber al menos un origen válido en ALLOWED_ORIGINS (URLs separadas por coma)')
+        .refine((list) => !list.includes('*'), {
+          message:
+            'ALLOWED_ORIGINS no puede incluir *: con cookies/credenciales cada origen debe ser explícito (sin comodín)',
+        }),
+    ),
   /** Opcional: sin clave el servidor arranca pero el agente IA responde 503 (útil p. ej. Render sin AI). */
   GOOGLE_GENAI_API_KEY: z.preprocess(
     (val) => {
