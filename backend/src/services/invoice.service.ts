@@ -52,6 +52,15 @@ export const getById = async (userId: string, id: string) => {
   return invoice;
 };
 
+export const assertInvoiceCanRequestSendConfirmation = async (userId: string, id: string) => {
+  const row = await prisma.invoice.findFirst({
+    where: { id, user_id: userId },
+    select: { estado: true },
+  });
+  if (!row) throw new Error(INVOICE_NOT_FOUND);
+  if (row.estado !== 'borrador') throw new Error(ALREADY_SENT);
+};
+
 export interface InvoiceFilters {
   estado?: 'borrador' | 'enviada';
   client_id?: string;

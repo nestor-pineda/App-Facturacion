@@ -14,6 +14,10 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url('DATABASE_URL debe ser una URL válida'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET debe tener mínimo 32 caracteres'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET debe tener mínimo 32 caracteres'),
+  /** Secreto independiente para JWT de confirmación de envío (factura/presupuesto); no reutilizar JWT_SECRET. */
+  SEND_CONFIRMATION_SECRET: z
+    .string()
+    .min(32, 'SEND_CONFIRMATION_SECRET debe tener mínimo 32 caracteres'),
   JWT_EXPIRES_IN: z.string().default('1h'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   PORT: z.string().transform(Number).pipe(z.number().positive()),
@@ -50,6 +54,14 @@ const envSchema = z.object({
   .refine((data) => data.JWT_SECRET !== data.JWT_REFRESH_SECRET, {
     message: 'JWT_SECRET y JWT_REFRESH_SECRET deben ser distintos',
     path: ['JWT_REFRESH_SECRET'],
+  })
+  .refine((data) => data.SEND_CONFIRMATION_SECRET !== data.JWT_SECRET, {
+    message: 'SEND_CONFIRMATION_SECRET debe ser distinto de JWT_SECRET',
+    path: ['SEND_CONFIRMATION_SECRET'],
+  })
+  .refine((data) => data.SEND_CONFIRMATION_SECRET !== data.JWT_REFRESH_SECRET, {
+    message: 'SEND_CONFIRMATION_SECRET debe ser distinto de JWT_REFRESH_SECRET',
+    path: ['SEND_CONFIRMATION_SECRET'],
   });
 
 const parsed = envSchema.safeParse(process.env);

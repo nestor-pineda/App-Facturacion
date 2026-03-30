@@ -1,5 +1,4 @@
 import type { CreateInvoiceInput } from '@/api/schemas/document.schema';
-import { USER_CONFIRMATION_REQUIRED_MESSAGE } from '@/agent/constants';
 import { ai } from '@/agent/genkit.config';
 import * as invoiceService from '@/services/invoice.service';
 import { z } from 'genkit';
@@ -186,42 +185,9 @@ export function createInvoiceTools(userId: string) {
     }
   );
 
-  const sendInvoiceTool = ai.defineTool(
-    {
-      name: 'sendInvoice',
-      description: `Marca una factura como ENVIADA y asigna número legal. Acción irreversible.
-        Solo llamar si el usuario ha confirmado explícitamente (userConfirmed: true).`,
-      inputSchema: z.object({
-        invoiceId: z.string().uuid().describe('UUID de la factura a enviar'),
-        userConfirmed: z
-          .boolean()
-          .describe('Debe ser true; confirma aprobación explícita del usuario'),
-      }),
-      outputSchema: z.object({
-        numero: z.string(),
-        message: z.string(),
-      }),
-    },
-    async input => {
-      if (!input.userConfirmed) {
-        throw new Error(USER_CONFIRMATION_REQUIRED_MESSAGE);
-      }
-      const sent = await invoiceService.send(userId, input.invoiceId);
-      const numero = sent.numero;
-      if (!numero) {
-        throw new Error('La factura enviada no tiene número asignado.');
-      }
-      return {
-        numero,
-        message: `Factura ${numero} enviada correctamente.`,
-      };
-    }
-  );
-
   return {
     listInvoicesTool,
     getInvoiceTool,
     createInvoiceTool,
-    sendInvoiceTool,
   };
 }

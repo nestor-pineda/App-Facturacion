@@ -40,10 +40,8 @@ export const billingFlow = ai.defineFlow(
     // userId sigue viniendo del JWT via controller, no de input del usuario
     const { searchClientsTool, listClientsTool } = createClientTools(userId);
     const { searchServicesTool, listServicesTool } = createServiceTools(userId);
-    const { listInvoicesTool, getInvoiceTool, createInvoiceTool, sendInvoiceTool } =
-      createInvoiceTools(userId);
-    const { listQuotesTool, getQuoteTool, createQuoteTool, sendQuoteTool } =
-      createQuoteTools(userId);
+    const { listInvoicesTool, getInvoiceTool, createInvoiceTool } = createInvoiceTools(userId);
+    const { listQuotesTool, getQuoteTool, createQuoteTool } = createQuoteTools(userId);
 
     const response = await ai.generate({
       model: googleAI.model(GEMINI_MODEL_NAME),
@@ -63,11 +61,9 @@ export const billingFlow = ai.defineFlow(
         listInvoicesTool,
         getInvoiceTool,
         createInvoiceTool,
-        sendInvoiceTool,
         listQuotesTool,
         getQuoteTool,
         createQuoteTool,
-        sendQuoteTool,
       ],
     });
 

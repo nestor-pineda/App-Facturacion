@@ -7,17 +7,25 @@ import {
   safeParseUuidParams,
 } from '@/api/schemas/params.schema';
 import { createInvoiceSchema, updateInvoiceSchema } from '@/api/schemas/document.schema';
+import { patchSendBodySchema } from '@/api/schemas/send-confirmation.schema';
 import {
   RELATED_CLIENT_NOT_FOUND,
   RELATED_SERVICE_NOT_FOUND,
 } from '@/services/document-ownership.service';
 import * as invoiceService from '@/services/invoice.service';
+import {
+  INVALID_SEND_CONFIRMATION,
+  issueSendConfirmationToken,
+  SEND_CONFIRMATION_PURPOSE_INVOICE,
+  verifySendConfirmationToken,
+} from '@/services/send-confirmation-token.service';
 
 const ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   NOT_FOUND: 'NOT_FOUND',
   ALREADY_SENT: 'ALREADY_SENT',
   NUMERO_CONFLICT: 'NUMERO_CONFLICT',
+  INVALID_SEND_CONFIRMATION: 'INVALID_SEND_CONFIRMATION',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;
 
@@ -174,6 +182,42 @@ export const remove = async (req: Request, res: Response) => {
   }
 };
 
+export const issueSendConfirmation = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
+  const id = paramsParsed.data.id;
+  const userId = req.user!.id;
+
+  try {
+    await invoiceService.assertInvoiceCanRequestSendConfirmation(userId, id);
+    const confirmationToken = issueSendConfirmationToken(SEND_CONFIRMATION_PURPOSE_INVOICE, userId, id);
+    return res.status(200).json({ success: true, data: { confirmationToken } });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === invoiceService.INVOICE_NOT_FOUND) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Factura no encontrada', code: ERROR_CODES.NOT_FOUND },
+        });
+      }
+      if (error.message === invoiceService.ALREADY_SENT) {
+        return res.status(409).json({
+          success: false,
+          error: { message: 'Factura ya enviada', code: ERROR_CODES.ALREADY_SENT },
+        });
+      }
+    }
+    return res.status(500).json({
+      success: false,
+      error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
+    });
+  }
+};
+
 export const send = async (req: Request, res: Response) => {
   const paramsParsed = safeParseUuidParams(req.params);
   if (!paramsParsed.success) {
@@ -181,10 +225,41 @@ export const send = async (req: Request, res: Response) => {
     return;
   }
 
+  const bodyParsed = patchSendBodySchema.safeParse(req.body);
+  if (!bodyParsed.success) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        message: 'Datos de entrada inválidos',
+        code: ERROR_CODES.VALIDATION_ERROR,
+        details: bodyParsed.error.flatten(),
+      },
+    });
+  }
+
+  const id = paramsParsed.data.id;
+  const userId = req.user!.id;
+
   try {
-    const invoice = await invoiceService.send(req.user!.id, paramsParsed.data.id);
+    verifySendConfirmationToken(
+      bodyParsed.data.confirmationToken,
+      SEND_CONFIRMATION_PURPOSE_INVOICE,
+      userId,
+      id,
+    );
+    const invoice = await invoiceService.send(userId, id);
     return res.status(200).json({ success: true, data: invoice });
   } catch (error) {
+    if (error instanceof Error && error.message === INVALID_SEND_CONFIRMATION) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          message: 'Token de confirmación inválido o caducado. Solicita uno nuevo desde la app.',
+          code: ERROR_CODES.INVALID_SEND_CONFIRMATION,
+        },
+      });
+    }
+
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return res.status(409).json({
         success: false,

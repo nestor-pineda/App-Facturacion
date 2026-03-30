@@ -15,4 +15,12 @@ describe('GOOGLE_GENAI_API_KEY in env configuration', () => {
     const example = readFileSync(resolve(BACKEND_ROOT, '.env.example'), 'utf8');
     expect(example).toMatch(/^GOOGLE_GENAI_API_KEY=/m);
   });
+
+  it('exige SEND_CONFIRMATION_SECRET independiente de JWT en env.ts y .env.example', () => {
+    const envTs = readFileSync(resolve(BACKEND_ROOT, 'src/config/env.ts'), 'utf8');
+    expect(envTs).toContain('SEND_CONFIRMATION_SECRET');
+    expect(envTs).toContain('distinto de JWT_SECRET');
+    const example = readFileSync(resolve(BACKEND_ROOT, '.env.example'), 'utf8');
+    expect(example).toMatch(/^SEND_CONFIRMATION_SECRET=/m);
+  });
 });

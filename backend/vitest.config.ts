@@ -11,6 +11,7 @@ export default defineConfig({
     globals: true,
     env: {
       GOOGLE_GENAI_API_KEY: 'vitest-placeholder-google-genai-api-key',
+      SEND_CONFIRMATION_SECRET: 'vitest-send-confirmation-secret-32chars-min',
     },
     setupFiles: ['./tests/setup.ts'],
     testTimeout: 30000,

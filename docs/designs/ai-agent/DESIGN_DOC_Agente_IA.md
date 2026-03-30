@@ -250,7 +250,7 @@ crear facturas, consultar facturas, marcar como enviado.
 | `listInvoices` | Lista facturas con filtros opcionales (estado, cliente, fechas) | Para búsquedas y consultas sobre facturas |
 | `updateInvoice` | Actualiza una factura en borrador | Cuando se modifican lineas, fecha o notas antes de enviar |
 | `deleteInvoice` | Elimina factura en borrador | **SOLO** tras confirmacion explicita |
-| `sendInvoice` | Marca factura como enviada y genera número legal | **SOLO** tras confirmación explícita del usuario |
+| *(no tool)* | **Enviar factura** (número legal + estado `enviada`) | **Solo en la app web:** flujo API `POST .../send-confirmation` + `PATCH .../send` con token; el chat no puede completar el envío |
 | `resendInvoice` | Reenvia email de factura enviada sin cambiar estado | Cuando el usuario pide reenviar una factura ya emitida |
 | `copyInvoice` | Crea una nueva factura borrador desde una enviada | Cuando el usuario quiere reutilizar una factura anterior |
 | `downloadInvoicePdf` | Genera/descarga PDF de factura | Cuando el usuario pide el PDF (borrador o enviada) |
@@ -259,7 +259,7 @@ crear facturas, consultar facturas, marcar como enviado.
 | `listQuotes` | Lista presupuestos con filtros opcionales | Para consultas sobre presupuestos |
 | `updateQuote` | Actualiza un presupuesto en borrador | Cuando se ajustan lineas, fecha o notas |
 | `deleteQuote` | Elimina presupuesto en borrador | **SOLO** tras confirmacion explicita |
-| `sendQuote` | Marca presupuesto como enviado | **SOLO** tras confirmación explícita |
+| *(no tool)* | **Enviar presupuesto** (estado `enviado`) | **Solo en la app web:** mismo flujo de token que facturas; el chat orienta al usuario a la pantalla del documento |
 | `resendQuote` | Reenvia email de presupuesto enviado sin cambiar estado | Cuando el usuario pide reenviar un presupuesto |
 | `copyQuote` | Crea un nuevo presupuesto borrador desde uno enviado | Cuando el usuario quiere duplicar un presupuesto previo |
 | `convertQuoteToInvoice` | Convierte presupuesto en factura borrador | Cuando el usuario quiere facturar un presupuesto aceptado |
@@ -340,41 +340,9 @@ export function createInvoiceTools(userId: string) {
 }
 ```
 
-### 6.4 Tool crítica: `sendInvoice`
+### 6.4 Envío de facturas y presupuestos (fuera del agente)
 
-Esta tool es la más delicada. El system prompt instruye al agente a pedir confirmación antes de llamarla, pero la tool también incluye una guardia propia mediante el campo `userConfirmed`:
-
-```typescript
-const sendInvoiceTool = ai.defineTool(
-  {
-    name: 'sendInvoice',
-    description: `Marca una factura como ENVIADA y genera su número legal
-      correlativo (ej: 2026/003). Esta acción es IRREVERSIBLE.
-      SOLO llamar esta tool si el usuario ha confirmado explícitamente.
-      Nunca llamarla si el usuario solo preguntó o pidió ver la factura.`,
-    inputSchema: z.object({
-      invoiceId: z.string().uuid()
-        .describe('UUID de la factura a enviar'),
-      userConfirmed: z.boolean()
-        .describe('Debe ser true. Confirma que el usuario ha aprobado la acción'),
-    }),
-    outputSchema: z.object({
-      numero: z.string(),
-      message: z.string(),
-    }),
-  },
-  async (input) => {
-    if (!input.userConfirmed) {
-      throw new Error('Acción cancelada: se requiere confirmación del usuario');
-    }
-    const invoice = await invoiceService.markAsSent(userId, input.invoiceId);
-    return {
-      numero: invoice.numero,
-      message: `Factura ${invoice.numero} enviada correctamente.`,
-    };
-  }
-);
-```
+El envío que fija número legal (facturas) o marca el presupuesto como `enviado` **no** se expone como tool de Genkit: un flag `userConfirmed` en el input del modelo no sería una prueba criptográfica de intención. En su lugar, la API REST implementa un flujo en dos pasos (`POST .../send-confirmation` → JWT de corta vida → `PATCH .../send` con `confirmationToken`). El system prompt indica al asistente que debe dirigir al usuario al botón **Enviar** en la aplicación.
 
 ### 6.5 Tool de búsqueda: `searchClients`
 
@@ -443,11 +411,8 @@ export async function runBillingFlow(
   // Inyectar userId en todas las tools via closure
   const { searchClientsTool, getClientByIdTool } = createClientTools(userId);
   const { searchServicesTool, listServicesTool } = createServiceTools(userId);
-  const {
-    createInvoiceTool, listInvoicesTool,
-    getInvoiceTool, sendInvoiceTool,
-  } = createInvoiceTools(userId);
-  const { createQuoteTool, listQuotesTool, sendQuoteTool } = createQuoteTools(userId);
+  const { createInvoiceTool, listInvoicesTool, getInvoiceTool } = createInvoiceTools(userId);
+  const { createQuoteTool, listQuotesTool, getQuoteTool } = createQuoteTools(userId);
 
   const toolsUsed: string[] = [];
 
@@ -465,8 +430,8 @@ export async function runBillingFlow(
     tools: [
       searchClientsTool, getClientByIdTool,
       searchServicesTool, listServicesTool,
-      createInvoiceTool, listInvoicesTool, getInvoiceTool, sendInvoiceTool,
-      createQuoteTool, listQuotesTool, sendQuoteTool,
+      createInvoiceTool, listInvoicesTool, getInvoiceTool,
+      createQuoteTool, listQuotesTool, getQuoteTool,
     ],
   });
 
@@ -790,7 +755,7 @@ El agente de Cursor debe completar estos pasos **en orden**. No avanzar al sigui
 
 - [ ] `"lista mis clientes"` → usa `searchClients`, devuelve lista
 - [ ] `"crea factura para [cliente inexistente]"` → responde que no existe, no inventa
-- [ ] `"envía la factura X"` → pide confirmación **antes** de llamar `sendInvoice`
+- [ ] `"envía la factura X"` → explica que el envío se hace desde la app (no hay tool `sendInvoice`)
 - [ ] Verificar que el `userId` del closure es siempre el correcto en todas las tools
 - [ ] `npm run test` → todos los tests pasan
 - [ ] `npm run typecheck` → sin errores de TypeScript
@@ -845,6 +810,8 @@ Esta seccion deja trazabilidad de los cambios funcionales aplicados en presupues
   - `POST /quotes/:id/copy`
   - `POST /invoices/:id/copy`
   - `POST /invoices/:id/resend`
+  - `POST /quotes/:id/send-confirmation`, `POST /invoices/:id/send-confirmation` (token de confirmación para el envío)
+  - `PATCH /quotes/:id/send` y `PATCH /invoices/:id/send` requieren body `{ confirmationToken }` (el agente IA no ejecuta este flujo)
 - Nuevos metodos de servicio para copia y reenvio:
   - `copyQuote`, `copyInvoice`, `resendInvoiceEmail`.
 - Reglas de error especificas por estado no permitido al copiar documentos no enviados.

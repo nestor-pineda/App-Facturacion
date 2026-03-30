@@ -53,34 +53,6 @@ describe('createInvoiceTools', () => {
     });
   });
 
-  it('sendInvoice con userConfirmed false lanza error sin llamar al servicio', async () => {
-    const { sendInvoiceTool } = createInvoiceTools(closureUserId);
-
-    await expect(
-      sendInvoiceTool({
-        invoiceId: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
-        userConfirmed: false,
-      })
-    ).rejects.toThrow(/confirmación/i);
-
-    expect(invoiceService.send).not.toHaveBeenCalled();
-  });
-
-  it('sendInvoice con userConfirmed true llama a invoiceService.send con userId del closure', async () => {
-    vi.mocked(invoiceService.send).mockResolvedValue({
-      id: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
-      numero: '2026/001',
-    } as never);
-
-    const { sendInvoiceTool } = createInvoiceTools(closureUserId);
-    const invoiceId = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
-
-    await sendInvoiceTool({ invoiceId, userConfirmed: true });
-
-    expect(invoiceService.send).toHaveBeenCalledTimes(1);
-    expect(invoiceService.send).toHaveBeenCalledWith(closureUserId, invoiceId);
-  });
-
   it('listInvoices usa userId del closure en invoiceService.list', async () => {
     vi.mocked(invoiceService.list).mockResolvedValue([]);
 

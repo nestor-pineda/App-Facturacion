@@ -59,6 +59,7 @@ Abre `.env` y rellena los valores. Para desarrollo local puedes usar exactamente
 DATABASE_URL="postgresql://user:password@localhost:5433/facturacion_db"
 JWT_SECRET="un-secreto-largo-de-al-menos-32-caracteres-aqui"
 JWT_REFRESH_SECRET="otro-secreto-largo-de-al-menos-32-caracteres-aqui"
+SEND_CONFIRMATION_SECRET="tercer-secreto-largo-distinto-de-los-jwt-32chars"
 JWT_EXPIRES_IN="1h"
 JWT_REFRESH_EXPIRES_IN="7d"
 PORT=3000
@@ -66,7 +67,7 @@ NODE_ENV="development"
 ALLOWED_ORIGINS="http://localhost:8080,http://localhost:5173"
 ```
 
-> **Importante:** `JWT_SECRET` y `JWT_REFRESH_SECRET` deben ser **dos cadenas distintas**, cada una de **al menos 32 caracteres**. El schema Zod en `src/config/env.ts` lo valida al arrancar: si son iguales, el proceso sale con error (`JWT_SECRET y JWT_REFRESH_SECRET deben ser distintos`). En producción usa valores aleatorios generados de forma segura y distintos entre sí; en local basta con dos frases largas diferentes (como en el ejemplo de arriba).
+> **Importante:** `JWT_SECRET`, `JWT_REFRESH_SECRET` y `SEND_CONFIRMATION_SECRET` deben ser **tres cadenas distintas** (≥32 caracteres cada una). Las dos primeras firman sesión; `SEND_CONFIRMATION_SECRET` firma los JWT de confirmación al enviar facturas/presupuestos y **no** debe ser igual a ninguna de las otras (comprometer solo `JWT_SECRET` no debe permitir forjar envíos). Zod en `src/config/env.ts` lo valida al arrancar.
 
 > **CORS y anti-CSRF:** `ALLOWED_ORIGINS` debe listar los orígenes exactos del frontend (separados por coma). El frontend de este monorepo corre en **`http://localhost:8080`** (Vite); si ahí solo tienes `http://localhost:5173`, el login y el resto de mutaciones responderán **403** («Origen de la petición no permitido»). Las peticiones `POST`, `PUT`, `PATCH` y `DELETE` bajo `/api` exigen además `Origin` o `Referer` permitido y la cabecera `X-Requested-With: XMLHttpRequest` (el cliente web ya la incluye). Clientes no navegador deben replicar ambas.
 
@@ -332,7 +333,7 @@ SMTP_PASS=<tu-pass-de-mailtrap>
 SMTP_FROM="Facturación App <noreply@facturacion.app>"
 ```
 
-Reinicia el servidor tras añadir las variables (`npm run dev`). A partir de ese momento, cada vez que se llame a `PATCH /quotes/:id/send` o `PATCH /invoices/:id/send`, el cliente recibirá un email HTML con el resumen del documento.
+Reinicia el servidor tras añadir las variables (`npm run dev`). A partir de ese momento, cada vez que se **complete el envío** —es decir, tras `POST /api/v1/quotes/:id/send-confirmation` o `POST /api/v1/invoices/:id/send-confirmation` y el `PATCH` correspondiente a `/send` con el `confirmationToken` recibido—, si el SMTP está configurado el cliente del documento recibirá un email HTML con el resumen.
 
 ---
 
@@ -380,11 +381,22 @@ Respuesta esperada (`201 Created`) — el presupuesto se crea en estado `borrado
 
 ### Paso 9 — Enviar un presupuesto
 
-Marca el presupuesto como `enviado` (bloqueado, no editable). Si el SMTP está configurado, el sistema envía automáticamente un email HTML con el resumen al correo del cliente:
+El envío es **en dos pasos**: primero se pide un token de confirmación al servidor y luego se confirma con `PATCH` y cuerpo JSON. Así se evita que un único `PATCH` sin prueba previa complete la acción. Si el SMTP está configurado, el email se dispara al completar el segundo paso.
+
+**1) Obtener token** (`200` con `data.confirmationToken`):
+
+```bash
+curl -X POST http://localhost:3000/api/v1/quotes/UUID_DEL_PRESUPUESTO/send-confirmation \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
+**2) Confirmar envío** (sustituye `TOKEN_DEL_PASO_1` por el valor recibido):
 
 ```bash
 curl -X PATCH http://localhost:3000/api/v1/quotes/UUID_DEL_PRESUPUESTO/send \
-  -H "Authorization: Bearer TU_TOKEN"
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -d '{"confirmationToken":"TOKEN_DEL_PASO_1"}'
 ```
 
 Respuesta esperada (`200 OK`):
@@ -589,11 +601,22 @@ Respuesta esperada (`201 Created`):
 
 ### Paso 15 — Emitir la factura (asigna número legal)
 
-Genera el número correlativo `YYYY/NNN`, bloquea la factura (inmutable). Si el SMTP está configurado, envía un email HTML con la factura al cliente:
+Mismo patrón que el presupuesto: **POST** `send-confirmation` y luego **PATCH** `/send` con el token en el cuerpo. Genera el número correlativo `YYYY/NNN` y bloquea la factura. Si el SMTP está configurado, el email se envía al completar el `PATCH`.
+
+**1) Token:**
+
+```bash
+curl -X POST http://localhost:3000/api/v1/invoices/UUID_DE_LA_FACTURA/send-confirmation \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
+**2) Emitir** (sustituye `TOKEN_DEL_PASO_1`):
 
 ```bash
 curl -X PATCH http://localhost:3000/api/v1/invoices/UUID_DE_LA_FACTURA/send \
-  -H "Authorization: Bearer TU_TOKEN"
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -d '{"confirmationToken":"TOKEN_DEL_PASO_1"}'
 ```
 
 Respuesta esperada (`200 OK`):

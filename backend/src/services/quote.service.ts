@@ -20,6 +20,15 @@ export const getById = async (userId: string, id: string) => {
   return quote;
 };
 
+export const assertQuoteCanRequestSendConfirmation = async (userId: string, id: string) => {
+  const row = await prisma.quote.findFirst({
+    where: { id, user_id: userId },
+    select: { estado: true },
+  });
+  if (!row) throw new Error(QUOTE_NOT_FOUND);
+  if (row.estado !== 'borrador') throw new Error(QUOTE_ALREADY_SENT);
+};
+
 export interface QuoteFilters {
   estado?: 'borrador' | 'enviado';
   client_id?: string;

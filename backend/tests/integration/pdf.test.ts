@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import { withMutationGuards } from '../helpers/mutation-guard.helper';
+import { getInvoiceSendToken, getQuoteSendToken, patchInvoiceSend, patchQuoteSend } from '../helpers/send-flow.helper';
 import app from '@/app';
 import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
@@ -110,9 +111,8 @@ describe('PDF endpoints', () => {
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
-      await withMutationGuards(request(app)
-        .patch(`${INVOICES_URL}/${invoiceId}/send`))
-        .set('Cookie', cookies);
+      const invTok = await getInvoiceSendToken(app, cookies, invoiceId);
+      await patchInvoiceSend(app, cookies, invoiceId, invTok);
 
       const otherCookies = await createSecondUserAndGetCookies();
       const response = await request(app)
@@ -129,9 +129,8 @@ describe('PDF endpoints', () => {
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
-      await withMutationGuards(request(app)
-        .patch(`${INVOICES_URL}/${invoiceId}/send`))
-        .set('Cookie', cookies);
+      const invTok2 = await getInvoiceSendToken(app, cookies, invoiceId);
+      await patchInvoiceSend(app, cookies, invoiceId, invTok2);
 
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
@@ -147,9 +146,8 @@ describe('PDF endpoints', () => {
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
-      await withMutationGuards(request(app)
-        .patch(`${INVOICES_URL}/${invoiceId}/send`))
-        .set('Cookie', cookies);
+      const invTok3 = await getInvoiceSendToken(app, cookies, invoiceId);
+      await patchInvoiceSend(app, cookies, invoiceId, invTok3);
 
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
@@ -165,9 +163,8 @@ describe('PDF endpoints', () => {
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
-      await withMutationGuards(request(app)
-        .patch(`${INVOICES_URL}/${invoiceId}/send`))
-        .set('Cookie', cookies);
+      const invTok4 = await getInvoiceSendToken(app, cookies, invoiceId);
+      await patchInvoiceSend(app, cookies, invoiceId, invTok4);
 
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
@@ -214,9 +211,8 @@ describe('PDF endpoints', () => {
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;
 
-      await withMutationGuards(request(app)
-        .patch(`${QUOTES_URL}/${quoteId}/send`))
-        .set('Cookie', cookies);
+      const qTok = await getQuoteSendToken(app, cookies, quoteId);
+      await patchQuoteSend(app, cookies, quoteId, qTok);
 
       const response = await request(app)
         .get(`${QUOTES_URL}/${quoteId}/pdf`)

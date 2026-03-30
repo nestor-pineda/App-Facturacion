@@ -24,7 +24,7 @@ cp .env.example .env   # Configurar variables de entorno
 npm run dev
 ```
 
-En `backend/.env`, **`JWT_SECRET` y `JWT_REFRESH_SECRET` deben ser dos cadenas distintas**, cada una de **al menos 32 caracteres**. El arranque valida esto con Zod: si copias el mismo valor en ambas, el proceso termina con error. Usa el ejemplo de `.env.example` o genera valores aleatorios distintos para cada una.
+En `backend/.env`, **`JWT_SECRET`**, **`JWT_REFRESH_SECRET`** y **`SEND_CONFIRMATION_SECRET`** deben ser **tres cadenas distintas**, cada una de **al menos 32 caracteres**. Las dos primeras firman access/refresh tokens; la tercera firma los JWT de confirmación de envío de facturas y presupuestos (no debe reutilizar ninguna de las otras). El arranque lo valida con Zod. Usa `.env.example` o genera valores aleatorios independientes para cada una.
 
 Para que al pulsar **Enviar** en un presupuesto o factura se envíe un correo real al cliente, descomenta y rellena las variables SMTP en `backend/.env` (en `.env.example` tienes un bloque de ejemplo con [Mailtrap](https://mailtrap.io) para desarrollo).
 
@@ -174,8 +174,9 @@ El build de Vite deja el resultado en `frontend/dist/`. En Vercel (o similar) el
 | Variable | Descripción |
 |----------|-------------|
 | `DATABASE_URL` | URL de PostgreSQL (ej. Neon) |
-| `JWT_SECRET` | Secreto de ≥32 caracteres (debe ser **distinto** de `JWT_REFRESH_SECRET`; Zod lo comprueba al arrancar) |
-| `JWT_REFRESH_SECRET` | Otro secreto de ≥32 caracteres, **distinto** del anterior |
+| `JWT_SECRET` | Secreto de ≥32 caracteres (debe ser **distinto** de `JWT_REFRESH_SECRET` y de `SEND_CONFIRMATION_SECRET`) |
+| `JWT_REFRESH_SECRET` | Otro secreto de ≥32 caracteres, **distinto** de los otros dos |
+| `SEND_CONFIRMATION_SECRET` | Secreto de ≥32 caracteres solo para tokens de envío de documentos; **distinto** de ambos JWT |
 | `ALLOWED_ORIGINS` | URL del frontend en producción (ej. `https://tu-app.vercel.app`) |
 | `PORT` | Lo suele asignar el host (ej. Render) |
 | `NODE_ENV` | `production` |

@@ -111,7 +111,7 @@ Verifica que el servidor en producción responde con `Strict-Transport-Security`
 ### 4.4 Rotar claves y tokens periódicamente
 **Categorías:** Cryptographic Failures
 
-Verifica que existe un proceso documentado para rotar `JWT_SECRET`, `JWT_REFRESH_SECRET` y `GOOGLE_GENAI_API_KEY`. Comprueba que al cambiar el `JWT_SECRET`, los tokens anteriores dejan de ser válidos (devuelven **401**).
+Verifica que existe un proceso documentado para rotar `JWT_SECRET`, `JWT_REFRESH_SECRET`, `SEND_CONFIRMATION_SECRET` y `GOOGLE_GENAI_API_KEY`. Comprueba que al cambiar el `JWT_SECRET`, los tokens anteriores dejan de ser válidos (devuelven **401**). Al rotar `SEND_CONFIRMATION_SECRET`, los tokens de confirmación de envío pendientes caducan en la práctica (los nuevos `POST .../send-confirmation` emiten firmas con la clave nueva).
 
 ---
 
@@ -130,7 +130,7 @@ Provoca errores intencionados (rutas inexistentes, IDs malformados, errores de D
 ### 5.3 Validar variables de entorno al arrancar el servidor
 **Categorías:** Security Misconfiguration
 
-Arranca el servidor sin `JWT_SECRET` o sin `DATABASE_URL` y verifica que la aplicación falla inmediatamente con un error claro y no arranca en un estado parcialmente configurado. El schema Zod en `src/config/env.ts` debe bloquear el arranque si falta alguna variable obligatoria. Comprueba también que, si `JWT_SECRET` y `JWT_REFRESH_SECRET` son la misma cadena (aunque cumplan longitud mínima), el arranque falla: deben ser **dos valores distintos** de al menos 32 caracteres.
+Arranca el servidor sin `JWT_SECRET` o sin `DATABASE_URL` y verifica que la aplicación falla inmediatamente con un error claro y no arranca en un estado parcialmente configurado. El schema Zod en `src/config/env.ts` debe bloquear el arranque si falta alguna variable obligatoria. Comprueba también que, si `JWT_SECRET` y `JWT_REFRESH_SECRET` son la misma cadena (aunque cumplan longitud mínima), el arranque falla: deben ser **dos valores distintos** de al menos 32 caracteres. Lo mismo aplica a `SEND_CONFIRMATION_SECRET`: no puede coincidir con ninguno de los dos JWT.
 
 ### 5.4 Agregar cabeceras de seguridad HTTP
 **Categorías:** Security Misconfiguration
