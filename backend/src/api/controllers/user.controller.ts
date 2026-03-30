@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
 import { updateProfileSchema } from '@/api/schemas/auth.schema';
+import { AUDIT_EVENT, RESOURCE_KIND } from '@/constants/audit-events.constants';
+import { auditLog } from '@/lib/audit-log';
+import { logControllerError } from '@/lib/log-controller-error';
 import * as userService from '@/services/user.service';
 
 const ERROR_CODES = {
@@ -38,6 +41,11 @@ export const updateCurrentUser = async (req: Request, res: Response) => {
     }
 
     if (error instanceof Error && error.message === userService.USER_NOT_FOUND) {
+      auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+        userId: req.user!.id,
+        resourceKind: RESOURCE_KIND.USER,
+        resourceId: req.user!.id,
+      });
       return res.status(401).json({
         success: false,
         error: {
@@ -47,6 +55,7 @@ export const updateCurrentUser = async (req: Request, res: Response) => {
       });
     }
 
+    logControllerError(req, 'user.updateCurrentUser', error);
     return res.status(500).json({
       success: false,
       error: {

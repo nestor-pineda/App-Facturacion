@@ -31,8 +31,24 @@ model User {
   services Service[]
   quotes   Quote[]
   invoices Invoice[]
+  refreshTokens RefreshToken[]
 
   @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  user_id    String
+  token_hash String    @unique
+  expires_at DateTime
+  created_at DateTime  @default(now())
+  revoked_at DateTime?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([expires_at])
+  @@map("refresh_tokens")
 }
 
 model Client {
@@ -113,7 +129,7 @@ model Invoice {
   id            String        @id @default(uuid())
   user_id       String
   client_id     String
-  numero        String?       @unique
+  numero        String?
   estado        EstadoInvoice @default(borrador)
   fecha_emision DateTime      @db.Date
   subtotal      Decimal       @default(0) @db.Decimal(10, 2)
@@ -127,6 +143,7 @@ model Invoice {
   client Client        @relation(fields: [client_id], references: [id])
   lines  InvoiceLine[]
 
+  @@unique([user_id, numero])
   @@map("invoices")
 }
 

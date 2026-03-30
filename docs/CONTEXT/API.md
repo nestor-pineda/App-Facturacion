@@ -115,11 +115,23 @@ Elimina un presupuesto en estado `borrador`. Las líneas se eliminan en cascada.
 * **Response 404:** Presupuesto no encontrado.
 * **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — el presupuesto ya fue enviado.
 
+### POST `/quotes/:id/send-confirmation`
+
+Prepara el envío de un presupuesto en estado `borrador`. Devuelve un **token de confirmación** de corta duración (JWT HS256 firmado con `SEND_CONFIRMATION_SECRET`, independiente de `JWT_SECRET`) que debe enviarse en el siguiente paso. El asistente IA **no** expone esta acción; el flujo completo debe hacerse desde la app o un cliente que replique las dos peticiones.
+
+* **Body:** ninguno.
+* **Response 200:** `{ success: true, data: { confirmationToken: string } }`
+* **Response 404:** Presupuesto no encontrado.
+* **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — el presupuesto ya fue enviado.
+
 ### PATCH `/quotes/:id/send`
 
-Marca como `enviado`. Bloquea futuras ediciones. Si las variables SMTP están configuradas, envía un email HTML al cliente con el resumen del presupuesto (líneas, totales, notas). El fallo en el envío de email no afecta a la respuesta HTTP.
+Marca como `enviado`. Requiere haber obtenido antes un token con `POST .../send-confirmation`. Bloquea futuras ediciones. Si las variables SMTP están configuradas, envía un email HTML al cliente con el resumen del presupuesto (líneas, totales, notas). El fallo en el envío de email no afecta a la respuesta HTTP.
 
+* **Body:** `{ "confirmationToken": "string" }` — el valor devuelto por `POST .../send-confirmation` para **este mismo** `:id` y usuario autenticado.
 * **Response 200:** `{ success: true, data: Quote }`
+* **Response 400:** `{ success: false, error: { code: "VALIDATION_ERROR", ... } }` — falta o es inválido `confirmationToken`.
+* **Response 403:** `{ success: false, error: { code: "INVALID_SEND_CONFIRMATION", ... } }` — token caducado, manipulado o no coincide con el documento.
 * **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — el presupuesto ya fue enviado.
 
 ### POST `/quotes/:id/resend`
@@ -183,13 +195,25 @@ Elimina una factura en estado `borrador`. Las líneas se eliminan en cascada.
 * **Response 404:** Factura no encontrada.
 * **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — la factura ya fue enviada.
 
+### POST `/invoices/:id/send-confirmation`
+
+Prepara el envío de una factura en estado `borrador`. Devuelve un **token de confirmación** de corta duración (firmado con `SEND_CONFIRMATION_SECRET`) que debe usarse en `PATCH .../send`. El asistente IA **no** expone esta acción.
+
+* **Body:** ninguno.
+* **Response 200:** `{ success: true, data: { confirmationToken: string } }`
+* **Response 404:** Factura no encontrada.
+* **Response 409:** `{ success: false, error: { message: "...", code: "ALREADY_SENT" } }` — la factura ya fue enviada.
+
 ### PATCH `/invoices/:id/send`
 
-**Acción Crítica:** Genera número legal `YYYY/NNN` y cambia estado a `enviada`. Si las variables SMTP están configuradas, envía un email HTML al cliente con el número de factura, líneas, totales y notas. El fallo en el envío de email no afecta a la respuesta HTTP.
+**Acción crítica:** Genera número legal `YYYY/NNN` y cambia estado a `enviada`. Requiere `confirmationToken` obtenido con `POST .../send-confirmation` para el mismo `:id` y usuario. Si las variables SMTP están configuradas, envía un email HTML al cliente con el número de factura, líneas, totales y notas. El fallo en el envío de email no afecta a la respuesta HTTP.
 
 * **Regla:** Solo si la factura actual es `borrador`. Una vez enviada, es inmutable.
+* **Body:** `{ "confirmationToken": "string" }`
 * **Response 200:** `{ success: true, data: Invoice }`
-* **Response 409:** `{ success: false, error: { message: "Factura ya enviada", code: "ALREADY_SENT" } }`
+* **Response 400:** `{ success: false, error: { code: "VALIDATION_ERROR", ... } }` — falta o es inválido `confirmationToken`.
+* **Response 403:** `{ success: false, error: { code: "INVALID_SEND_CONFIRMATION", ... } }` — token caducado, manipulado o no coincide con el documento.
+* **Response 409:** `{ success: false, error: { message: "Factura ya enviada", code: "ALREADY_SENT" } }` (u otros códigos de conflicto de numeración según implementación).
 
 ### POST `/invoices/:id/resend`
 

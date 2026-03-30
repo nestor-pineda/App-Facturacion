@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
+import { withMutationGuards } from '../helpers/mutation-guard.helper';
+import { getInvoiceSendToken, getQuoteSendToken, patchInvoiceSend, patchQuoteSend } from '../helpers/send-flow.helper';
 import app from '@/app';
 import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
@@ -66,14 +68,14 @@ describe('PDF endpoints', () => {
   beforeEach(async () => {
     cookies = await createUserAndGetCookies();
 
-    const clientRes = await request(app)
-      .post(CLIENTS_URL)
+    const clientRes = await withMutationGuards(request(app)
+      .post(CLIENTS_URL))
       .set('Cookie', cookies)
       .send(validClient);
     clientId = clientRes.body.data.id;
 
-    const serviceRes = await request(app)
-      .post(SERVICES_URL)
+    const serviceRes = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
     serviceId = serviceRes.body.data.id;
@@ -87,8 +89,8 @@ describe('PDF endpoints', () => {
     });
 
     it('should return 200 with PDF for a borrador invoice', async () => {
-      const createRes = await request(app)
-        .post(INVOICES_URL)
+      const createRes = await withMutationGuards(request(app)
+        .post(INVOICES_URL))
         .set('Cookie', cookies)
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
@@ -103,15 +105,14 @@ describe('PDF endpoints', () => {
     });
 
     it('should return 404 for an invoice belonging to another user', async () => {
-      const createRes = await request(app)
-        .post(INVOICES_URL)
+      const createRes = await withMutationGuards(request(app)
+        .post(INVOICES_URL))
         .set('Cookie', cookies)
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
-      await request(app)
-        .patch(`${INVOICES_URL}/${invoiceId}/send`)
-        .set('Cookie', cookies);
+      const invTok = await getInvoiceSendToken(app, cookies, invoiceId);
+      await patchInvoiceSend(app, cookies, invoiceId, invTok);
 
       const otherCookies = await createSecondUserAndGetCookies();
       const response = await request(app)
@@ -122,15 +123,14 @@ describe('PDF endpoints', () => {
     });
 
     it('should return 200 with PDF buffer for a sent invoice', async () => {
-      const createRes = await request(app)
-        .post(INVOICES_URL)
+      const createRes = await withMutationGuards(request(app)
+        .post(INVOICES_URL))
         .set('Cookie', cookies)
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
-      await request(app)
-        .patch(`${INVOICES_URL}/${invoiceId}/send`)
-        .set('Cookie', cookies);
+      const invTok2 = await getInvoiceSendToken(app, cookies, invoiceId);
+      await patchInvoiceSend(app, cookies, invoiceId, invTok2);
 
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
@@ -140,15 +140,14 @@ describe('PDF endpoints', () => {
     });
 
     it('should set Content-Type to application/pdf for sent invoice', async () => {
-      const createRes = await request(app)
-        .post(INVOICES_URL)
+      const createRes = await withMutationGuards(request(app)
+        .post(INVOICES_URL))
         .set('Cookie', cookies)
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
-      await request(app)
-        .patch(`${INVOICES_URL}/${invoiceId}/send`)
-        .set('Cookie', cookies);
+      const invTok3 = await getInvoiceSendToken(app, cookies, invoiceId);
+      await patchInvoiceSend(app, cookies, invoiceId, invTok3);
 
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
@@ -158,15 +157,14 @@ describe('PDF endpoints', () => {
     });
 
     it('should set Content-Disposition attachment with filename for sent invoice', async () => {
-      const createRes = await request(app)
-        .post(INVOICES_URL)
+      const createRes = await withMutationGuards(request(app)
+        .post(INVOICES_URL))
         .set('Cookie', cookies)
         .send(buildInvoicePayload(clientId, serviceId));
       const invoiceId = createRes.body.data.id;
 
-      await request(app)
-        .patch(`${INVOICES_URL}/${invoiceId}/send`)
-        .set('Cookie', cookies);
+      const invTok4 = await getInvoiceSendToken(app, cookies, invoiceId);
+      await patchInvoiceSend(app, cookies, invoiceId, invTok4);
 
       const response = await request(app)
         .get(`${INVOICES_URL}/${invoiceId}/pdf`)
@@ -193,8 +191,8 @@ describe('PDF endpoints', () => {
     });
 
     it('should return 200 for a borrador quote', async () => {
-      const createRes = await request(app)
-        .post(QUOTES_URL)
+      const createRes = await withMutationGuards(request(app)
+        .post(QUOTES_URL))
         .set('Cookie', cookies)
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;
@@ -207,15 +205,14 @@ describe('PDF endpoints', () => {
     });
 
     it('should return 200 for an enviado quote', async () => {
-      const createRes = await request(app)
-        .post(QUOTES_URL)
+      const createRes = await withMutationGuards(request(app)
+        .post(QUOTES_URL))
         .set('Cookie', cookies)
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;
 
-      await request(app)
-        .patch(`${QUOTES_URL}/${quoteId}/send`)
-        .set('Cookie', cookies);
+      const qTok = await getQuoteSendToken(app, cookies, quoteId);
+      await patchQuoteSend(app, cookies, quoteId, qTok);
 
       const response = await request(app)
         .get(`${QUOTES_URL}/${quoteId}/pdf`)
@@ -225,8 +222,8 @@ describe('PDF endpoints', () => {
     });
 
     it('should set Content-Type to application/pdf for quote', async () => {
-      const createRes = await request(app)
-        .post(QUOTES_URL)
+      const createRes = await withMutationGuards(request(app)
+        .post(QUOTES_URL))
         .set('Cookie', cookies)
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;
@@ -239,8 +236,8 @@ describe('PDF endpoints', () => {
     });
 
     it('should set Content-Disposition attachment with filename for borrador quote', async () => {
-      const createRes = await request(app)
-        .post(QUOTES_URL)
+      const createRes = await withMutationGuards(request(app)
+        .post(QUOTES_URL))
         .set('Cookie', cookies)
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;
@@ -254,8 +251,8 @@ describe('PDF endpoints', () => {
     });
 
     it('should return 404 for quote belonging to another user', async () => {
-      const createRes = await request(app)
-        .post(QUOTES_URL)
+      const createRes = await withMutationGuards(request(app)
+        .post(QUOTES_URL))
         .set('Cookie', cookies)
         .send(buildQuotePayload(clientId, serviceId));
       const quoteId = createRes.body.data.id;

@@ -11,6 +11,7 @@ router.get('/', invoiceController.list);
 router.post('/', invoiceController.create);
 router.put('/:id', invoiceController.update);
 router.delete('/:id', invoiceController.remove);
+router.post('/:id/send-confirmation', invoiceController.issueSendConfirmation);
 router.patch('/:id/send', invoiceController.send);
 router.post('/:id/resend', invoiceController.resend);
 router.post('/:id/copy', invoiceController.copy);

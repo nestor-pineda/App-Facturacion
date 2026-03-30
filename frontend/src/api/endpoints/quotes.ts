@@ -96,10 +96,20 @@ export const updateQuote = (id: string, data: CreateQuoteInput) =>
 export const deleteQuote = (id: string) =>
   apiClient.delete<ApiResponse<null>>(`${API_BASE_PATH}/quotes/${id}`).then((r) => r.data);
 
-export const sendQuote = (id: string) =>
-  apiClient
-    .patch<ApiResponse<Quote>>(`${API_BASE_PATH}/quotes/${id}/send`)
+export const sendQuote = async (id: string) => {
+  const prep = await apiClient.post<ApiResponse<{ confirmationToken: string }>>(
+    `${API_BASE_PATH}/quotes/${id}/send-confirmation`,
+  );
+  const token = prep.data.data?.confirmationToken;
+  if (!token) {
+    throw new Error('Respuesta inválida al preparar el envío del presupuesto');
+  }
+  return apiClient
+    .patch<ApiResponse<Quote>>(`${API_BASE_PATH}/quotes/${id}/send`, {
+      confirmationToken: token,
+    })
     .then((r) => r.data);
+};
 
 export const resendQuote = (id: string) =>
   apiClient

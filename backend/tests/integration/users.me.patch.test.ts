@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
+import { withMutationGuards } from '../helpers/mutation-guard.helper';
 import app from '@/app';
 
 const REGISTER_URL = '/api/v1/auth/register';
@@ -8,7 +9,7 @@ const UPDATE_ME_URL = '/api/v1/users/me';
 
 const userPayload = {
   email: 'perfil1@test.com',
-  password: 'Password123',
+  password: 'Password1234',
   nombre_comercial: 'Mi Negocio',
   nif: '12345678A',
   direccion_fiscal: 'Calle Uno 1',
@@ -17,7 +18,7 @@ const userPayload = {
 
 const secondUserPayload = {
   email: 'perfil2@test.com',
-  password: 'Password123',
+  password: 'Password1234',
   nombre_comercial: 'Otro Negocio',
   nif: '87654321B',
   direccion_fiscal: 'Calle Dos 2',
@@ -26,12 +27,12 @@ const secondUserPayload = {
 
 describe('PATCH /api/v1/users/me', () => {
   beforeEach(async () => {
-    await request(app).post(REGISTER_URL).send(userPayload);
+    await withMutationGuards(request(app).post(REGISTER_URL)).send(userPayload);
   });
 
   it('should update current user profile and return 200', async () => {
-    const loginResponse = await request(app)
-      .post(LOGIN_URL)
+    const loginResponse = await withMutationGuards(request(app)
+      .post(LOGIN_URL))
       .send({ email: userPayload.email, password: userPayload.password });
     const cookies = loginResponse.headers['set-cookie'];
 
@@ -43,8 +44,8 @@ describe('PATCH /api/v1/users/me', () => {
       telefono: '+34699999999',
     };
 
-    const response = await request(app)
-      .patch(UPDATE_ME_URL)
+    const response = await withMutationGuards(request(app)
+      .patch(UPDATE_ME_URL))
       .set('Cookie', cookies)
       .send(updatePayload);
 
@@ -59,7 +60,7 @@ describe('PATCH /api/v1/users/me', () => {
   });
 
   it('should return 401 when request is unauthenticated', async () => {
-    const response = await request(app).patch(UPDATE_ME_URL).send({
+    const response = await withMutationGuards(request(app).patch(UPDATE_ME_URL)).send({
       email: 'noauth@test.com',
       nombre_comercial: 'No Auth',
       nif: '12312312A',
@@ -73,13 +74,13 @@ describe('PATCH /api/v1/users/me', () => {
 
 
   it('should return 400 for invalid payload', async () => {
-    const loginResponse = await request(app)
-      .post(LOGIN_URL)
+    const loginResponse = await withMutationGuards(request(app)
+      .post(LOGIN_URL))
       .send({ email: userPayload.email, password: userPayload.password });
     const cookies = loginResponse.headers['set-cookie'];
 
-    const response = await request(app)
-      .patch(UPDATE_ME_URL)
+    const response = await withMutationGuards(request(app)
+      .patch(UPDATE_ME_URL))
       .set('Cookie', cookies)
       .send({
         email: 'bad-email',
@@ -94,15 +95,15 @@ describe('PATCH /api/v1/users/me', () => {
   });
 
   it('should return 409 when email is already taken', async () => {
-    await request(app).post(REGISTER_URL).send(secondUserPayload);
+    await withMutationGuards(request(app).post(REGISTER_URL)).send(secondUserPayload);
 
-    const loginResponse = await request(app)
-      .post(LOGIN_URL)
+    const loginResponse = await withMutationGuards(request(app)
+      .post(LOGIN_URL))
       .send({ email: userPayload.email, password: userPayload.password });
     const cookies = loginResponse.headers['set-cookie'];
 
-    const response = await request(app)
-      .patch(UPDATE_ME_URL)
+    const response = await withMutationGuards(request(app)
+      .patch(UPDATE_ME_URL))
       .set('Cookie', cookies)
       .send({
         email: secondUserPayload.email,

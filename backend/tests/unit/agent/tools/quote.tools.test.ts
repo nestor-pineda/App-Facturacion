@@ -53,34 +53,6 @@ describe('createQuoteTools', () => {
     });
   });
 
-  it('sendQuote con userConfirmed false lanza error sin llamar al servicio', async () => {
-    const { sendQuoteTool } = createQuoteTools(closureUserId);
-
-    await expect(
-      sendQuoteTool({
-        quoteId: '44444444-4444-4444-4444-444444444444',
-        userConfirmed: false,
-      })
-    ).rejects.toThrow(/confirmación/i);
-
-    expect(quoteService.send).not.toHaveBeenCalled();
-  });
-
-  it('sendQuote con userConfirmed true llama a quoteService.send con userId del closure', async () => {
-    vi.mocked(quoteService.send).mockResolvedValue({
-      id: '44444444-4444-4444-4444-444444444444',
-      estado: 'enviado',
-    } as never);
-
-    const { sendQuoteTool } = createQuoteTools(closureUserId);
-    const quoteId = '44444444-4444-4444-4444-444444444444';
-
-    await sendQuoteTool({ quoteId, userConfirmed: true });
-
-    expect(quoteService.send).toHaveBeenCalledTimes(1);
-    expect(quoteService.send).toHaveBeenCalledWith(closureUserId, quoteId);
-  });
-
   it('listQuotes usa userId del closure en quoteService.list', async () => {
     vi.mocked(quoteService.list).mockResolvedValue([]);
 

@@ -11,12 +11,13 @@ Sistema de facturación para autónomos. Backend REST API construido con Node.js
 3. [Variables de entorno](#3-variables-de-entorno)
 4. [Base de datos](#4-base-de-datos)
 5. [Arrancar el servidor](#5-arrancar-el-servidor)
-6. [Probar la API paso a paso](#6-probar-la-api-paso-a-paso)
-7. [Tests](#7-tests)
-8. [Comandos de desarrollo](#8-comandos-de-desarrollo)
-9. [Ver los datos en la base de datos](#9-ver-los-datos-en-la-base-de-datos)
-10. [Solución de problemas frecuentes](#10-solución-de-problemas-frecuentes)
-11. [Documentación adicional](#11-documentación-adicional)
+6. [Logger (Pino y trazas)](#6-logger-pino-y-trazas)
+7. [Probar la API paso a paso](#7-probar-la-api-paso-a-paso)
+8. [Tests](#8-tests)
+9. [Comandos de desarrollo](#9-comandos-de-desarrollo)
+10. [Ver los datos en la base de datos](#10-ver-los-datos-en-la-base-de-datos)
+11. [Solución de problemas frecuentes](#11-solución-de-problemas-frecuentes)
+12. [Documentación adicional](#12-documentación-adicional)
 
 > La sección **Probar la API paso a paso** cubre 20 pasos: registro, login, clientes, servicios, configuración SMTP (opcional), presupuestos (crear, enviar, listar, editar, eliminar, convertir a factura) y facturas (crear, emitir, listar, editar, eliminar).
 
@@ -59,14 +60,17 @@ Abre `.env` y rellena los valores. Para desarrollo local puedes usar exactamente
 DATABASE_URL="postgresql://user:password@localhost:5433/facturacion_db"
 JWT_SECRET="un-secreto-largo-de-al-menos-32-caracteres-aqui"
 JWT_REFRESH_SECRET="otro-secreto-largo-de-al-menos-32-caracteres-aqui"
+SEND_CONFIRMATION_SECRET="tercer-secreto-largo-distinto-de-los-jwt-32chars"
 JWT_EXPIRES_IN="1h"
 JWT_REFRESH_EXPIRES_IN="7d"
 PORT=3000
 NODE_ENV="development"
-ALLOWED_ORIGINS="http://localhost:5173"
+ALLOWED_ORIGINS="http://localhost:8080,http://localhost:5173"
 ```
 
-> **Importante:** `JWT_SECRET` y `JWT_REFRESH_SECRET` deben tener al menos 32 caracteres. En producción usa valores aleatorios generados de forma segura. Para pruebas locales basta con cualquier cadena larga.
+> **Importante:** `JWT_SECRET`, `JWT_REFRESH_SECRET` y `SEND_CONFIRMATION_SECRET` deben ser **tres cadenas distintas** (≥32 caracteres cada una). Las dos primeras firman sesión; `SEND_CONFIRMATION_SECRET` firma los JWT de confirmación al enviar facturas/presupuestos y **no** debe ser igual a ninguna de las otras (comprometer solo `JWT_SECRET` no debe permitir forjar envíos). Zod en `src/config/env.ts` lo valida al arrancar.
+
+> **CORS y anti-CSRF:** `ALLOWED_ORIGINS` debe listar los orígenes exactos del frontend (separados por coma). El frontend de este monorepo corre en **`http://localhost:8080`** (Vite); si ahí solo tienes `http://localhost:5173`, el login y el resto de mutaciones responderán **403** («Origen de la petición no permitido»). Las peticiones `POST`, `PUT`, `PATCH` y `DELETE` bajo `/api` exigen además `Origin` o `Referer` permitido y la cabecera `X-Requested-With: XMLHttpRequest` (el cliente web ya la incluye). Clientes no navegador deben replicar ambas.
 
 ---
 
@@ -138,7 +142,57 @@ Respuesta esperada:
 
 ---
 
-## 6. Probar la API paso a paso
+## 6. Logger (Pino y trazas)
+
+El backend usa **[Pino](https://github.com/pinojs/pino)** (`src/config/logger.ts`). La instancia exportada es `logger`.
+
+### Dónde ver los logs
+
+Por defecto Pino escribe **JSON en una línea por evento** en la **salida estándar** (`stdout`) del proceso. Al ejecutar `npm run dev`, esas líneas aparecen en la **misma terminal** que el servidor.
+
+Ejemplo de línea (campos típicos: `level`, `time`, `msg`, `service`):
+
+```json
+{"level":30,"time":1730000000000,"service":"app-facturacion-api","msg":"Servidor en escucha","port":3000,"nodeEnv":"development"}
+```
+
+### Niveles según `NODE_ENV`
+
+| `NODE_ENV`   | Nivel efectivo | Notas |
+| ------------ | -------------- | ----- |
+| `production` | `info`         | Sin trazas `debug`. |
+| `test`       | `silent`       | Vitest no llena la consola con logs de la app. |
+| Otro (p. ej. `development`) | `debug` | Más detalle en local. |
+
+### Uso en código
+
+```typescript
+import { logger } from '@/config/logger';
+
+logger.info('Algo ocurrió');
+logger.info({ userId, action }, 'Acción completada');
+logger.warn({ requestId }, 'Situación revisable');
+logger.error({ err }, 'Fallo al procesar');
+```
+
+Los errores capturados en controladores suelen pasar por `logControllerError` (`src/lib/log-controller-error.ts`), que añade `requestId` y `context` (identificador de la operación).
+
+### Auditoría y correlación
+
+- Eventos de seguridad / negocio relevantes usan `auditLog` (`src/lib/audit-log.ts`): en el JSON verás `type: "audit"` y `event` (nombres en `src/constants/audit-events.constants.ts`).
+- Cada petición puede llevar la cabecera **`X-Request-Id`** (o el servidor genera una). El mismo valor se devuelve en la respuesta y suele aparecer como **`requestId`** en los logs para enlazar todas las entradas de una misma petición.
+
+### Legibilidad en local (opcional)
+
+Para ver el JSON coloreado y multilínea, puedes tuberizar la salida (no hace falta instalar nada de forma permanente):
+
+```bash
+npm run dev 2>&1 | npx pino-pretty
+```
+
+---
+
+## 7. Probar la API paso a paso
 
 Todos los endpoints protegidos requieren un `accessToken` en la cabecera `Authorization`. El flujo completo es:
 
@@ -330,7 +384,7 @@ SMTP_PASS=<tu-pass-de-mailtrap>
 SMTP_FROM="Facturación App <noreply@facturacion.app>"
 ```
 
-Reinicia el servidor tras añadir las variables (`npm run dev`). A partir de ese momento, cada vez que se llame a `PATCH /quotes/:id/send` o `PATCH /invoices/:id/send`, el cliente recibirá un email HTML con el resumen del documento.
+Reinicia el servidor tras añadir las variables (`npm run dev`). A partir de ese momento, cada vez que se **complete el envío** —es decir, tras `POST /api/v1/quotes/:id/send-confirmation` o `POST /api/v1/invoices/:id/send-confirmation` y el `PATCH` correspondiente a `/send` con el `confirmationToken` recibido—, si el SMTP está configurado el cliente del documento recibirá un email HTML con el resumen.
 
 ---
 
@@ -378,11 +432,22 @@ Respuesta esperada (`201 Created`) — el presupuesto se crea en estado `borrado
 
 ### Paso 9 — Enviar un presupuesto
 
-Marca el presupuesto como `enviado` (bloqueado, no editable). Si el SMTP está configurado, el sistema envía automáticamente un email HTML con el resumen al correo del cliente:
+El envío es **en dos pasos**: primero se pide un token de confirmación al servidor y luego se confirma con `PATCH` y cuerpo JSON. Así se evita que un único `PATCH` sin prueba previa complete la acción. Si el SMTP está configurado, el email se dispara al completar el segundo paso.
+
+**1) Obtener token** (`200` con `data.confirmationToken`):
+
+```bash
+curl -X POST http://localhost:3000/api/v1/quotes/UUID_DEL_PRESUPUESTO/send-confirmation \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
+**2) Confirmar envío** (sustituye `TOKEN_DEL_PASO_1` por el valor recibido):
 
 ```bash
 curl -X PATCH http://localhost:3000/api/v1/quotes/UUID_DEL_PRESUPUESTO/send \
-  -H "Authorization: Bearer TU_TOKEN"
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -d '{"confirmationToken":"TOKEN_DEL_PASO_1"}'
 ```
 
 Respuesta esperada (`200 OK`):
@@ -587,11 +652,22 @@ Respuesta esperada (`201 Created`):
 
 ### Paso 15 — Emitir la factura (asigna número legal)
 
-Genera el número correlativo `YYYY/NNN`, bloquea la factura (inmutable). Si el SMTP está configurado, envía un email HTML con la factura al cliente:
+Mismo patrón que el presupuesto: **POST** `send-confirmation` y luego **PATCH** `/send` con el token en el cuerpo. Genera el número correlativo `YYYY/NNN` y bloquea la factura. Si el SMTP está configurado, el email se envía al completar el `PATCH`.
+
+**1) Token:**
+
+```bash
+curl -X POST http://localhost:3000/api/v1/invoices/UUID_DE_LA_FACTURA/send-confirmation \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
+**2) Emitir** (sustituye `TOKEN_DEL_PASO_1`):
 
 ```bash
 curl -X PATCH http://localhost:3000/api/v1/invoices/UUID_DE_LA_FACTURA/send \
-  -H "Authorization: Bearer TU_TOKEN"
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -d '{"confirmationToken":"TOKEN_DEL_PASO_1"}'
 ```
 
 Respuesta esperada (`200 OK`):
@@ -721,7 +797,7 @@ Respuesta esperada (`200 OK`):
 
 ---
 
-## 7. Tests
+## 8. Tests
 
 ```bash
 npm test                  # Todos los tests
@@ -737,7 +813,7 @@ Hay un test en `tests/integration/clients.test.ts` que comprueba el 409 al crear
 
 ---
 
-## 8. Comandos de desarrollo
+## 9. Comandos de desarrollo
 
 ```bash
 npm run dev        # Servidor con hot reload
@@ -756,7 +832,7 @@ npx prisma studio          # Abrir interfaz visual en el navegador
 
 ---
 
-## 9. Ver los datos en la base de datos
+## 10. Ver los datos en la base de datos
 
 ### Opción A — Prisma Studio (interfaz visual, sin instalar nada)
 
@@ -781,7 +857,7 @@ Descarga [Beekeeper Studio](https://www.beekeeperstudio.io/) y conecta con estos
 
 ---
 
-## 10. Solución de problemas frecuentes
+## 11. Solución de problemas frecuentes
 
 **El servidor no arranca / error de variables de entorno**
 → Comprueba que el archivo `.env` existe y tiene todos los campos rellenos. El servidor no arranca si falta alguna variable obligatoria.
@@ -806,7 +882,7 @@ Descarga [Beekeeper Studio](https://www.beekeeperstudio.io/) y conecta con estos
 
 ---
 
-## 11. Documentación adicional
+## 12. Documentación adicional
 
 | Documento            | Contenido                          |
 | -------------------- | ---------------------------------- |

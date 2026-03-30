@@ -212,7 +212,8 @@ userId, nombreComercial, createdAt, totalIva, precioBase
 ### En URLs (kebab-case)
 ```
 /api/invoice-lines
-/api/quote/:id/send
+/api/v1/quotes/:id/send-confirmation
+/api/v1/quotes/:id/send
 ```
 
 ---

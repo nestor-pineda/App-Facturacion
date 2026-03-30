@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
+import { withMutationGuards } from '../helpers/mutation-guard.helper';
 import app from '@/app';
 import { createUserAndGetCookies, createSecondUserAndGetCookies } from '../helpers/auth.helper';
 
@@ -36,8 +37,8 @@ describe('GET /api/v1/services', () => {
     const cookies1 = await createUserAndGetCookies();
     const cookies2 = await createSecondUserAndGetCookies();
 
-    await request(app)
-      .post(SERVICES_URL)
+    await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies1)
       .send(validService);
 
@@ -52,7 +53,7 @@ describe('GET /api/v1/services', () => {
 
 describe('POST /api/v1/services', () => {
   it('should return 401 without auth token', async () => {
-    const response = await request(app).post(SERVICES_URL).send(validService);
+    const response = await withMutationGuards(request(app).post(SERVICES_URL)).send(validService);
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');
@@ -61,8 +62,8 @@ describe('POST /api/v1/services', () => {
   it('should create a service and return 201 with default IVA 21%', async () => {
     const cookies = await createUserAndGetCookies();
 
-    const response = await request(app)
-      .post(SERVICES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send(validService);
 
@@ -77,8 +78,8 @@ describe('POST /api/v1/services', () => {
   it('should create a service with custom IVA', async () => {
     const cookies = await createUserAndGetCookies();
 
-    const response = await request(app)
-      .post(SERVICES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send({ ...validService, iva_porcentaje: 10 });
 
@@ -89,8 +90,8 @@ describe('POST /api/v1/services', () => {
   it('should return 400 when required fields are missing', async () => {
     const cookies = await createUserAndGetCookies();
 
-    const response = await request(app)
-      .post(SERVICES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send({ nombre: 'Solo nombre' });
 
@@ -101,8 +102,8 @@ describe('POST /api/v1/services', () => {
   it('should return 400 when precio_base is not a positive number', async () => {
     const cookies = await createUserAndGetCookies();
 
-    const response = await request(app)
-      .post(SERVICES_URL)
+    const response = await withMutationGuards(request(app)
+      .post(SERVICES_URL))
       .set('Cookie', cookies)
       .send({ ...validService, precio_base: -10 });
 

@@ -3,6 +3,9 @@ import { API_BASE_PATH } from '@/lib/constants';
 
 const BASE = API_BASE_PATH; // '/api/v1'
 
+/** Token fijo para MSW: el cliente real obtiene uno firmado del backend. */
+const MOCK_SEND_CONFIRMATION_TOKEN = 'msw-mock-send-confirmation-token';
+
 const mockUser = {
   id: 'user-1',
   email: 'test@example.com',
@@ -146,7 +149,20 @@ export const handlers = [
   http.delete(`${BASE}/quotes/:id`, () => {
     return HttpResponse.json({ success: true, data: null }, { status: 200 });
   }),
-  http.patch(`${BASE}/quotes/:id/send`, () => {
+  http.post(`${BASE}/quotes/:id/send-confirmation`, () => {
+    return HttpResponse.json(
+      { success: true, data: { confirmationToken: MOCK_SEND_CONFIRMATION_TOKEN } },
+      { status: 200 },
+    );
+  }),
+  http.patch(`${BASE}/quotes/:id/send`, async ({ request }) => {
+    const body = (await request.json()) as { confirmationToken?: string };
+    if (!body?.confirmationToken) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Falta token' } },
+        { status: 400 },
+      );
+    }
     return HttpResponse.json({
       success: true,
       data: { ...mockQuote, estado: 'enviado' },
@@ -178,7 +194,20 @@ export const handlers = [
   http.delete(`${BASE}/invoices/:id`, () => {
     return HttpResponse.json({ success: true, data: null }, { status: 200 });
   }),
-  http.patch(`${BASE}/invoices/:id/send`, () => {
+  http.post(`${BASE}/invoices/:id/send-confirmation`, () => {
+    return HttpResponse.json(
+      { success: true, data: { confirmationToken: MOCK_SEND_CONFIRMATION_TOKEN } },
+      { status: 200 },
+    );
+  }),
+  http.patch(`${BASE}/invoices/:id/send`, async ({ request }) => {
+    const body = (await request.json()) as { confirmationToken?: string };
+    if (!body?.confirmationToken) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Falta token' } },
+        { status: 400 },
+      );
+    }
     return HttpResponse.json({
       success: true,
       data: { ...mockInvoice, estado: 'enviada', numero: '2026/001' },

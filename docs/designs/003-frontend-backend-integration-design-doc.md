@@ -65,6 +65,7 @@ GET    /api/v1/quotes
 POST   /api/v1/quotes
 PUT    /api/v1/quotes/:id
 DELETE /api/v1/quotes/:id
+POST   /api/v1/quotes/:id/send-confirmation
 PATCH  /api/v1/quotes/:id/send
 POST   /api/v1/quotes/:id/convert
 GET    /api/v1/quotes/:id/pdf
@@ -73,6 +74,7 @@ GET    /api/v1/invoices
 POST   /api/v1/invoices
 PUT    /api/v1/invoices/:id
 DELETE /api/v1/invoices/:id
+POST   /api/v1/invoices/:id/send-confirmation
 PATCH  /api/v1/invoices/:id/send
 GET    /api/v1/invoices/:id/pdf
 ```
@@ -668,7 +670,7 @@ Rutas protegidas (envueltas en ProtectedRoute + AppLayout):
 
 1. **Crear `src/api/endpoints/quotes.ts`:**
 
-- `getQuotes(filters?)`, `createQuote(data)`, `updateQuote(id, data)`, `deleteQuote(id)`, `sendQuote(id)`, `convertQuoteToInvoice(id, fecha?)`
+- `getQuotes(filters?)`, `createQuote(data)`, `updateQuote(id, data)`, `deleteQuote(id)`, `sendQuote(id)` (internamente `POST .../send-confirmation` + `PATCH .../send` con token), `convertQuoteToInvoice(id, fecha?)`
 
 2. **Crear hooks:**
 
@@ -727,7 +729,7 @@ Rutas protegidas (envueltas en ProtectedRoute + AppLayout):
 
 1. **Crear `src/api/endpoints/invoices.ts`:**
 
-- `getInvoices(filters?)`, `createInvoice(data)`, `updateInvoice(id, data)`, `deleteInvoice(id)`, `sendInvoice(id)`, `downloadInvoicePDF(id)`
+- `getInvoices(filters?)`, `createInvoice(data)`, `updateInvoice(id, data)`, `deleteInvoice(id)`, `sendInvoice(id)` (internamente `POST .../send-confirmation` + `PATCH .../send` con token), `downloadInvoicePDF(id)`
 
 2. **Crear hooks:**
 

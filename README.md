@@ -24,6 +24,8 @@ cp .env.example .env   # Configurar variables de entorno
 npm run dev
 ```
 
+En `backend/.env`, **`JWT_SECRET`**, **`JWT_REFRESH_SECRET`** y **`SEND_CONFIRMATION_SECRET`** deben ser **tres cadenas distintas**, cada una de **al menos 32 caracteres**. Las dos primeras firman access/refresh tokens; la tercera firma los JWT de confirmación de envío de facturas y presupuestos (no debe reutilizar ninguna de las otras). El arranque lo valida con Zod. Usa `.env.example` o genera valores aleatorios independientes para cada una.
+
 Para que al pulsar **Enviar** en un presupuesto o factura se envíe un correo real al cliente, descomenta y rellena las variables SMTP en `backend/.env` (en `.env.example` tienes un bloque de ejemplo con [Mailtrap](https://mailtrap.io) para desarrollo).
 
 **Asistente IA (Genkit + Gemini):** el endpoint `POST /api/v1/agent/chat` y el widget de chat del frontend necesitan una **`GOOGLE_GENAI_API_KEY` válida** de [Google AI Studio](https://aistudio.google.com/apikey). El backend usa el plugin **`@genkit-ai/google-genai`** (no el paquete legacy `@genkit-ai/googleai`). Si la clave es un placeholder o está revocada, la API responde **503** con `code: AGENT_MISCONFIGURED`. Si Google devuelve **429** (cuota, límite de frecuencia o *spending cap*), la API responde **503** con `code: AGENT_RATE_LIMITED`. Si el modelo configurado no está disponible para tu proyecto (**404**), la API responde **503** con `code: AGENT_MODEL_UNAVAILABLE`. Tras cambiar `.env`, reinicia el backend o deja que nodemon recargue (también vigila `.env` en `npm run dev`).
@@ -172,8 +174,9 @@ El build de Vite deja el resultado en `frontend/dist/`. En Vercel (o similar) el
 | Variable | Descripción |
 |----------|-------------|
 | `DATABASE_URL` | URL de PostgreSQL (ej. Neon) |
-| `JWT_SECRET` | Secreto de al menos 32 caracteres |
-| `JWT_REFRESH_SECRET` | Otro secreto de al menos 32 caracteres |
+| `JWT_SECRET` | Secreto de ≥32 caracteres (debe ser **distinto** de `JWT_REFRESH_SECRET` y de `SEND_CONFIRMATION_SECRET`) |
+| `JWT_REFRESH_SECRET` | Otro secreto de ≥32 caracteres, **distinto** de los otros dos |
+| `SEND_CONFIRMATION_SECRET` | Secreto de ≥32 caracteres solo para tokens de envío de documentos; **distinto** de ambos JWT |
 | `ALLOWED_ORIGINS` | URL del frontend en producción (ej. `https://tu-app.vercel.app`) |
 | `PORT` | Lo suele asignar el host (ej. Render) |
 | `NODE_ENV` | `production` |

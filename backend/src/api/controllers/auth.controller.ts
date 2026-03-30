@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
 import { registerSchema, loginSchema } from '@/api/schemas/auth.schema';
+import { AUDIT_EVENT } from '@/constants/audit-events.constants';
+import { auditLog } from '@/lib/audit-log';
+import { emailDomainFrom } from '@/lib/email-domain';
+import { logControllerError } from '@/lib/log-controller-error';
 import * as authService from '@/services/auth.service';
 import {
   getCookieOptions,
@@ -44,6 +48,7 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
+    logControllerError(req, 'auth.register', error);
     return res.status(500).json({
       success: false,
       error: {
@@ -74,9 +79,13 @@ export const login = async (req: Request, res: Response) => {
     res.cookie('accessToken', accessToken, getCookieOptions(ACCESS_TOKEN_MAX_AGE));
     res.cookie('refreshToken', refreshToken, getCookieOptions(REFRESH_TOKEN_MAX_AGE));
 
+    auditLog(req, AUDIT_EVENT.AUTH_LOGIN_SUCCESS, { userId: user.id });
     return res.status(200).json({ success: true, data: { user } });
   } catch (error) {
     if (error instanceof Error && error.message === authService.INVALID_CREDENTIALS) {
+      auditLog(req, AUDIT_EVENT.AUTH_LOGIN_FAILURE, {
+        emailDomain: emailDomainFrom(parsed.data.email),
+      });
       return res.status(401).json({
         success: false,
         error: {
@@ -86,6 +95,7 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
+    logControllerError(req, 'auth.login', error);
     return res.status(500).json({
       success: false,
       error: {
@@ -100,6 +110,7 @@ export const refresh = async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken as string | undefined;
 
   if (!refreshToken) {
+    auditLog(req, AUDIT_EVENT.AUTH_REFRESH_FAILURE, { reason: 'no_cookie' });
     return res.status(401).json({
       success: false,
       error: {
@@ -119,6 +130,7 @@ export const refresh = async (req: Request, res: Response) => {
       data: { message: 'Token renovado correctamente' },
     });
   } catch {
+    auditLog(req, AUDIT_EVENT.AUTH_REFRESH_FAILURE, { reason: 'invalid_or_expired' });
     return res.status(401).json({
       success: false,
       error: {
@@ -129,7 +141,10 @@ export const refresh = async (req: Request, res: Response) => {
   }
 };
 
-export const logout = (req: Request, res: Response) => {
+export const logout = async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken as string | undefined;
+  await authService.logout(refreshToken);
+
   res.clearCookie('accessToken', getCookieOptions(0));
   res.clearCookie('refreshToken', getCookieOptions(0));
 

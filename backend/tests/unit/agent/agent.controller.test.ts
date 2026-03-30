@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Request, Response } from 'express';
+import { logger } from '@/config/logger';
 
 vi.mock('@/agent/flows/billing.flow', () => ({
   runBillingFlow: vi.fn(),
@@ -81,7 +82,7 @@ describe('agentChat', () => {
   });
 
   it('retorna 500 si runBillingFlow lanza error', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     vi.mocked(runBillingFlow).mockRejectedValue(new Error('fallo red'));
     const req = {
       body: { message: 'Hola', history: [] },
@@ -103,7 +104,7 @@ describe('agentChat', () => {
   });
 
   it('retorna 503 con AGENT_MISCONFIGURED si Google AI rechaza la API key', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     vi.mocked(runBillingFlow).mockRejectedValue({
       errorDetails: [{ reason: 'API_KEY_INVALID' }],
     });
@@ -128,7 +129,7 @@ describe('agentChat', () => {
   });
 
   it('retorna 503 con AGENT_RATE_LIMITED si Google AI responde 429 (cuota)', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     vi.mocked(runBillingFlow).mockRejectedValue({ status: 429 });
     const req = {
       body: { message: 'Hola', history: [] },
@@ -151,7 +152,7 @@ describe('agentChat', () => {
   });
 
   it('retorna 503 con AGENT_MODEL_UNAVAILABLE si Google AI responde 404 de modelo no disponible', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     vi.mocked(runBillingFlow).mockRejectedValue({
       status: 404,
       message:

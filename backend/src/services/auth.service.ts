@@ -1,14 +1,43 @@
 import bcrypt from 'bcrypt';
+import { createHash, randomUUID } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/config/database';
 import { env } from '@/config/env';
 import type { RegisterInput, LoginInput } from '@/api/schemas/auth.schema';
 
 const SALT_ROUNDS = 12;
+const ACCESS_TOKEN_TTL = env.JWT_EXPIRES_IN;
+const REFRESH_TOKEN_TTL = env.JWT_REFRESH_EXPIRES_IN;
 
 export const EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS';
 export const INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
 export const INVALID_TOKEN = 'INVALID_TOKEN';
+export const REFRESH_TOKEN_REVOKED = 'REFRESH_TOKEN_REVOKED';
+
+type JwtPayload = {
+  userId: string;
+  jti?: string;
+  exp?: number;
+};
+
+const hashToken = (token: string): string => createHash('sha256').update(token).digest('hex');
+
+const parseTokenExpiration = (token: string): Date => {
+  const decoded = jwt.decode(token) as JwtPayload | null;
+  if (!decoded?.exp) {
+    throw new Error(INVALID_TOKEN);
+  }
+  return new Date(decoded.exp * 1000);
+};
+
+const signAccessToken = (userId: string): string =>
+  jwt.sign({ userId }, env.JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL } as jwt.SignOptions);
+
+const signRefreshToken = (userId: string): string =>
+  jwt.sign({ userId }, env.JWT_REFRESH_SECRET, {
+    expiresIn: REFRESH_TOKEN_TTL,
+    jwtid: randomUUID(),
+  } as jwt.SignOptions);
 
 export const register = async (data: RegisterInput) => {
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
@@ -47,17 +76,18 @@ export const login = async (data: LoginInput) => {
     throw new Error(INVALID_CREDENTIALS);
   }
 
-  const accessToken = jwt.sign(
-    { userId: user.id },
-    env.JWT_SECRET,
-    { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions,
-  );
+  const accessToken = signAccessToken(user.id);
+  const refreshToken = signRefreshToken(user.id);
+  const refreshTokenHash = hashToken(refreshToken);
+  const refreshTokenExpiresAt = parseTokenExpiration(refreshToken);
 
-  const refreshToken = jwt.sign(
-    { userId: user.id },
-    env.JWT_REFRESH_SECRET,
-    { expiresIn: env.JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions,
-  );
+  await prisma.refreshToken.create({
+    data: {
+      user_id: user.id,
+      token_hash: refreshTokenHash,
+      expires_at: refreshTokenExpiresAt,
+    },
+  });
 
   const { password: _password, ...userWithoutPassword } = user;
 
@@ -66,20 +96,44 @@ export const login = async (data: LoginInput) => {
 
 export const refresh = async (refreshToken: string) => {
   try {
-    const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { userId: string };
+    const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as JwtPayload;
+    const refreshTokenHash = hashToken(refreshToken);
+    const activeToken = await prisma.refreshToken.findFirst({
+      where: {
+        user_id: decoded.userId,
+        token_hash: refreshTokenHash,
+        revoked_at: null,
+        expires_at: { gt: new Date() },
+      },
+    });
+
+    if (!activeToken) {
+      throw new Error(REFRESH_TOKEN_REVOKED);
+    }
+
     const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
     if (!user) {
       throw new Error(INVALID_TOKEN);
     }
 
-    const accessToken = jwt.sign(
-      { userId: decoded.userId },
-      env.JWT_SECRET,
-      { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions,
-    );
+    const accessToken = signAccessToken(decoded.userId);
 
     return { accessToken };
   } catch {
     throw new Error(INVALID_TOKEN);
   }
+};
+
+export const logout = async (refreshToken: string | undefined) => {
+  if (!refreshToken) {
+    return;
+  }
+
+  await prisma.refreshToken.updateMany({
+    where: {
+      token_hash: hashToken(refreshToken),
+      revoked_at: null,
+    },
+    data: { revoked_at: new Date() },
+  });
 };

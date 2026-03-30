@@ -1,5 +1,4 @@
 import type { CreateQuoteInput } from '@/api/schemas/document.schema';
-import { USER_CONFIRMATION_REQUIRED_MESSAGE } from '@/agent/constants';
 import { ai } from '@/agent/genkit.config';
 import * as quoteService from '@/services/quote.service';
 import { z } from 'genkit';
@@ -182,40 +181,9 @@ export function createQuoteTools(userId: string) {
     }
   );
 
-  const sendQuoteTool = ai.defineTool(
-    {
-      name: 'sendQuote',
-      description: `Marca un presupuesto como ENVIADO. Acción relevante para el flujo comercial.
-        Solo llamar si el usuario ha confirmado explícitamente (userConfirmed: true).`,
-      inputSchema: z.object({
-        quoteId: z.string().uuid().describe('UUID del presupuesto a enviar'),
-        userConfirmed: z
-          .boolean()
-          .describe('Debe ser true; confirma aprobación explícita del usuario'),
-      }),
-      outputSchema: z.object({
-        id: z.string().uuid(),
-        estado: z.literal('enviado'),
-        message: z.string(),
-      }),
-    },
-    async input => {
-      if (!input.userConfirmed) {
-        throw new Error(USER_CONFIRMATION_REQUIRED_MESSAGE);
-      }
-      const sent = await quoteService.send(userId, input.quoteId);
-      return {
-        id: sent.id,
-        estado: 'enviado' as const,
-        message: 'Presupuesto marcado como enviado correctamente.',
-      };
-    }
-  );
-
   return {
     listQuotesTool,
     getQuoteTool,
     createQuoteTool,
-    sendQuoteTool,
   };
 }

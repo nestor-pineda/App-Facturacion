@@ -11,6 +11,7 @@ router.get('/', quoteController.list);
 router.post('/', quoteController.create);
 router.put('/:id', quoteController.update);
 router.delete('/:id', quoteController.remove);
+router.post('/:id/send-confirmation', quoteController.issueSendConfirmation);
 router.patch('/:id/send', quoteController.send);
 router.post('/:id/resend', quoteController.resend);
 router.post('/:id/copy', quoteController.copy);

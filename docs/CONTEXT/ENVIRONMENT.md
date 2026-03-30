@@ -7,8 +7,9 @@ Este documento define las variables de entorno necesarias para el funcionamiento
 | Variable | Descripción | Ejemplo / Formato |
 | :--- | :--- | :--- |
 | `DATABASE_URL` | String de conexión para PostgreSQL | `postgresql://user:pass@localhost:5432/db` |
-| `JWT_SECRET` | Secreto para firmar Access Tokens | Mínimo 32 caracteres aleatorios |
-| `JWT_REFRESH_SECRET` | Secreto para firmar Refresh Tokens | Mínimo 32 caracteres aleatorios |
+| `JWT_SECRET` | Secreto para firmar Access Tokens | ≥32 caracteres; **distinto** de `JWT_REFRESH_SECRET` y de `SEND_CONFIRMATION_SECRET` |
+| `JWT_REFRESH_SECRET` | Secreto para firmar Refresh Tokens | ≥32 caracteres; **distinto** de `JWT_SECRET` y de `SEND_CONFIRMATION_SECRET` |
+| `SEND_CONFIRMATION_SECRET` | Secreto para firmar JWT de confirmación de envío (factura/presupuesto) | ≥32 caracteres; **independiente** de los dos JWT (no reutilizar `JWT_SECRET`) |
 | `PORT` | Puerto donde corre el servidor Express | `3000` |
 | `NODE_ENV` | Entorno de ejecución | `development` \| `production` \| `test` |
 

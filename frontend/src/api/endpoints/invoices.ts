@@ -108,10 +108,20 @@ export const updateInvoice = (id: string, data: CreateInvoiceInput) =>
 export const deleteInvoice = (id: string) =>
   apiClient.delete<ApiResponse<null>>(`${API_BASE_PATH}/invoices/${id}`).then((r) => r.data);
 
-export const sendInvoice = (id: string) =>
-  apiClient
-    .patch<ApiResponse<Invoice>>(`${API_BASE_PATH}/invoices/${id}/send`)
+export const sendInvoice = async (id: string) => {
+  const prep = await apiClient.post<ApiResponse<{ confirmationToken: string }>>(
+    `${API_BASE_PATH}/invoices/${id}/send-confirmation`,
+  );
+  const token = prep.data.data?.confirmationToken;
+  if (!token) {
+    throw new Error('Respuesta inválida al preparar el envío de la factura');
+  }
+  return apiClient
+    .patch<ApiResponse<Invoice>>(`${API_BASE_PATH}/invoices/${id}/send`, {
+      confirmationToken: token,
+    })
     .then((r) => r.data);
+};
 
 export const resendInvoice = (id: string) =>
   apiClient

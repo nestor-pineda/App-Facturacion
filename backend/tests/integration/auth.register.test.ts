@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
+import { withMutationGuards } from '../helpers/mutation-guard.helper';
 import app from '@/app';
 
 const REGISTER_URL = '/api/v1/auth/register';
 
 const validPayload = {
   email: 'autonomo@test.com',
-  password: 'Password123',
+  password: 'Password1234',
   nombre_comercial: 'Test Autónomo',
   nif: '12345678A',
   direccion_fiscal: 'Calle Test 1, Madrid',
@@ -15,7 +16,7 @@ const validPayload = {
 describe('POST /api/v1/auth/register', () => {
   it('should register a new user and return 201', async () => {
     // Act
-    const response = await request(app).post(REGISTER_URL).send(validPayload);
+    const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(validPayload);
 
     // Assert
     expect(response.status).toBe(201);
@@ -30,7 +31,7 @@ describe('POST /api/v1/auth/register', () => {
     const invalidPayload = { ...validPayload, email: 'not-an-email' };
 
     // Act
-    const response = await request(app).post(REGISTER_URL).send(invalidPayload);
+    const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(invalidPayload);
 
     // Assert
     expect(response.status).toBe(400);
@@ -38,12 +39,12 @@ describe('POST /api/v1/auth/register', () => {
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
   });
 
-  it('should return 400 with password shorter than 8 characters', async () => {
+  it('should return 400 with password shorter than 12 characters', async () => {
     // Arrange
     const invalidPayload = { ...validPayload, password: 'short' };
 
     // Act
-    const response = await request(app).post(REGISTER_URL).send(invalidPayload);
+    const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(invalidPayload);
 
     // Assert
     expect(response.status).toBe(400);
@@ -53,10 +54,10 @@ describe('POST /api/v1/auth/register', () => {
 
   it('should return 400 when required fields are missing', async () => {
     // Arrange - only email and password, missing nif and direccion_fiscal
-    const incompletePayload = { email: 'test@test.com', password: 'Password123' };
+    const incompletePayload = { email: 'test@test.com', password: 'Password1234' };
 
     // Act
-    const response = await request(app).post(REGISTER_URL).send(incompletePayload);
+    const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(incompletePayload);
 
     // Assert
     expect(response.status).toBe(400);
@@ -66,10 +67,10 @@ describe('POST /api/v1/auth/register', () => {
 
   it('should return 409 when email is already registered', async () => {
     // Arrange - first registration
-    await request(app).post(REGISTER_URL).send(validPayload);
+    await withMutationGuards(request(app).post(REGISTER_URL)).send(validPayload);
 
     // Act - second registration with the same email
-    const response = await request(app).post(REGISTER_URL).send(validPayload);
+    const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(validPayload);
 
     // Assert
     expect(response.status).toBe(409);

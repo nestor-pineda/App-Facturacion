@@ -1,5 +1,8 @@
 import { prisma } from '@/config/database';
 import type { CreateQuoteInput, DocumentLineInput, UpdateQuoteInput } from '@/api/schemas/document.schema';
+import { assertDocumentRefsForUser } from '@/services/document-ownership.service';
+import { logger } from '@/config/logger';
+import { applyCatalogSnapshotsToDocumentLines } from '@/services/document-line-snapshot.service';
 import { sendQuoteEmail } from '@/services/email.service';
 
 export const QUOTE_NOT_FOUND = 'QUOTE_NOT_FOUND';
@@ -16,6 +19,15 @@ export const getById = async (userId: string, id: string) => {
   }
 
   return quote;
+};
+
+export const assertQuoteCanRequestSendConfirmation = async (userId: string, id: string) => {
+  const row = await prisma.quote.findFirst({
+    where: { id, user_id: userId },
+    select: { estado: true },
+  });
+  if (!row) throw new Error(QUOTE_NOT_FOUND);
+  if (row.estado !== 'borrador') throw new Error(QUOTE_ALREADY_SENT);
 };
 
 export interface QuoteFilters {
@@ -71,7 +83,9 @@ const calculateDocumentTotals = (lines: DocumentLineInput[]) => {
 };
 
 export const create = async (userId: string, data: CreateQuoteInput) => {
-  const totals = calculateDocumentTotals(data.lines);
+  await assertDocumentRefsForUser(prisma, userId, data.client_id, data.lines);
+  const lines = await applyCatalogSnapshotsToDocumentLines(prisma, userId, data.lines);
+  const totals = calculateDocumentTotals(lines);
 
   return prisma.quote.create({
     data: {
@@ -83,7 +97,7 @@ export const create = async (userId: string, data: CreateQuoteInput) => {
       total_iva: totals.total_iva,
       total: totals.total,
       lines: {
-        create: data.lines.map((line) => {
+        create: lines.map((line) => {
           const { subtotal } = calculateLineTotals(line);
           return {
             service_id: line.service_id,
@@ -101,8 +115,6 @@ export const create = async (userId: string, data: CreateQuoteInput) => {
 };
 
 export const update = async (userId: string, id: string, data: UpdateQuoteInput) => {
-  const totals = calculateDocumentTotals(data.lines);
-
   return prisma.$transaction(async (tx: typeof prisma) => {
     const quote = await tx.quote.findFirst({ where: { id, user_id: userId } });
 
@@ -113,6 +125,10 @@ export const update = async (userId: string, id: string, data: UpdateQuoteInput)
     if (quote.estado !== 'borrador') {
       throw new Error(QUOTE_ALREADY_SENT);
     }
+
+    await assertDocumentRefsForUser(tx, userId, data.client_id, data.lines);
+    const lines = await applyCatalogSnapshotsToDocumentLines(tx, userId, data.lines);
+    const totals = calculateDocumentTotals(lines);
 
     await tx.quoteLine.deleteMany({ where: { quote_id: id } });
     return tx.quote.update({
@@ -125,7 +141,7 @@ export const update = async (userId: string, id: string, data: UpdateQuoteInput)
         total_iva: totals.total_iva,
         total: totals.total,
         lines: {
-          create: data.lines.map((line) => {
+          create: lines.map((line) => {
             const { subtotal } = calculateLineTotals(line);
             return {
               service_id: line.service_id,
@@ -166,6 +182,8 @@ export const convertToInvoice = async (userId: string, quoteId: string, fechaEmi
   if (!quote) {
     throw new Error(QUOTE_NOT_FOUND);
   }
+
+  await assertDocumentRefsForUser(prisma, userId, quote.client_id, quote.lines);
 
   return prisma.invoice.create({
     data: {
@@ -231,7 +249,7 @@ export const send = async (userId: string, id: string) => {
       },
     });
   } catch (err) {
-    console.error('[email] Failed to send quote email:', err);
+    logger.error({ err, context: 'quote.email.send' }, '[email] Failed to send quote email');
   }
 
   return sent;
@@ -271,7 +289,7 @@ export const resendQuoteEmail = async (userId: string, id: string) => {
       },
     });
   } catch (err) {
-    console.error('[email] Failed to resend quote email:', err);
+    logger.error({ err, context: 'quote.email.resend' }, '[email] Failed to resend quote email');
     throw err;
   }
 
