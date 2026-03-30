@@ -754,7 +754,7 @@ describe('POST /api/v1/quotes/:id/convert', () => {
   });
 
   it('should return 401 without auth token', async () => {
-    const response = await withMutationGuards(request(app).post(`${QUOTES_URL}/${quoteId}/convert`));
+    const response = await withMutationGuards(request(app).post(`${QUOTES_URL}/${quoteId}/convert`)).send({});
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('NO_TOKEN');

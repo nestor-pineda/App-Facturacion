@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { replyInvalidUuidParams, safeParseUuidParams } from '@/api/schemas/params.schema';
 import { createClientSchema, updateClientSchema } from '@/api/schemas/client.schema';
 import * as clientService from '@/services/client.service';
 
@@ -66,6 +67,12 @@ export const create = async (req: Request, res: Response) => {
 };
 
 export const update = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   const parsed = updateClientSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -80,7 +87,7 @@ export const update = async (req: Request, res: Response) => {
   }
 
   try {
-    const client = await clientService.update(req.user!.id, req.params.id as string, parsed.data);
+    const client = await clientService.update(req.user!.id, paramsParsed.data.id, parsed.data);
     return res.status(200).json({ success: true, data: client });
   } catch (error) {
     if (error instanceof Error && error.message === clientService.CLIENT_NOT_FOUND) {

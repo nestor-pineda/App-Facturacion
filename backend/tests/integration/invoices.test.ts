@@ -67,6 +67,15 @@ describe('GET /api/v1/invoices', () => {
     expect(response.body.data).toHaveLength(0);
   });
 
+  it('should return 400 when estado query param is invalid', async () => {
+    const response = await request(app)
+      .get(`${INVOICES_URL}?estado=no-existe`)
+      .set('Cookie', cookies);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
   it('should filter invoices by estado query param', async () => {
     const clientRes = await withMutationGuards(request(app)
       .post(CLIENTS_URL))

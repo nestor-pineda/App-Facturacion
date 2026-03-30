@@ -1,4 +1,10 @@
 import { Request, Response } from 'express';
+import {
+  parseInvoiceListQuery,
+  replyInvalidDocumentListQuery,
+  replyInvalidUuidParams,
+  safeParseUuidParams,
+} from '@/api/schemas/params.schema';
 import { createInvoiceSchema, updateInvoiceSchema } from '@/api/schemas/document.schema';
 import {
   RELATED_CLIENT_NOT_FOUND,
@@ -14,11 +20,17 @@ const ERROR_CODES = {
 } as const;
 
 export const list = async (req: Request, res: Response) => {
-  const { estado, client_id, desde, hasta } = req.query as Record<string, string | undefined>;
+  const queryParsed = parseInvoiceListQuery(req.query);
+  if (!queryParsed.success) {
+    replyInvalidDocumentListQuery(res, queryParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
+  const { estado, client_id, desde, hasta } = queryParsed.data;
 
   try {
     const invoices = await invoiceService.list(req.user!.id, {
-      estado: estado as invoiceService.InvoiceFilters['estado'],
+      estado,
       client_id,
       desde,
       hasta,
@@ -70,6 +82,12 @@ export const create = async (req: Request, res: Response) => {
 };
 
 export const update = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   const parsed = updateInvoiceSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -84,7 +102,7 @@ export const update = async (req: Request, res: Response) => {
   }
 
   try {
-    const invoice = await invoiceService.update(req.user!.id, req.params.id as string, parsed.data);
+    const invoice = await invoiceService.update(req.user!.id, paramsParsed.data.id, parsed.data);
     return res.status(200).json({ success: true, data: invoice });
   } catch (error) {
     if (error instanceof Error) {
@@ -121,8 +139,14 @@ export const update = async (req: Request, res: Response) => {
 };
 
 export const remove = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   try {
-    await invoiceService.remove(req.user!.id, req.params.id as string);
+    await invoiceService.remove(req.user!.id, paramsParsed.data.id);
     return res.status(200).json({ success: true });
   } catch (error) {
     if (error instanceof Error) {
@@ -149,8 +173,14 @@ export const remove = async (req: Request, res: Response) => {
 };
 
 export const send = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   try {
-    const invoice = await invoiceService.send(req.user!.id, req.params.id as string);
+    const invoice = await invoiceService.send(req.user!.id, paramsParsed.data.id);
     return res.status(200).json({ success: true, data: invoice });
   } catch (error) {
     if (error instanceof Error) {
@@ -177,8 +207,14 @@ export const send = async (req: Request, res: Response) => {
 };
 
 export const resend = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   try {
-    const invoice = await invoiceService.resendInvoiceEmail(req.user!.id, req.params.id as string);
+    const invoice = await invoiceService.resendInvoiceEmail(req.user!.id, paramsParsed.data.id);
     return res.status(200).json({ success: true, data: invoice });
   } catch (error) {
     if (error instanceof Error && error.message === invoiceService.INVOICE_NOT_FOUND) {
@@ -195,8 +231,14 @@ export const resend = async (req: Request, res: Response) => {
 };
 
 export const copy = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   try {
-    const invoice = await invoiceService.copyInvoice(req.user!.id, req.params.id as string);
+    const invoice = await invoiceService.copyInvoice(req.user!.id, paramsParsed.data.id);
     return res.status(201).json({ success: true, data: invoice });
   } catch (error) {
     if (error instanceof Error) {

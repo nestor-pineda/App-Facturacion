@@ -17,7 +17,13 @@ const validUser = {
 };
 
 describe('Browser mutation guard (Origin + X-Requested-With)', () => {
-  const allowedOrigin = parseAllowedOriginsList(env.ALLOWED_ORIGINS)[0];
+  const allowedOriginsList = parseAllowedOriginsList(env.ALLOWED_ORIGINS);
+  const [allowedOrigin] = allowedOriginsList;
+  if (allowedOrigin === undefined) {
+    throw new Error(
+      'Browser mutation guard tests require ALLOWED_ORIGINS to list at least one origin. Set backend/.env (e.g. http://localhost:8080).',
+    );
+  }
 
   beforeEach(async () => {
     await withMutationGuards(request(app).post('/api/v1/auth/register')).send(validUser);

@@ -6,20 +6,22 @@ import {
   BROWSER_MUTATION_HEADER_VALUE,
 } from '@/lib/constants';
 
+const JSON_CONTENT_TYPE = 'application/json';
+
+const defaultRequestHeaders = {
+  'Content-Type': JSON_CONTENT_TYPE,
+  [BROWSER_MUTATION_HEADER_NAME]: BROWSER_MUTATION_HEADER_VALUE,
+} as const;
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
-  headers: {
-    'Content-Type': 'application/json',
-    [BROWSER_MUTATION_HEADER_NAME]: BROWSER_MUTATION_HEADER_VALUE,
-  },
+  headers: { ...defaultRequestHeaders },
   withCredentials: true,
 });
 
 const refreshRequestConfig = {
   withCredentials: true,
-  headers: {
-    [BROWSER_MUTATION_HEADER_NAME]: BROWSER_MUTATION_HEADER_VALUE,
-  },
+  headers: { ...defaultRequestHeaders },
 };
 
 let isRefreshing = false;

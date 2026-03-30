@@ -1,4 +1,10 @@
 import { Request, Response } from 'express';
+import {
+  parseQuoteListQuery,
+  replyInvalidDocumentListQuery,
+  replyInvalidUuidParams,
+  safeParseUuidParams,
+} from '@/api/schemas/params.schema';
 import { createQuoteSchema, updateQuoteSchema, convertQuoteSchema } from '@/api/schemas/document.schema';
 import {
   RELATED_CLIENT_NOT_FOUND,
@@ -14,11 +20,17 @@ const ERROR_CODES = {
 } as const;
 
 export const list = async (req: Request, res: Response) => {
-  const { estado, client_id, desde, hasta } = req.query as Record<string, string | undefined>;
+  const queryParsed = parseQuoteListQuery(req.query);
+  if (!queryParsed.success) {
+    replyInvalidDocumentListQuery(res, queryParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
+  const { estado, client_id, desde, hasta } = queryParsed.data;
 
   try {
     const quotes = await quoteService.list(req.user!.id, {
-      estado: estado as quoteService.QuoteFilters['estado'],
+      estado,
       client_id,
       desde,
       hasta,
@@ -70,6 +82,12 @@ export const create = async (req: Request, res: Response) => {
 };
 
 export const update = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   const parsed = updateQuoteSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -84,7 +102,7 @@ export const update = async (req: Request, res: Response) => {
   }
 
   try {
-    const quote = await quoteService.update(req.user!.id, req.params.id as string, parsed.data);
+    const quote = await quoteService.update(req.user!.id, paramsParsed.data.id, parsed.data);
     return res.status(200).json({ success: true, data: quote });
   } catch (error) {
     if (error instanceof Error) {
@@ -121,8 +139,14 @@ export const update = async (req: Request, res: Response) => {
 };
 
 export const remove = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   try {
-    await quoteService.remove(req.user!.id, req.params.id as string);
+    await quoteService.remove(req.user!.id, paramsParsed.data.id);
     return res.status(200).json({ success: true });
   } catch (error) {
     if (error instanceof Error) {
@@ -149,6 +173,12 @@ export const remove = async (req: Request, res: Response) => {
 };
 
 export const convert = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   const parsed = convertQuoteSchema.safeParse(req.body ?? {});
 
   if (!parsed.success) {
@@ -165,7 +195,7 @@ export const convert = async (req: Request, res: Response) => {
   try {
     const invoice = await quoteService.convertToInvoice(
       req.user!.id,
-      req.params.id as string,
+      paramsParsed.data.id,
       parsed.data.fecha_emision,
     );
     return res.status(201).json({ success: true, data: invoice });
@@ -198,8 +228,14 @@ export const convert = async (req: Request, res: Response) => {
 };
 
 export const send = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   try {
-    const quote = await quoteService.send(req.user!.id, req.params.id as string);
+    const quote = await quoteService.send(req.user!.id, paramsParsed.data.id);
     return res.status(200).json({ success: true, data: quote });
   } catch (error) {
     if (error instanceof Error) {
@@ -226,8 +262,14 @@ export const send = async (req: Request, res: Response) => {
 };
 
 export const resend = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   try {
-    const quote = await quoteService.resendQuoteEmail(req.user!.id, req.params.id as string);
+    const quote = await quoteService.resendQuoteEmail(req.user!.id, paramsParsed.data.id);
     return res.status(200).json({ success: true, data: quote });
   } catch (error) {
     if (error instanceof Error && error.message === quoteService.QUOTE_NOT_FOUND) {
@@ -244,8 +286,14 @@ export const resend = async (req: Request, res: Response) => {
 };
 
 export const copy = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   try {
-    const quote = await quoteService.copyQuote(req.user!.id, req.params.id as string);
+    const quote = await quoteService.copyQuote(req.user!.id, paramsParsed.data.id);
     return res.status(201).json({ success: true, data: quote });
   } catch (error) {
     if (error instanceof Error) {

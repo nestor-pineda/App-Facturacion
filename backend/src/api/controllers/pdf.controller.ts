@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { replyInvalidUuidParams, safeParseUuidParams } from '@/api/schemas/params.schema';
 import * as invoiceService from '@/services/invoice.service';
 import * as quoteService from '@/services/quote.service';
 import * as pdfService from '@/services/pdf.service';
@@ -7,6 +8,7 @@ import { renderQuoteTemplate } from '@/templates/pdf/quote.template';
 import type { InvoiceTemplateData, QuoteTemplateData } from '@/types/pdf.types';
 
 const PDF_ERROR_CODES = {
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
   NOT_FOUND: 'NOT_FOUND',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;
@@ -90,8 +92,14 @@ const mapQuoteToTemplateData = (
  * Allowed for both borrador and enviada states (same as quotes).
  */
 export const generateInvoicePDF = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, PDF_ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   const userId = req.user!.id;
-  const invoiceId = req.params.id as string;
+  const invoiceId = paramsParsed.data.id;
 
   try {
     const invoice = await invoiceService.getById(userId, invoiceId);
@@ -130,8 +138,14 @@ export const generateInvoicePDF = async (req: Request, res: Response) => {
  * Quotes in both borrador and enviado states are allowed.
  */
 export const generateQuotePDF = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, PDF_ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   const userId = req.user!.id;
-  const quoteId = req.params.id as string;
+  const quoteId = paramsParsed.data.id;
 
   try {
     const quote = await quoteService.getById(userId, quoteId);

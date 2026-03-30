@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { replyInvalidUuidParams, safeParseUuidParams } from '@/api/schemas/params.schema';
 import { createServiceSchema, updateServiceSchema } from '@/api/schemas/service.schema';
 import * as serviceService from '@/services/service.service';
 
@@ -46,6 +47,12 @@ export const create = async (req: Request, res: Response) => {
 };
 
 export const update = async (req: Request, res: Response) => {
+  const paramsParsed = safeParseUuidParams(req.params);
+  if (!paramsParsed.success) {
+    replyInvalidUuidParams(res, paramsParsed.error, ERROR_CODES.VALIDATION_ERROR);
+    return;
+  }
+
   const parsed = updateServiceSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -60,7 +67,7 @@ export const update = async (req: Request, res: Response) => {
   }
 
   try {
-    const service = await serviceService.update(req.user!.id, req.params.id as string, parsed.data);
+    const service = await serviceService.update(req.user!.id, paramsParsed.data.id, parsed.data);
     return res.status(200).json({ success: true, data: service });
   } catch (error) {
     if (error instanceof Error && error.message === serviceService.SERVICE_NOT_FOUND) {
