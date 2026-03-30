@@ -129,7 +129,10 @@ export const refresh = async (req: Request, res: Response) => {
   }
 };
 
-export const logout = (req: Request, res: Response) => {
+export const logout = async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken as string | undefined;
+  await authService.logout(refreshToken);
+
   res.clearCookie('accessToken', getCookieOptions(0));
   res.clearCookie('refreshToken', getCookieOptions(0));
 

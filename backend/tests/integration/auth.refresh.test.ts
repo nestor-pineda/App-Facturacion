@@ -8,10 +8,11 @@ import { env } from '@/config/env';
 const REGISTER_URL = '/api/v1/auth/register';
 const LOGIN_URL = '/api/v1/auth/login';
 const REFRESH_URL = '/api/v1/auth/refresh';
+const LOGOUT_URL = '/api/v1/auth/logout';
 
 const validUser = {
   email: 'autonomo@test.com',
-  password: 'Password123',
+  password: 'Password1234',
   nombre_comercial: 'Test Autónomo',
   nif: '12345678A',
   direccion_fiscal: 'Calle Test 1, Madrid',
@@ -100,6 +101,16 @@ describe('POST /api/v1/auth/refresh', () => {
       .set('Cookie', [`refreshToken=${accessTokenUsedAsRefresh}`]);
 
     // Assert
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe('INVALID_TOKEN');
+  });
+
+  it('should return 401 INVALID_TOKEN after logout invalidates refresh token', async () => {
+    await withMutationGuards(request(app).post(LOGOUT_URL)).set('Cookie', loginCookies);
+
+    const response = await withMutationGuards(request(app).post(REFRESH_URL)).set('Cookie', loginCookies);
+
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('INVALID_TOKEN');

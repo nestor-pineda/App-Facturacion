@@ -8,7 +8,7 @@ const LOGIN_URL = '/api/v1/auth/login';
 
 const validUser = {
   email: 'autonomo@test.com',
-  password: 'Password123',
+  password: 'Password1234',
   nombre_comercial: 'Test Autónomo',
   nif: '12345678A',
   direccion_fiscal: 'Calle Test 1, Madrid',

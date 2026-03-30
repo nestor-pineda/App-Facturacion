@@ -7,7 +7,7 @@ const REGISTER_URL = '/api/v1/auth/register';
 
 const validPayload = {
   email: 'autonomo@test.com',
-  password: 'Password123',
+  password: 'Password1234',
   nombre_comercial: 'Test Autónomo',
   nif: '12345678A',
   direccion_fiscal: 'Calle Test 1, Madrid',
@@ -39,7 +39,7 @@ describe('POST /api/v1/auth/register', () => {
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
   });
 
-  it('should return 400 with password shorter than 8 characters', async () => {
+  it('should return 400 with password shorter than 12 characters', async () => {
     // Arrange
     const invalidPayload = { ...validPayload, password: 'short' };
 
@@ -54,7 +54,7 @@ describe('POST /api/v1/auth/register', () => {
 
   it('should return 400 when required fields are missing', async () => {
     // Arrange - only email and password, missing nif and direccion_fiscal
-    const incompletePayload = { email: 'test@test.com', password: 'Password123' };
+    const incompletePayload = { email: 'test@test.com', password: 'Password1234' };
 
     // Act
     const response = await withMutationGuards(request(app).post(REGISTER_URL)).send(incompletePayload);

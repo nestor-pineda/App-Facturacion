@@ -9,7 +9,7 @@ const LOGIN_URL = '/api/v1/auth/login';
 
 const validUser = {
   email: 'csrf-guard@test.com',
-  password: 'Password123',
+  password: 'Password1234',
   nombre_comercial: 'CSRF Test',
   nif: '11111111H',
   direccion_fiscal: 'Calle CSRF 1',

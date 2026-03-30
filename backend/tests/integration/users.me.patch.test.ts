@@ -9,7 +9,7 @@ const UPDATE_ME_URL = '/api/v1/users/me';
 
 const userPayload = {
   email: 'perfil1@test.com',
-  password: 'Password123',
+  password: 'Password1234',
   nombre_comercial: 'Mi Negocio',
   nif: '12345678A',
   direccion_fiscal: 'Calle Uno 1',
@@ -18,7 +18,7 @@ const userPayload = {
 
 const secondUserPayload = {
   email: 'perfil2@test.com',
-  password: 'Password123',
+  password: 'Password1234',
   nombre_comercial: 'Otro Negocio',
   nif: '87654321B',
   direccion_fiscal: 'Calle Dos 2',

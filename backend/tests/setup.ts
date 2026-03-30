@@ -6,6 +6,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  await prisma.refreshToken.deleteMany();
   await prisma.invoiceLine.deleteMany();
   await prisma.invoice.deleteMany();
   await prisma.quoteLine.deleteMany();
