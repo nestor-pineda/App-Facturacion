@@ -11,12 +11,13 @@ Sistema de facturación para autónomos. Backend REST API construido con Node.js
 3. [Variables de entorno](#3-variables-de-entorno)
 4. [Base de datos](#4-base-de-datos)
 5. [Arrancar el servidor](#5-arrancar-el-servidor)
-6. [Probar la API paso a paso](#6-probar-la-api-paso-a-paso)
-7. [Tests](#7-tests)
-8. [Comandos de desarrollo](#8-comandos-de-desarrollo)
-9. [Ver los datos en la base de datos](#9-ver-los-datos-en-la-base-de-datos)
-10. [Solución de problemas frecuentes](#10-solución-de-problemas-frecuentes)
-11. [Documentación adicional](#11-documentación-adicional)
+6. [Logger (Pino y trazas)](#6-logger-pino-y-trazas)
+7. [Probar la API paso a paso](#7-probar-la-api-paso-a-paso)
+8. [Tests](#8-tests)
+9. [Comandos de desarrollo](#9-comandos-de-desarrollo)
+10. [Ver los datos en la base de datos](#10-ver-los-datos-en-la-base-de-datos)
+11. [Solución de problemas frecuentes](#11-solución-de-problemas-frecuentes)
+12. [Documentación adicional](#12-documentación-adicional)
 
 > La sección **Probar la API paso a paso** cubre 20 pasos: registro, login, clientes, servicios, configuración SMTP (opcional), presupuestos (crear, enviar, listar, editar, eliminar, convertir a factura) y facturas (crear, emitir, listar, editar, eliminar).
 
@@ -141,7 +142,57 @@ Respuesta esperada:
 
 ---
 
-## 6. Probar la API paso a paso
+## 6. Logger (Pino y trazas)
+
+El backend usa **[Pino](https://github.com/pinojs/pino)** (`src/config/logger.ts`). La instancia exportada es `logger`.
+
+### Dónde ver los logs
+
+Por defecto Pino escribe **JSON en una línea por evento** en la **salida estándar** (`stdout`) del proceso. Al ejecutar `npm run dev`, esas líneas aparecen en la **misma terminal** que el servidor.
+
+Ejemplo de línea (campos típicos: `level`, `time`, `msg`, `service`):
+
+```json
+{"level":30,"time":1730000000000,"service":"app-facturacion-api","msg":"Servidor en escucha","port":3000,"nodeEnv":"development"}
+```
+
+### Niveles según `NODE_ENV`
+
+| `NODE_ENV`   | Nivel efectivo | Notas |
+| ------------ | -------------- | ----- |
+| `production` | `info`         | Sin trazas `debug`. |
+| `test`       | `silent`       | Vitest no llena la consola con logs de la app. |
+| Otro (p. ej. `development`) | `debug` | Más detalle en local. |
+
+### Uso en código
+
+```typescript
+import { logger } from '@/config/logger';
+
+logger.info('Algo ocurrió');
+logger.info({ userId, action }, 'Acción completada');
+logger.warn({ requestId }, 'Situación revisable');
+logger.error({ err }, 'Fallo al procesar');
+```
+
+Los errores capturados en controladores suelen pasar por `logControllerError` (`src/lib/log-controller-error.ts`), que añade `requestId` y `context` (identificador de la operación).
+
+### Auditoría y correlación
+
+- Eventos de seguridad / negocio relevantes usan `auditLog` (`src/lib/audit-log.ts`): en el JSON verás `type: "audit"` y `event` (nombres en `src/constants/audit-events.constants.ts`).
+- Cada petición puede llevar la cabecera **`X-Request-Id`** (o el servidor genera una). El mismo valor se devuelve en la respuesta y suele aparecer como **`requestId`** en los logs para enlazar todas las entradas de una misma petición.
+
+### Legibilidad en local (opcional)
+
+Para ver el JSON coloreado y multilínea, puedes tuberizar la salida (no hace falta instalar nada de forma permanente):
+
+```bash
+npm run dev 2>&1 | npx pino-pretty
+```
+
+---
+
+## 7. Probar la API paso a paso
 
 Todos los endpoints protegidos requieren un `accessToken` en la cabecera `Authorization`. El flujo completo es:
 
@@ -746,7 +797,7 @@ Respuesta esperada (`200 OK`):
 
 ---
 
-## 7. Tests
+## 8. Tests
 
 ```bash
 npm test                  # Todos los tests
@@ -762,7 +813,7 @@ Hay un test en `tests/integration/clients.test.ts` que comprueba el 409 al crear
 
 ---
 
-## 8. Comandos de desarrollo
+## 9. Comandos de desarrollo
 
 ```bash
 npm run dev        # Servidor con hot reload
@@ -781,7 +832,7 @@ npx prisma studio          # Abrir interfaz visual en el navegador
 
 ---
 
-## 9. Ver los datos en la base de datos
+## 10. Ver los datos en la base de datos
 
 ### Opción A — Prisma Studio (interfaz visual, sin instalar nada)
 
@@ -806,7 +857,7 @@ Descarga [Beekeeper Studio](https://www.beekeeperstudio.io/) y conecta con estos
 
 ---
 
-## 10. Solución de problemas frecuentes
+## 11. Solución de problemas frecuentes
 
 **El servidor no arranca / error de variables de entorno**
 → Comprueba que el archivo `.env` existe y tiene todos los campos rellenos. El servidor no arranca si falta alguna variable obligatoria.
@@ -831,7 +882,7 @@ Descarga [Beekeeper Studio](https://www.beekeeperstudio.io/) y conecta con estos
 
 ---
 
-## 11. Documentación adicional
+## 12. Documentación adicional
 
 | Documento            | Contenido                          |
 | -------------------- | ---------------------------------- |
