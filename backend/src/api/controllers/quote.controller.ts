@@ -5,6 +5,9 @@ import {
   replyInvalidUuidParams,
   safeParseUuidParams,
 } from '@/api/schemas/params.schema';
+import { AUDIT_EVENT, RESOURCE_KIND } from '@/constants/audit-events.constants';
+import { auditLog } from '@/lib/audit-log';
+import { logControllerError } from '@/lib/log-controller-error';
 import { createQuoteSchema, updateQuoteSchema, convertQuoteSchema } from '@/api/schemas/document.schema';
 import { patchSendBodySchema } from '@/api/schemas/send-confirmation.schema';
 import {
@@ -44,7 +47,8 @@ export const list = async (req: Request, res: Response) => {
       hasta,
     });
     return res.status(200).json({ success: true, data: quotes });
-  } catch {
+  } catch (error) {
+    logControllerError(req, 'quote.list', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -82,6 +86,7 @@ export const create = async (req: Request, res: Response) => {
         },
       });
     }
+    logControllerError(req, 'quote.create', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -115,6 +120,11 @@ export const update = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === quoteService.QUOTE_NOT_FOUND) {
+        auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+          userId: req.user!.id,
+          resourceKind: RESOURCE_KIND.QUOTE,
+          resourceId: paramsParsed.data.id,
+        });
         return res.status(404).json({
           success: false,
           error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
@@ -139,6 +149,7 @@ export const update = async (req: Request, res: Response) => {
       }
     }
 
+    logControllerError(req, 'quote.update', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -159,6 +170,11 @@ export const remove = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === quoteService.QUOTE_NOT_FOUND) {
+        auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+          userId: req.user!.id,
+          resourceKind: RESOURCE_KIND.QUOTE,
+          resourceId: paramsParsed.data.id,
+        });
         return res.status(404).json({
           success: false,
           error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
@@ -173,6 +189,7 @@ export const remove = async (req: Request, res: Response) => {
       }
     }
 
+    logControllerError(req, 'quote.remove', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -209,6 +226,11 @@ export const convert = async (req: Request, res: Response) => {
     return res.status(201).json({ success: true, data: invoice });
   } catch (error) {
     if (error instanceof Error && error.message === quoteService.QUOTE_NOT_FOUND) {
+      auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+        userId: req.user!.id,
+        resourceKind: RESOURCE_KIND.QUOTE,
+        resourceId: paramsParsed.data.id,
+      });
       return res.status(404).json({
         success: false,
         error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
@@ -228,6 +250,7 @@ export const convert = async (req: Request, res: Response) => {
       });
     }
 
+    logControllerError(req, 'quote.convert', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -248,10 +271,20 @@ export const issueSendConfirmation = async (req: Request, res: Response) => {
   try {
     await quoteService.assertQuoteCanRequestSendConfirmation(userId, id);
     const confirmationToken = issueSendConfirmationToken(SEND_CONFIRMATION_PURPOSE_QUOTE, userId, id);
+    auditLog(req, AUDIT_EVENT.DOCUMENT_SEND_CONFIRMATION_ISSUED, {
+      userId,
+      resourceKind: RESOURCE_KIND.QUOTE,
+      resourceId: id,
+    });
     return res.status(200).json({ success: true, data: { confirmationToken } });
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === quoteService.QUOTE_NOT_FOUND) {
+        auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+          userId,
+          resourceKind: RESOURCE_KIND.QUOTE,
+          resourceId: id,
+        });
         return res.status(404).json({
           success: false,
           error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
@@ -264,6 +297,7 @@ export const issueSendConfirmation = async (req: Request, res: Response) => {
         });
       }
     }
+    logControllerError(req, 'quote.issueSendConfirmation', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -301,9 +335,19 @@ export const send = async (req: Request, res: Response) => {
       id,
     );
     const quote = await quoteService.send(userId, id);
+    auditLog(req, AUDIT_EVENT.DOCUMENT_SENT, {
+      userId,
+      resourceKind: RESOURCE_KIND.QUOTE,
+      resourceId: id,
+    });
     return res.status(200).json({ success: true, data: quote });
   } catch (error) {
     if (error instanceof Error && error.message === INVALID_SEND_CONFIRMATION) {
+      auditLog(req, AUDIT_EVENT.DOCUMENT_SEND_CONFIRMATION_REJECTED, {
+        userId,
+        resourceKind: RESOURCE_KIND.QUOTE,
+        resourceId: id,
+      });
       return res.status(403).json({
         success: false,
         error: {
@@ -315,6 +359,11 @@ export const send = async (req: Request, res: Response) => {
 
     if (error instanceof Error) {
       if (error.message === quoteService.QUOTE_NOT_FOUND) {
+        auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+          userId,
+          resourceKind: RESOURCE_KIND.QUOTE,
+          resourceId: id,
+        });
         return res.status(404).json({
           success: false,
           error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
@@ -329,6 +378,7 @@ export const send = async (req: Request, res: Response) => {
       }
     }
 
+    logControllerError(req, 'quote.send', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -348,11 +398,17 @@ export const resend = async (req: Request, res: Response) => {
     return res.status(200).json({ success: true, data: quote });
   } catch (error) {
     if (error instanceof Error && error.message === quoteService.QUOTE_NOT_FOUND) {
+      auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+        userId: req.user!.id,
+        resourceKind: RESOURCE_KIND.QUOTE,
+        resourceId: paramsParsed.data.id,
+      });
       return res.status(404).json({
         success: false,
         error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
       });
     }
+    logControllerError(req, 'quote.resend', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -373,12 +429,18 @@ export const copy = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === quoteService.QUOTE_NOT_FOUND) {
+        auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+          userId: req.user!.id,
+          resourceKind: RESOURCE_KIND.QUOTE,
+          resourceId: paramsParsed.data.id,
+        });
         return res.status(404).json({
           success: false,
           error: { message: 'Presupuesto no encontrado', code: ERROR_CODES.NOT_FOUND },
         });
       }
     }
+    logControllerError(req, 'quote.copy', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },

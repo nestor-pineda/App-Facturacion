@@ -6,6 +6,9 @@ import {
   replyInvalidUuidParams,
   safeParseUuidParams,
 } from '@/api/schemas/params.schema';
+import { AUDIT_EVENT, RESOURCE_KIND } from '@/constants/audit-events.constants';
+import { auditLog } from '@/lib/audit-log';
+import { logControllerError } from '@/lib/log-controller-error';
 import { createInvoiceSchema, updateInvoiceSchema } from '@/api/schemas/document.schema';
 import { patchSendBodySchema } from '@/api/schemas/send-confirmation.schema';
 import {
@@ -46,7 +49,8 @@ export const list = async (req: Request, res: Response) => {
       hasta,
     });
     return res.status(200).json({ success: true, data: invoices });
-  } catch {
+  } catch (error) {
+    logControllerError(req, 'invoice.list', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -84,6 +88,7 @@ export const create = async (req: Request, res: Response) => {
         },
       });
     }
+    logControllerError(req, 'invoice.create', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -117,6 +122,11 @@ export const update = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === invoiceService.INVOICE_NOT_FOUND) {
+        auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+          userId: req.user!.id,
+          resourceKind: RESOURCE_KIND.INVOICE,
+          resourceId: paramsParsed.data.id,
+        });
         return res.status(404).json({
           success: false,
           error: { message: 'Factura no encontrada', code: ERROR_CODES.NOT_FOUND },
@@ -141,6 +151,7 @@ export const update = async (req: Request, res: Response) => {
       }
     }
 
+    logControllerError(req, 'invoice.update', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -161,6 +172,11 @@ export const remove = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === invoiceService.INVOICE_NOT_FOUND) {
+        auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+          userId: req.user!.id,
+          resourceKind: RESOURCE_KIND.INVOICE,
+          resourceId: paramsParsed.data.id,
+        });
         return res.status(404).json({
           success: false,
           error: { message: 'Factura no encontrada', code: ERROR_CODES.NOT_FOUND },
@@ -175,6 +191,7 @@ export const remove = async (req: Request, res: Response) => {
       }
     }
 
+    logControllerError(req, 'invoice.remove', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -195,10 +212,20 @@ export const issueSendConfirmation = async (req: Request, res: Response) => {
   try {
     await invoiceService.assertInvoiceCanRequestSendConfirmation(userId, id);
     const confirmationToken = issueSendConfirmationToken(SEND_CONFIRMATION_PURPOSE_INVOICE, userId, id);
+    auditLog(req, AUDIT_EVENT.DOCUMENT_SEND_CONFIRMATION_ISSUED, {
+      userId,
+      resourceKind: RESOURCE_KIND.INVOICE,
+      resourceId: id,
+    });
     return res.status(200).json({ success: true, data: { confirmationToken } });
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === invoiceService.INVOICE_NOT_FOUND) {
+        auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+          userId,
+          resourceKind: RESOURCE_KIND.INVOICE,
+          resourceId: id,
+        });
         return res.status(404).json({
           success: false,
           error: { message: 'Factura no encontrada', code: ERROR_CODES.NOT_FOUND },
@@ -211,6 +238,7 @@ export const issueSendConfirmation = async (req: Request, res: Response) => {
         });
       }
     }
+    logControllerError(req, 'invoice.issueSendConfirmation', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -248,9 +276,20 @@ export const send = async (req: Request, res: Response) => {
       id,
     );
     const invoice = await invoiceService.send(userId, id);
+    auditLog(req, AUDIT_EVENT.DOCUMENT_SENT, {
+      userId,
+      resourceKind: RESOURCE_KIND.INVOICE,
+      resourceId: id,
+      numero: invoice.numero ?? undefined,
+    });
     return res.status(200).json({ success: true, data: invoice });
   } catch (error) {
     if (error instanceof Error && error.message === INVALID_SEND_CONFIRMATION) {
+      auditLog(req, AUDIT_EVENT.DOCUMENT_SEND_CONFIRMATION_REJECTED, {
+        userId,
+        resourceKind: RESOURCE_KIND.INVOICE,
+        resourceId: id,
+      });
       return res.status(403).json({
         success: false,
         error: {
@@ -272,6 +311,11 @@ export const send = async (req: Request, res: Response) => {
 
     if (error instanceof Error) {
       if (error.message === invoiceService.INVOICE_NOT_FOUND) {
+        auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+          userId,
+          resourceKind: RESOURCE_KIND.INVOICE,
+          resourceId: id,
+        });
         return res.status(404).json({
           success: false,
           error: { message: 'Factura no encontrada', code: ERROR_CODES.NOT_FOUND },
@@ -296,6 +340,7 @@ export const send = async (req: Request, res: Response) => {
       }
     }
 
+    logControllerError(req, 'invoice.send', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -315,11 +360,17 @@ export const resend = async (req: Request, res: Response) => {
     return res.status(200).json({ success: true, data: invoice });
   } catch (error) {
     if (error instanceof Error && error.message === invoiceService.INVOICE_NOT_FOUND) {
+      auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+        userId: req.user!.id,
+        resourceKind: RESOURCE_KIND.INVOICE,
+        resourceId: paramsParsed.data.id,
+      });
       return res.status(404).json({
         success: false,
         error: { message: 'Factura no encontrada', code: ERROR_CODES.NOT_FOUND },
       });
     }
+    logControllerError(req, 'invoice.resend', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -340,12 +391,18 @@ export const copy = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === invoiceService.INVOICE_NOT_FOUND) {
+        auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+          userId: req.user!.id,
+          resourceKind: RESOURCE_KIND.INVOICE,
+          resourceId: paramsParsed.data.id,
+        });
         return res.status(404).json({
           success: false,
           error: { message: 'Factura no encontrada', code: ERROR_CODES.NOT_FOUND },
         });
       }
     }
+    logControllerError(req, 'invoice.copy', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },

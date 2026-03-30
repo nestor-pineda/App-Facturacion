@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { replyInvalidUuidParams, safeParseUuidParams } from '@/api/schemas/params.schema';
 import { createClientSchema, updateClientSchema } from '@/api/schemas/client.schema';
+import { AUDIT_EVENT, RESOURCE_KIND } from '@/constants/audit-events.constants';
+import { auditLog } from '@/lib/audit-log';
+import { logControllerError } from '@/lib/log-controller-error';
 import * as clientService from '@/services/client.service';
 
 const ERROR_CODES = {
@@ -13,7 +16,8 @@ export const list = async (req: Request, res: Response) => {
   try {
     const { data, total } = await clientService.list(req.user!.id);
     return res.status(200).json({ success: true, data, meta: { total } });
-  } catch {
+  } catch (error) {
+    logControllerError(req, 'client.list', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -58,7 +62,7 @@ export const create = async (req: Request, res: Response) => {
         },
       });
     }
-    console.error('[client.controller] create error:', error);
+    logControllerError(req, 'client.create', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },
@@ -91,12 +95,18 @@ export const update = async (req: Request, res: Response) => {
     return res.status(200).json({ success: true, data: client });
   } catch (error) {
     if (error instanceof Error && error.message === clientService.CLIENT_NOT_FOUND) {
+      auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+        userId: req.user!.id,
+        resourceKind: RESOURCE_KIND.CLIENT,
+        resourceId: paramsParsed.data.id,
+      });
       return res.status(404).json({
         success: false,
         error: { message: 'Cliente no encontrado', code: ERROR_CODES.NOT_FOUND },
       });
     }
 
+    logControllerError(req, 'client.update', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error interno del servidor', code: ERROR_CODES.INTERNAL_ERROR },

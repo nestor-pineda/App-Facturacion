@@ -4,7 +4,9 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { BROWSER_MUTATION_HEADER_NAME } from '@/api/constants/browser-mutation.constants';
 import { browserMutationGuard } from '@/api/middlewares/browser-mutation-guard.middleware';
+import { requestIdMiddleware } from '@/api/middlewares/request-id.middleware';
 import { env } from '@/config/env';
+import { logger } from '@/config/logger';
 import '@/agent/genkit.config';
 import { generalLimiter, authLimiter } from '@/api/middlewares/rate-limit.middleware';
 import authRouter from '@/api/routes/auth.routes';
@@ -24,6 +26,7 @@ const UNHANDLED_ERROR_LOG_LABEL = '[express] Unhandled error';
 
 const app = express();
 
+app.use(requestIdMiddleware);
 app.use(helmet());
 app.use(
   cors({
@@ -53,8 +56,11 @@ app.use((_req, res) => {
   res.status(404).json({ success: false, error: { message: 'Ruta no encontrada', code: 'NOT_FOUND' } });
 });
 
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(UNHANDLED_ERROR_LOG_LABEL, err);
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  logger.error(
+    { err, requestId: req.requestId, label: UNHANDLED_ERROR_LOG_LABEL },
+    UNHANDLED_ERROR_LOG_LABEL,
+  );
   res.status(500).json({
     success: false,
     error: {

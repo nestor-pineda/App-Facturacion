@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
 import { replyInvalidUuidParams, safeParseUuidParams } from '@/api/schemas/params.schema';
+import { AUDIT_EVENT, RESOURCE_KIND } from '@/constants/audit-events.constants';
+import { auditLog } from '@/lib/audit-log';
+import { logControllerError } from '@/lib/log-controller-error';
 import * as invoiceService from '@/services/invoice.service';
 import * as quoteService from '@/services/quote.service';
 import * as pdfService from '@/services/pdf.service';
@@ -119,13 +122,18 @@ export const generateInvoicePDF = async (req: Request, res: Response) => {
     return res.send(pdfBuffer);
   } catch (error) {
     if (error instanceof Error && error.message === invoiceService.INVOICE_NOT_FOUND) {
+      auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+        userId,
+        resourceKind: RESOURCE_KIND.INVOICE,
+        resourceId: invoiceId,
+      });
       return res.status(404).json({
         success: false,
         error: { message: 'Factura no encontrada', code: PDF_ERROR_CODES.NOT_FOUND },
       });
     }
 
-    console.error('[pdf] Error generating invoice PDF:', error);
+    logControllerError(req, 'pdf.generateInvoice', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error al generar el PDF', code: PDF_ERROR_CODES.INTERNAL_ERROR },
@@ -165,13 +173,18 @@ export const generateQuotePDF = async (req: Request, res: Response) => {
     return res.send(pdfBuffer);
   } catch (error) {
     if (error instanceof Error && error.message === quoteService.QUOTE_NOT_FOUND) {
+      auditLog(req, AUDIT_EVENT.RESOURCE_ACCESS_NOT_FOUND, {
+        userId,
+        resourceKind: RESOURCE_KIND.QUOTE,
+        resourceId: quoteId,
+      });
       return res.status(404).json({
         success: false,
         error: { message: 'Presupuesto no encontrado', code: PDF_ERROR_CODES.NOT_FOUND },
       });
     }
 
-    console.error('[pdf] Error generating quote PDF:', error);
+    logControllerError(req, 'pdf.generateQuote', error);
     return res.status(500).json({
       success: false,
       error: { message: 'Error al generar el PDF', code: PDF_ERROR_CODES.INTERNAL_ERROR },

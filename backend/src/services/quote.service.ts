@@ -1,6 +1,7 @@
 import { prisma } from '@/config/database';
 import type { CreateQuoteInput, DocumentLineInput, UpdateQuoteInput } from '@/api/schemas/document.schema';
 import { assertDocumentRefsForUser } from '@/services/document-ownership.service';
+import { logger } from '@/config/logger';
 import { applyCatalogSnapshotsToDocumentLines } from '@/services/document-line-snapshot.service';
 import { sendQuoteEmail } from '@/services/email.service';
 
@@ -248,7 +249,7 @@ export const send = async (userId: string, id: string) => {
       },
     });
   } catch (err) {
-    console.error('[email] Failed to send quote email:', err);
+    logger.error({ err, context: 'quote.email.send' }, '[email] Failed to send quote email');
   }
 
   return sent;
@@ -288,7 +289,7 @@ export const resendQuoteEmail = async (userId: string, id: string) => {
       },
     });
   } catch (err) {
-    console.error('[email] Failed to resend quote email:', err);
+    logger.error({ err, context: 'quote.email.resend' }, '[email] Failed to resend quote email');
     throw err;
   }
 

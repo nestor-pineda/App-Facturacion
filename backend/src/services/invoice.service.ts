@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/config/database';
 import type { CreateInvoiceInput, DocumentLineInput, UpdateInvoiceInput } from '@/api/schemas/document.schema';
 import { assertDocumentRefsForUser } from '@/services/document-ownership.service';
+import { logger } from '@/config/logger';
 import { applyCatalogSnapshotsToDocumentLines } from '@/services/document-line-snapshot.service';
 import { generateInvoiceNumber } from '@/services/numbering.service';
 import { sendInvoiceEmail } from '@/services/email.service';
@@ -234,7 +235,7 @@ export const send = async (userId: string, id: string) => {
       },
     });
   } catch (err) {
-    console.error('[email] Failed to send invoice email:', err);
+    logger.error({ err, context: 'invoice.email.send' }, '[email] Failed to send invoice email');
   }
 
   return sent;
@@ -275,7 +276,7 @@ export const resendInvoiceEmail = async (userId: string, id: string) => {
       },
     });
   } catch (err) {
-    console.error('[email] Failed to resend invoice email:', err);
+    logger.error({ err, context: 'invoice.email.resend' }, '[email] Failed to resend invoice email');
     throw err;
   }
 

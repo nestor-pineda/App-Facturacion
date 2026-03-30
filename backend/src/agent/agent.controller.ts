@@ -2,7 +2,10 @@ import util from 'node:util';
 import { Request, Response } from 'express';
 import { AgentChatSchema } from '@/agent/agent.schemas';
 import { runBillingFlow } from '@/agent/flows/billing.flow';
+import { AUDIT_EVENT } from '@/constants/audit-events.constants';
 import { env } from '@/config/env';
+import { logger } from '@/config/logger';
+import { auditLog } from '@/lib/audit-log';
 
 const ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
@@ -22,6 +25,8 @@ const AGENT_RATE_LIMITED_MESSAGE =
 
 const AGENT_MODEL_UNAVAILABLE_MESSAGE =
   'El modelo configurado para el asistente no está disponible para este proyecto de Google AI. Actualiza el modelo en el servidor (p. ej. gemini-3-flash-preview o gemini-2.5-flash).';
+
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 function isGoogleAiApiKeyInvalidError(error: unknown): boolean {
   if (!error || typeof error !== 'object') {
@@ -61,6 +66,25 @@ function isGoogleAiModelUnavailableError(error: unknown): boolean {
   );
 }
 
+function logAgentFailure(req: Request, userId: string, error: unknown) {
+  const base = { requestId: req.requestId, userId };
+  if (error instanceof Error) {
+    logger.error({ ...base, err: error }, '[AgentChat]');
+    return;
+  }
+  if (!IS_PRODUCTION) {
+    logger.error(
+      {
+        ...base,
+        payload: util.inspect(error, { depth: 6, maxArrayLength: 25, colors: false }),
+      },
+      '[AgentChat]',
+    );
+    return;
+  }
+  logger.error({ ...base, valueType: typeof error }, '[AgentChat] non-Error');
+}
+
 export async function agentChat(req: Request, res: Response) {
   const parsed = AgentChatSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -87,26 +111,23 @@ export async function agentChat(req: Request, res: Response) {
     });
   }
 
+  const started = Date.now();
   try {
     const result = await runBillingFlow(message, history, userId);
+    auditLog(req, AUDIT_EVENT.AGENT_CHAT_SUCCESS, {
+      userId,
+      toolsUsed: result.toolsUsed,
+      durationMs: Date.now() - started,
+    });
     return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.error(
-      '[AgentChat] Error (inspect):',
-      util.inspect(error, { depth: 12, colors: false, maxArrayLength: null, breakLength: 120 })
-    );
-    if (error instanceof Error) {
-      console.error('[AgentChat] Error message:', error.message);
-      console.error('[AgentChat] Error stack:', error.stack);
-      if (error.cause !== undefined) {
-        console.error(
-          '[AgentChat] Error cause:',
-          util.inspect(error.cause, { depth: 12, colors: false, maxArrayLength: null })
-        );
-      }
-    }
+    logAgentFailure(req, userId, error);
+
     if (isGoogleAiApiKeyInvalidError(error)) {
-      console.error('[AgentChat] Classified as AGENT_MISCONFIGURED (Google API key invalid)');
+      auditLog(req, AUDIT_EVENT.AGENT_CHAT_ERROR, {
+        userId,
+        code: ERROR_CODES.AGENT_MISCONFIGURED,
+      });
       return res.status(503).json({
         success: false,
         error: {
@@ -116,9 +137,10 @@ export async function agentChat(req: Request, res: Response) {
       });
     }
     if (isGoogleAiRateLimitedError(error)) {
-      console.error(
-        '[AgentChat] Classified as AGENT_RATE_LIMITED (HTTP 429 / cuota o límite de Google Generative AI)'
-      );
+      auditLog(req, AUDIT_EVENT.AGENT_CHAT_ERROR, {
+        userId,
+        code: ERROR_CODES.AGENT_RATE_LIMITED,
+      });
       return res.status(503).json({
         success: false,
         error: {
@@ -128,7 +150,10 @@ export async function agentChat(req: Request, res: Response) {
       });
     }
     if (isGoogleAiModelUnavailableError(error)) {
-      console.error('[AgentChat] Classified as AGENT_MODEL_UNAVAILABLE (modelo no disponible)');
+      auditLog(req, AUDIT_EVENT.AGENT_CHAT_ERROR, {
+        userId,
+        code: ERROR_CODES.AGENT_MODEL_UNAVAILABLE,
+      });
       return res.status(503).json({
         success: false,
         error: {
@@ -137,6 +162,7 @@ export async function agentChat(req: Request, res: Response) {
         },
       });
     }
+    auditLog(req, AUDIT_EVENT.AGENT_CHAT_ERROR, { userId, code: ERROR_CODES.AGENT_ERROR });
     return res.status(500).json({
       success: false,
       error: { message: AGENT_FAILURE_MESSAGE, code: ERROR_CODES.AGENT_ERROR },
