@@ -52,7 +52,23 @@ const prisma = new PrismaClient({ adapter });
 // ─── Credenciales del usuario de prueba ──────────────────────────────────────
 
 const SEED_USER_EMAIL = 'admin@facturacion.test';
-const SEED_USER_PASSWORD = 'Test1234!';
+const SEED_USER_PASSWORD_MIN_LENGTH = 12;
+const SEED_USER_PASSWORD_COMPLEXITY_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
+const SEED_USER_PASSWORD = 'SeedAdmin2026';
+
+function ensureSeedPasswordStrength(password: string) {
+  if (password.length < SEED_USER_PASSWORD_MIN_LENGTH) {
+    throw new Error(
+      `SEED_USER_PASSWORD debe tener mínimo ${SEED_USER_PASSWORD_MIN_LENGTH} caracteres.`,
+    );
+  }
+
+  if (!SEED_USER_PASSWORD_COMPLEXITY_REGEX.test(password)) {
+    throw new Error(
+      'SEED_USER_PASSWORD debe incluir al menos una minúscula, una mayúscula y un número.',
+    );
+  }
+}
 
 // ─── Helpers de cálculo ───────────────────────────────────────────────────────
 
@@ -72,6 +88,7 @@ function calcTotals(lines: { subtotal: number; cuotaIva: number }[]) {
 
 async function main() {
   console.log('🌱 Iniciando seed...\n');
+  ensureSeedPasswordStrength(SEED_USER_PASSWORD);
 
   // ── Limpieza previa del usuario de prueba (para idempotencia) ──────────────
   const existing = await prisma.user.findUnique({ where: { email: SEED_USER_EMAIL } });

@@ -27,6 +27,14 @@
       "nif": "Tax ID",
       "fiscalAddress": "Fiscal address",
       "phone": "Phone (optional)",
+      "passwordRequirements": {
+        "title": "Password requirements",
+        "minLength": "Minimum {{count}} characters",
+        "lowercase": "At least one lowercase letter",
+        "uppercase": "At least one uppercase letter",
+        "number": "At least one number",
+        "format": "Must include lowercase, uppercase, and a number"
+      },
       "submit": "Create account",
       "submitting": "Creating account...",
       "success": "Account created. Please sign in.",
@@ -298,6 +306,9 @@
   "validation": {
     "emailInvalid": "Invalid email",
     "minPassword": "Minimum 6 characters",
+    "registerPasswordMin": "Password must be at least {{count}} characters",
+    "registerPasswordMax": "Password must be at most {{count}} characters",
+    "registerPasswordComplexity": "Password must include at least one lowercase, one uppercase, and one number",
     "businessNameRequired": "Business name is required",
     "nifRequired": "Tax ID is required",
     "fiscalAddressRequired": "Fiscal address is required",

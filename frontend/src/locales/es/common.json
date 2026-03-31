@@ -27,6 +27,14 @@
       "nif": "NIF",
       "fiscalAddress": "Dirección fiscal",
       "phone": "Teléfono (opcional)",
+      "passwordRequirements": {
+        "title": "Requisitos de contraseña",
+        "minLength": "Mínimo {{count}} caracteres",
+        "lowercase": "Al menos una letra minúscula",
+        "uppercase": "Al menos una letra mayúscula",
+        "number": "Al menos un número",
+        "format": "Debe combinar minúscula, mayúscula y número"
+      },
       "submit": "Crear cuenta",
       "submitting": "Creando cuenta...",
       "success": "Cuenta creada correctamente. Inicia sesión.",
@@ -298,6 +306,9 @@
   "validation": {
     "emailInvalid": "Email inválido",
     "minPassword": "Mínimo 6 caracteres",
+    "registerPasswordMin": "La contraseña debe tener mínimo {{count}} caracteres",
+    "registerPasswordMax": "La contraseña debe tener máximo {{count}} caracteres",
+    "registerPasswordComplexity": "La contraseña debe incluir al menos una minúscula, una mayúscula y un número",
     "businessNameRequired": "Nombre comercial obligatorio",
     "nifRequired": "NIF obligatorio",
     "fiscalAddressRequired": "Dirección fiscal obligatoria",

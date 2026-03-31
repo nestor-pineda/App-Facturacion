@@ -1,7 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FORM_VALIDATION_MODE } from '@/lib/constants';
-import { createRegisterSchema, type RegisterInput } from '@/schemas/auth.schema';
+import {
+  createRegisterSchema,
+  REGISTER_PASSWORD_COMPLEXITY_REGEX,
+  REGISTER_PASSWORD_MIN_LENGTH,
+  type RegisterInput,
+} from '@/schemas/auth.schema';
 import { registerUser } from '@/api/endpoints/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -23,11 +28,37 @@ export default function Register() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterInput>({
     mode: FORM_VALIDATION_MODE,
     resolver: zodResolver(createRegisterSchema()),
   });
+  const passwordValue = watch('password', '');
+  const passwordRequirements = [
+    {
+      label: t('auth.register.passwordRequirements.minLength', {
+        count: REGISTER_PASSWORD_MIN_LENGTH,
+      }),
+      isMet: passwordValue.length >= REGISTER_PASSWORD_MIN_LENGTH,
+    },
+    {
+      label: t('auth.register.passwordRequirements.lowercase'),
+      isMet: /[a-z]/.test(passwordValue),
+    },
+    {
+      label: t('auth.register.passwordRequirements.uppercase'),
+      isMet: /[A-Z]/.test(passwordValue),
+    },
+    {
+      label: t('auth.register.passwordRequirements.number'),
+      isMet: /\d/.test(passwordValue),
+    },
+    {
+      label: t('auth.register.passwordRequirements.format'),
+      isMet: REGISTER_PASSWORD_COMPLEXITY_REGEX.test(passwordValue),
+    },
+  ];
 
   const onSubmit = async (data: RegisterInput) => {
     setIsLoading(true);
@@ -64,6 +95,21 @@ export default function Register() {
             <div className="space-y-2">
               <Label htmlFor="password">{t('auth.login.password')}</Label>
               <Input id="password" type="password" placeholder="••••••••" {...register('password')} />
+              <div className="rounded-md border p-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">
+                  {t('auth.register.passwordRequirements.title')}
+                </p>
+                <ul className="space-y-1">
+                  {passwordRequirements.map((requirement) => (
+                    <li
+                      key={requirement.label}
+                      className={`text-xs ${requirement.isMet ? 'text-green-600' : 'text-muted-foreground'}`}
+                    >
+                      {requirement.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
             <div className="space-y-2">
