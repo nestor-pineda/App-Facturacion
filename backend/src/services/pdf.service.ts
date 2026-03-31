@@ -1,5 +1,11 @@
 import puppeteer from 'puppeteer';
 
+const PDF_CHROMIUM_ARGS = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+] as const;
+
 /**
  * Generates a PDF buffer from a complete HTML string using Puppeteer.
  * The browser is always closed after generation, even if an error occurs.
@@ -9,9 +15,11 @@ import puppeteer from 'puppeteer';
  * @throws Error if Puppeteer fails to launch or render the page
  */
 export const generatePDF = async (html: string): Promise<Buffer> => {
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    args: [...PDF_CHROMIUM_ARGS],
+    executablePath: executablePath || undefined,
   });
 
   try {
