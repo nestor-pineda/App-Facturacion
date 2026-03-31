@@ -7,7 +7,7 @@ import {
   REGISTER_PASSWORD_MIN_LENGTH,
   type RegisterInput,
 } from '@/schemas/auth.schema';
-import { registerUser } from '@/api/endpoints/auth';
+import { loginUser, registerUser } from '@/api/endpoints/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,10 +19,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
 import { getApiErrorMessage } from '@/lib/api-error';
+import { useAuthStore } from '@/store/authStore';
 
 export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const login = useAuthStore((s) => s.login);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -64,8 +66,10 @@ export default function Register() {
     setIsLoading(true);
     try {
       await registerUser(data);
+      const loginResponse = await loginUser({ email: data.email, password: data.password });
+      login(loginResponse.data.user);
       toast.success(i18next.t('toast.accountCreated'));
-      navigate('/login');
+      navigate('/');
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, i18next.t('toast.registerError')));
     } finally {

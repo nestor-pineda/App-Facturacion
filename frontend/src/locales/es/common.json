@@ -2,7 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "clients": "Clientes",
-    "services": "Servicios",
+    "services": "Catalogo",
     "quotes": "Presupuestos",
     "invoices": "Facturas",
     "settings": "Ajustes",
@@ -119,7 +119,7 @@
     "dialogEdit": "Editar cliente"
   },
   "services": {
-    "title": "Servicios",
+    "title": "Catalogo de Servicios",
     "subtitle": "{{count}} servicios disponibles",
     "newButton": "Nuevo servicio",
     "searchPlaceholder": "Buscar servicios...",
